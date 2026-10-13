@@ -409,3 +409,17 @@
   color: var(--trilha-terracota);
   font-weight: 500;
 }
+
+/* Blobs do login (AuthBlobs): deriva lenta. Sem animação para quem pede menos movimento. */
+@keyframes auth-blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(34px, -26px) scale(1.08); }
+  66% { transform: translate(-28px, 22px) scale(0.94); }
+}
+.auth-blob {
+  animation: auth-blob-drift 20s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-blob { animation: none; }
+}
