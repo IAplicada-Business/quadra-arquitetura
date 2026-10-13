@@ -94,6 +94,11 @@ vi.mock("@/hooks/useClientPortalToken", () => ({
   useClientPortalToken: () => ({ activeToken: mocks.portalToken, isLoading: false, createToken: mocks.createToken, isCreating: false }),
 }));
 
+// O aviso de cliente faz consulta própria; aqui só importa se aparece.
+vi.mock("@/components/projects/LinkClientNotice", () => ({
+  LinkClientNotice: () => <div data-testid="link-client-notice" />,
+}));
+
 vi.mock("@/hooks/useScheduleTasks", () => ({
   useScheduleTasks: () => ({ items: mocks.scheduleTasks }),
 }));
@@ -179,15 +184,17 @@ describe("Configurações → Onboarding (modelos)", () => {
     expect(mocks.templateSave.mock.calls[0][0]).toHaveLength(4); // capa + 3 passos
   });
 
-  it("adicionar seções e salvar manda a lista completa em ordem", () => {
+  it("adicionar seções e salvar manda a lista completa em ordem", async () => {
     render(<OnboardingTemplateTab />);
-    fireEvent.click(screen.getByRole("button", { name: "Adicionar seção" }));
-    fireEvent.click(screen.getByRole("button", { name: "Adicionar seção" }));
-    fireEvent.click(screen.getByRole("button", { name: "Adicionar seção" }));
+    for (const layout of [/Card numerado/, /Texto corrido/, /Mídia ao lado/]) {
+      fireEvent.keyDown(screen.getByRole("button", { name: "Adicionar seção" }), { key: "Enter" });
+      fireEvent.click(await screen.findByRole("menuitem", { name: layout }));
+    }
     fireEvent.click(screen.getByRole("button", { name: /Salvar modelo/ }));
     const salvo = mocks.templateSave.mock.calls[0][0] as OnboardingSection[];
     expect(salvo).toHaveLength(5);
     expect(salvo.slice(0, 2).map((s) => s.id)).toEqual(["t1", "t2"]);
+    expect(salvo.slice(2).map((s) => s.layout)).toEqual(["card", "texto", "midia"]);
   });
 });
 
@@ -323,5 +330,17 @@ describe("Projeto → Onboarding independente do link do portal", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("Ana & Beto")).toBeInTheDocument();
     expect(within(dialog).getByText(/Estamos em Marcenaria/)).toBeInTheDocument();
+  });
+});
+
+describe("Projeto → Onboarding sem cliente vinculado", () => {
+  it("mostra o aviso para vincular o cliente quando a obra não tem cliente", () => {
+    render(<ProjectOnboardingTab projectId="p1" projectName="Projeto Salão Cherie" />);
+    expect(screen.getByTestId("link-client-notice")).toBeInTheDocument();
+  });
+
+  it("com cliente vinculado, não mostra o aviso", () => {
+    render(<ProjectOnboardingTab projectId="p1" projectName="Apto 101" clientName="Ana" />);
+    expect(screen.queryByTestId("link-client-notice")).not.toBeInTheDocument();
   });
 });

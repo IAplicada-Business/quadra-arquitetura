@@ -15,6 +15,7 @@ import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { buildOnboardingPlaceholders, cloneSectionsForProject, invalidVideoSections, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
 import type { PortalTask, PortalWeeklyReport } from "@/lib/portal";
 import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
+import { LinkClientNotice } from "./LinkClientNotice";
 import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
@@ -167,6 +168,8 @@ export function ProjectOnboardingTab({ projectId, projectName, clientName, addre
           )}
         </div>
       </div>
+
+      {!clientName?.trim() && <LinkClientNotice projectId={projectId} projectName={projectName} />}
 
       {/* Escolha do modelo */}
       <div className="rounded-md border bg-muted/30 p-3 space-y-2">
