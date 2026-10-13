@@ -181,3 +181,20 @@ describe("Nova senha (/redefinir-senha)", () => {
     expect(screen.getByRole("heading", { name: "Esqueceu a senha?" })).toBeInTheDocument();
   });
 });
+
+describe("404", () => {
+  it("mostra a página não encontrada em português com caminho de volta", async () => {
+    const { default: NotFound } = await import("@/pages/NotFound");
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <MemoryRouter initialEntries={["/nao-existe"]}>
+        <NotFound />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Voltar ao sistema" })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("link", { name: "Ir para o site" })).toHaveAttribute("href", "/");
+    expect(screen.queryByTestId("auth-blobs")).not.toBeInTheDocument();
+    spy.mockRestore();
+  });
+});
