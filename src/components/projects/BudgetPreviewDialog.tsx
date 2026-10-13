@@ -12,6 +12,7 @@ import { useBudgetQuotes } from "@/hooks/useBudgetQuotes";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
+import { computeActivityCost } from "@/lib/budgetImport";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -33,9 +34,11 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   projectId: string;
   projectName: string;
+  /** Revisão aberta na aba (as cotações salvas entram nela). */
+  revisionNumber?: number;
 }
 
-export function BudgetPreviewDialog({ open, onOpenChange, projectId, projectName }: Props) {
+export function BudgetPreviewDialog({ open, onOpenChange, projectId, projectName, revisionNumber = 1 }: Props) {
   const { activities } = useProjectActivities(projectId);
   const { indices } = useMaterialIndices();
   const { research } = usePriceResearch(projectId);
@@ -44,60 +47,22 @@ export function BudgetPreviewDialog({ open, onOpenChange, projectId, projectName
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
 
+  // Mesmo cálculo da importação (src/lib/budgetImport.ts).
   const lines = useMemo<ActivityLine[]>(() => {
     const now = new Date();
-    const sevenDays = new Date(now); sevenDays.setDate(sevenDays.getDate() - 7);
-    const thirtyDays = new Date(now); thirtyDays.setDate(thirtyDays.getDate() - 30);
-
     return activities
       .filter((a) => a.area_m2 && a.area_m2 > 0)
       .map((activity) => {
-        // Material cost
-        const matchingIndices = indices.filter(
-          (idx) => activity.name.toLowerCase().includes(idx.activity_type.toLowerCase())
-        );
-
-        let materialCost = 0;
-        let confidence: "green" | "yellow" | "grey" = "grey";
-
-        for (const idx of matchingIndices) {
-          const qty = idx.index_per_m2 * (activity.area_m2 || 0);
-          // Find price research for this material
-          const materialResearch = research.filter(
-            (r) => r.activity_id === activity.id && r.material_name === idx.material_name
-          );
-          const latestResearch = materialResearch.sort(
-            (a, b) => new Date(b.searched_at).getTime() - new Date(a.searched_at).getTime()
-          )[0];
-
-          if (latestResearch && new Date(latestResearch.searched_at) > thirtyDays) {
-            const avg = latestResearch.price_avg || ((latestResearch.price_min || 0) + (latestResearch.price_max || 0)) / 2;
-            materialCost += qty * avg;
-            if (new Date(latestResearch.searched_at) > sevenDays) {
-              if (confidence !== "yellow") confidence = "green";
-            } else {
-              confidence = "yellow";
-            }
-          }
-          // No research = stays grey, materialCost += 0 for that item
-        }
-
-        // Labor cost
-        const lc = laborCosts.find(
-          (l) => activity.discipline?.toLowerCase().includes(l.activity_type?.toLowerCase() || "") ||
-                 activity.name.toLowerCase().includes(l.activity_type?.toLowerCase() || "")
-        );
-        const laborCostValue = lc ? (lc.cost_per_m2 || 0) * (activity.area_m2 || 0) : 0;
-
+        const cost = computeActivityCost(activity, { indices, research, laborCosts }, now);
         return {
           activityId: activity.id,
           activityName: activity.name,
           discipline: activity.discipline,
           areaM2: activity.area_m2 || 0,
-          materialCost,
-          laborCost: laborCostValue,
-          total: materialCost + laborCostValue,
-          confidence,
+          materialCost: cost.materialCost,
+          laborCost: cost.laborCost,
+          total: cost.total,
+          confidence: cost.confidence,
         };
       });
   }, [activities, indices, research, laborCosts]);
@@ -177,12 +142,14 @@ export function BudgetPreviewDialog({ open, onOpenChange, projectId, projectName
         if (line.total > 0) {
           await createQuote.mutateAsync({
             supplier_name: "Prévia automática",
-            services_description: `${line.activityName} — Prévia de orçamento`,
-            value: line.laborCost,
-            material_estimate: line.materialCost,
+            services_description: line.activityName,
+            activity_id: line.activityId,
+            discipline: line.discipline,
+            value: line.laborCost > 0 ? line.laborCost : null,
+            material_estimate: line.materialCost > 0 ? line.materialCost : null,
             status: "cotado",
-            revision_number: 1,
-            revision: "Rev 1",
+            revision_number: revisionNumber,
+            revision: `Rev ${revisionNumber}`,
             is_current_revision: true,
           });
         }

@@ -23,8 +23,17 @@ import {
   EyeOff,
   Upload,
   Loader2,
-  ImageIcon,
+  Copy,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CustomBlockFields } from "./CustomBlockFields";
+import {
+  CUSTOM_BLOCK_TYPES,
+  customTypeDef,
+  defaultCustomContent,
+  newCustomBlockKey,
+  type CustomBlockType,
+} from "@/lib/proposalCustomBlocks";
 import { toast } from "@/hooks/use-toast";
 import { useProposalBlocks } from "@/hooks/useProposalBlocks";
 import { useProposalAssets } from "@/hooks/useProposalAssets";
@@ -42,10 +51,13 @@ import {
   type AboutContent,
   type BlockCard,
   type BlockFieldDef,
-  type ProposalBlockKey,
+  isCustomBlock,
+  type CustomProposalBlock,
+  type ProposalBlock,
   type ResolvedProposalBlock,
 } from "@/lib/proposalBlocks";
 import { RichTextField } from "./RichTextField";
+import { ImageField } from "./ImageField";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -56,11 +68,11 @@ import { RichTextField } from "./RichTextField";
  * vale no PDF é o "quem_somos" de Textos Fixos. Semeia o rascunho com ele
  * pra que o editor mostre exatamente o que sai hoje.
  */
-export function seedBlocksFromAssets(blocks: ResolvedProposalBlock[], aboutFromAssets?: string | null): ResolvedProposalBlock[] {
+export function seedBlocksFromAssets(blocks: ProposalBlock[], aboutFromAssets?: string | null): ProposalBlock[] {
   const about = aboutFromAssets?.trim();
   if (!about) return blocks;
   return blocks.map((b) => {
-    if (b.key !== "about" || !b.isDefault) return b;
+    if (isCustomBlock(b) || b.key !== "about" || !b.isDefault) return b;
     const content = b.content as AboutContent;
     if (content.body !== DEFAULT_ABOUT_TEXT) return b;
     return { ...b, content: { ...content, body: about } };
@@ -177,77 +189,6 @@ function CardsField({
   );
 }
 
-function ImageField({
-  id,
-  field,
-  value,
-  onChange,
-  suggestions,
-}: {
-  id: string;
-  field: BlockFieldDef;
-  value: string;
-  onChange: (url: string) => void;
-  suggestions: { id: string; name: string; url: string }[];
-}) {
-  const { uploadFile } = useProposalAssets();
-  const [uploading, setUploading] = useState(false);
-
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      const url = await uploadFile(files[0], "blocos");
-      onChange(url);
-    } catch (e) {
-      toast({ title: "Erro no upload", description: (e as Error).message, variant: "destructive" });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="text-xs font-semibold flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" /> {field.label}</Label>
-      <div className="flex items-start gap-3">
-        <div className="h-20 w-28 shrink-0 overflow-hidden rounded border bg-muted/40 flex items-center justify-center">
-          {value ? <img src={value} alt={field.label} className="h-full w-full object-cover" /> : <span className="text-[10px] text-muted-foreground text-center px-1">padrão do app</span>}
-        </div>
-        <div className="flex-1 space-y-2">
-          <div className="flex gap-2">
-            <Input id={id} value={value} placeholder="URL da imagem ou envie um arquivo" className="h-8 text-sm" onChange={(e) => onChange(e.target.value)} />
-            <label className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border px-2 text-xs hover:bg-muted whitespace-nowrap">
-              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-              Upload
-              <input type="file" accept="image/*" className="hidden" disabled={uploading} aria-label={`Enviar ${field.label}`} onChange={(e) => handleUpload(e.target.files)} />
-            </label>
-            {value && (
-              <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => onChange("")}>Usar padrão</Button>
-            )}
-          </div>
-          {suggestions.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {suggestions.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  title={s.name}
-                  aria-label={`Usar ${s.name}`}
-                  onClick={() => onChange(s.url)}
-                  className={`h-10 w-14 overflow-hidden rounded border hover:ring-2 hover:ring-primary ${value === s.url ? "ring-2 ring-primary" : ""}`}
-                >
-                  <img src={s.url} alt={s.name} className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-          {field.hint && <p className="text-[11px] text-muted-foreground">{field.hint}</p>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function BlockFields({
   block,
   onChange,
@@ -352,9 +293,13 @@ export default function ProposalBlocksEditor() {
 
   const baseline = useMemo(() => seedBlocksFromAssets(blocks, aboutFromAssets), [blocks, aboutFromAssets]);
 
-  const [draft, setDraft] = useState<ResolvedProposalBlock[] | null>(null);
-  const [expanded, setExpanded] = useState<ProposalBlockKey | null>(null);
-  const [previewKey, setPreviewKey] = useState<ProposalBlockKey>("cover");
+  const [draft, setDraft] = useState<ProposalBlock[] | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [previewKey, setPreviewKey] = useState<string>("cover");
+  const [newBlockOpen, setNewBlockOpen] = useState(false);
+  const [newBlockType, setNewBlockType] = useState<CustomBlockType>("financial");
+  const [newBlockName, setNewBlockName] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<CustomProposalBlock | null>(null);
   const dirtyRef = useRef(false);
 
   const dirty = draft != null && !proposalBlocksEqual(draft, baseline);
@@ -367,8 +312,8 @@ export default function ProposalBlocksEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseline, isFetched, dataUpdatedAt]);
 
-  const updateBlock = useCallback((key: ProposalBlockKey, patch: Partial<ResolvedProposalBlock>) => {
-    setDraft((d) => (d ? d.map((b) => (b.key === key ? ({ ...b, ...patch } as ResolvedProposalBlock) : b)) : d));
+  const updateBlock = useCallback((key: string, patch: Partial<ProposalBlock>) => {
+    setDraft((d) => (d ? d.map((b) => (b.key === key ? ({ ...b, ...patch } as ProposalBlock) : b)) : d));
   }, []);
 
   const onDragEnd = (result: DropResult) => {
@@ -376,9 +321,58 @@ export default function ProposalBlocksEditor() {
     setDraft(moveProposalBlock(draft, result.source.index, result.destination.index));
   };
 
-  const resetBlock = (key: ProposalBlockKey) => {
-    const def = getBlockDefinition(key);
-    updateBlock(key, { label: def?.label ?? key, is_active: true, content: blockContent(key) as ResolvedProposalBlock["content"] });
+  const resetBlock = (block: ProposalBlock) => {
+    if (isCustomBlock(block)) {
+      updateBlock(block.key, { is_active: true, content: defaultCustomContent(block.type) } as Partial<ProposalBlock>);
+      return;
+    }
+    const def = getBlockDefinition(block.key);
+    updateBlock(block.key, { label: def?.label ?? block.key, is_active: true, content: blockContent(block.key) as ResolvedProposalBlock["content"] });
+  };
+
+  /* Blocos personalizados: criar a partir de um tipo, duplicar, excluir. */
+  const openNewBlock = () => {
+    setNewBlockType("financial");
+    setNewBlockName("");
+    setNewBlockOpen(true);
+  };
+
+  const addCustomBlock = (block: CustomProposalBlock) => {
+    setDraft((d) => (d ? [...d, { ...block, display_order: d.length }] : d));
+    setExpanded(block.key);
+    setPreviewKey(block.key);
+  };
+
+  const createBlock = () => {
+    if (!draft) return;
+    const def = customTypeDef(newBlockType);
+    addCustomBlock({
+      key: newCustomBlockKey(newBlockType, draft.map((b) => b.key)),
+      type: newBlockType,
+      label: newBlockName.trim() || def.label,
+      display_order: draft.length,
+      is_active: true,
+      content: defaultCustomContent(newBlockType),
+      isDefault: false,
+    });
+    setNewBlockOpen(false);
+  };
+
+  const duplicateBlock = (block: CustomProposalBlock) => {
+    if (!draft) return;
+    addCustomBlock({
+      ...block,
+      key: newCustomBlockKey(block.type, draft.map((b) => b.key)),
+      label: `${block.label} (cópia)`,
+      content: JSON.parse(JSON.stringify(block.content)),
+    });
+  };
+
+  const deleteBlock = (block: CustomProposalBlock) => {
+    setDraft((d) => (d ? d.filter((b) => b.key !== block.key).map((b, i) => ({ ...b, display_order: i })) : d));
+    if (expanded === block.key) setExpanded(null);
+    if (previewKey === block.key) setPreviewKey("cover");
+    setConfirmDelete(null);
   };
 
   const discard = () => setDraft(baseline);
@@ -430,6 +424,8 @@ export default function ProposalBlocksEditor() {
             { id: "ex2", nome: "Projeto Exemplo 2", foto_url: PLACEHOLDER_IMG },
           ],
       validUntil,
+      // No preview aparecem todos os blocos personalizados ativos.
+      previewAllCustomBlocks: true,
     };
   }, [logos, founderPhotos, portfolio, contacts, aboutFromAssets]);
 
@@ -437,7 +433,7 @@ export default function ProposalBlocksEditor() {
   const pageKeys = useMemo(() => proposalPageKeys(pages), [pages]);
   const previewIndex = pageKeys.indexOf(previewKey);
 
-  const selectBlock = (key: ProposalBlockKey) => {
+  const selectBlock = (key: string) => {
     setExpanded((e) => (e === key ? null : key));
     setPreviewKey(key);
   };
@@ -458,7 +454,8 @@ export default function ProposalBlocksEditor() {
 
   const activeCount = draft.filter((b) => b.is_active).length;
   const previewBlock = draft.find((b) => b.key === previewKey);
-  const previewDef = previewBlock ? getBlockDefinition(previewBlock.key) : undefined;
+  const previewDef = previewBlock && !isCustomBlock(previewBlock) ? getBlockDefinition(previewBlock.key) : undefined;
+  const imageSuggestions = founderPhotos.filter((p) => p.file_url).map((p) => ({ id: p.id, name: p.name, url: p.file_url! }));
 
   return (
     <div className="space-y-4">
@@ -472,6 +469,9 @@ export default function ProposalBlocksEditor() {
         </div>
         <div className="flex items-center gap-2">
           {dirty && <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">Alterações não salvas</Badge>}
+          <Button size="sm" variant="outline" onClick={openNewBlock}>
+            <Plus className="h-4 w-4 mr-1" /> Novo bloco
+          </Button>
           <Button size="sm" variant="ghost" onClick={discard} disabled={!dirty || save.isPending}>
             <Undo2 className="h-4 w-4 mr-1" /> Descartar
           </Button>
@@ -488,7 +488,9 @@ export default function ProposalBlocksEditor() {
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
                 {draft.map((block, index) => {
-                  const def = getBlockDefinition(block.key);
+                  const custom = isCustomBlock(block) ? block : null;
+                  const def = custom ? undefined : getBlockDefinition(block.key);
+                  const description = custom ? customTypeDef(custom.type).description : def?.description;
                   const isOpen = expanded === block.key;
                   return (
                     <Draggable key={block.key} draggableId={block.key} index={index}>
@@ -517,8 +519,11 @@ export default function ProposalBlocksEditor() {
                               <p className="text-sm font-medium truncate flex items-center gap-2">
                                 {block.label}
                                 {!block.is_active && <EyeOff className="h-3.5 w-3.5 text-muted-foreground" aria-label="Bloco desligado" />}
+                                {custom && (
+                                  <Badge variant="secondary" className="text-[10px] font-normal">{customTypeDef(custom.type).label}</Badge>
+                                )}
                               </p>
-                              <p className="text-xs text-muted-foreground truncate">{def?.description}</p>
+                              <p className="text-xs text-muted-foreground truncate">{description}</p>
                             </button>
                             <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => selectBlock(block.key)} aria-expanded={isOpen} aria-label={`Editar ${block.label}`}>
                               {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -537,13 +542,31 @@ export default function ProposalBlocksEditor() {
                                   onChange={(e) => updateBlock(block.key, { label: e.target.value })}
                                 />
                               </div>
-                              <BlockFields
-                                block={block}
-                                imageSuggestions={founderPhotos.filter((p) => p.file_url).map((p) => ({ id: p.id, name: p.name, url: p.file_url! }))}
-                                onChange={(content) => updateBlock(block.key, { content: content as unknown as ResolvedProposalBlock["content"] })}
-                              />
-                              <div className="flex justify-end">
-                                <Button size="sm" variant="ghost" className="text-xs" onClick={() => resetBlock(block.key)}>
+                              {custom ? (
+                                <CustomBlockFields
+                                  block={custom}
+                                  imageSuggestions={imageSuggestions}
+                                  onChange={(content) => updateBlock(block.key, { content } as Partial<ProposalBlock>)}
+                                />
+                              ) : (
+                                <BlockFields
+                                  block={block as ResolvedProposalBlock}
+                                  imageSuggestions={imageSuggestions}
+                                  onChange={(content) => updateBlock(block.key, { content: content as unknown as ResolvedProposalBlock["content"] })}
+                                />
+                              )}
+                              <div className="flex flex-wrap justify-end gap-1">
+                                {custom && (
+                                  <>
+                                    <Button size="sm" variant="ghost" className="text-xs" onClick={() => duplicateBlock(custom)}>
+                                      <Copy className="h-3.5 w-3.5 mr-1" /> Duplicar bloco
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="text-xs text-destructive" onClick={() => setConfirmDelete(custom)}>
+                                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir bloco
+                                    </Button>
+                                  </>
+                                )}
+                                <Button size="sm" variant="ghost" className="text-xs" onClick={() => resetBlock(block)}>
                                   <RotateCcw className="h-3.5 w-3.5 mr-1" /> Restaurar padrão deste bloco
                                 </Button>
                               </div>
@@ -594,6 +617,64 @@ export default function ProposalBlocksEditor() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Novo bloco a partir de um tipo */}
+      <Dialog open={newBlockOpen} onOpenChange={setNewBlockOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Novo bloco</DialogTitle>
+            <DialogDescription>
+              Escolha o tipo. O bloco entra no fim da lista; depois edite, reordene e escolha em quais propostas ele aparece.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-2" role="radiogroup" aria-label="Tipo de bloco">
+              {CUSTOM_BLOCK_TYPES.map((t) => (
+                <button
+                  key={t.type}
+                  type="button"
+                  role="radio"
+                  aria-checked={newBlockType === t.type}
+                  onClick={() => setNewBlockType(t.type)}
+                  className={`rounded-md border p-3 text-left transition ${newBlockType === t.type ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"}`}
+                >
+                  <p className="text-sm font-medium">{t.label}</p>
+                  <p className="text-xs text-muted-foreground">{t.description}</p>
+                </button>
+              ))}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="new-block-name" className="text-xs font-semibold">Nome do bloco (só no admin)</Label>
+              <Input
+                id="new-block-name"
+                value={newBlockName}
+                placeholder={`Ex.: ${customTypeDef(newBlockType).label} — Cliente Silva`}
+                className="h-8 text-sm"
+                onChange={(e) => setNewBlockName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewBlockOpen(false)}>Cancelar</Button>
+            <Button onClick={createBlock}>Criar bloco</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir o bloco "{confirmDelete?.label}"?</DialogTitle>
+            <DialogDescription>
+              Ele sai do PDF de todas as propostas quando você salvar as alterações. Para só esconder, use o interruptor.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => confirmDelete && deleteBlock(confirmDelete)}>Excluir bloco</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

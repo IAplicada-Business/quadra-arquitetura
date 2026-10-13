@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { defaultProposalBlocks, type ResolvedProposalBlock, type ProposalBlockUpsert } from "@/lib/proposalBlocks";
+import { defaultProposalBlocks, type ProposalBlock, type ProposalBlockUpsert } from "@/lib/proposalBlocks";
 
-let blocksDoServidor: ResolvedProposalBlock[] = defaultProposalBlocks();
+let blocksDoServidor: ProposalBlock[] = defaultProposalBlocks();
 let textoQuemSomosAssets: string | null = null;
 const saveMutate = vi.fn<(rows: ProposalBlockUpsert[]) => void>();
 

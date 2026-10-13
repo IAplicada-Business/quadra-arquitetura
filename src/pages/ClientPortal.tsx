@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ClientScheduleView } from "@/components/projects/ClientScheduleView";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TrilhaShell } from "@/components/portal/TrilhaShell";
 import { GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, ResumosScreen } from "@/components/portal/PortalScreens";
@@ -36,8 +35,10 @@ function writeSeen(key: string) {
  *
  * Fluxo do mockup: a Tela 0 (boas-vindas configuráveis pela equipe)
  * aparece na primeira visita e some ao clicar em "Entrar no meu projeto";
- * depois o cliente navega por telas (início, cronograma, pendências,
- * galeria, orçamento, resumo semanal) com a URL guardando a tela (#hash).
+ * depois o cliente cai na Trilha (escopos entregues, blocos de construção,
+ * saúde do projeto, adoção e próximas entregas) e navega pelas telas de
+ * apoio (pendências, galeria, orçamento, resumo semanal) com a URL
+ * guardando a tela (#hash).
  */
 export default function ClientPortal() {
   const { token } = useParams<{ token: string }>();
@@ -215,13 +216,6 @@ export default function ClientPortal() {
       badges={{ pendencias: openPendings }}
     >
       {tab === "inicio" && <InicioScreen {...screenProps} />}
-      {tab === "cronograma" && (
-        <div data-testid="screen-cronograma">
-          <h2 className="mb-1 font-display text-2xl text-[var(--trilha-navy)]">Cronograma</h2>
-          <p className="mb-4 text-sm text-[var(--trilha-navy)]/70">Semana a semana, o que está previsto para a obra.</p>
-          <ClientScheduleView tasks={data.tasks} projectName={data.project.name} />
-        </div>
-      )}
       {tab === "pendencias" && <PendenciasScreen {...screenProps} />}
       {tab === "galeria" && <GaleriaScreen {...screenProps} />}
       {tab === "orcamento" && <OrcamentoScreen {...screenProps} />}

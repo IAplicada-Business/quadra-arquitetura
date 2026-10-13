@@ -290,8 +290,19 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
     checklist.update.mutate({ id: item.id, resolved: !item.resolved });
   };
 
-  const handleChecklistSubmit = (draft: DeliveryChecklistDraft) => {
-    checklist.create.mutate(draft, { onSuccess: () => setChecklistDialog({ open: false, activityId: null }) });
+  const handleChecklistSubmit = ({ photos, ...draft }: DeliveryChecklistDraft) => {
+    checklist.create.mutate(draft, {
+      onSuccess: (created) => {
+        setChecklistDialog({ open: false, activityId: null });
+        if (photos.length > 0 && created) checklist.addPhotos.mutate({ item: created, files: photos });
+      },
+    });
+  };
+
+  const checklistPhotos = {
+    onAddPhotos: (item: DeliveryChecklistItem, files: File[]) => checklist.addPhotos.mutate({ item, files }),
+    onRemovePhoto: (item: DeliveryChecklistItem, path: string) => checklist.removePhoto.mutate({ item, path }),
+    uploadingItemId: checklist.addPhotos.isPending ? checklist.addPhotos.variables?.item.id ?? null : null,
   };
 
   const handleCopyPending = () => {
@@ -388,6 +399,7 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
             onChecklistRemove={(id) => checklist.remove.mutate(id)}
             onChecklistAdd={(activityId) => setChecklistDialog({ open: true, activityId })}
             onToggleDone={handleToggleDone}
+            checklistPhotos={checklistPhotos}
           />
 
           {(activities.length > 0 || checklist.items.length > 0) && (
@@ -396,6 +408,7 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
               onCopyPending={handleCopyPending}
               onAdd={() => setChecklistDialog({ open: true, activityId: null })}
               {...checklistHandlers}
+              photos={checklistPhotos}
             />
           )}
         </TabsContent>

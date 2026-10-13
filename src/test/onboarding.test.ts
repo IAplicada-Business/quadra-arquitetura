@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   parseVideoUrl,
+  validateVideoUrl,
+  invalidVideoSections,
   sanitizeSection,
   sectionsFromJson,
   sectionsFromRows,
@@ -15,6 +17,50 @@ import {
   onboardingMode,
   type OnboardingSectionRow,
 } from "@/lib/onboarding";
+
+describe("vídeos do onboarding: YouTube não listado e Google Drive", () => {
+  const DRIVE_ID = "1AbCdEfGhIjKlMnOpQrStUvWxYz012345";
+
+  it("YouTube não listado usa o mesmo link de vídeo e embute igual", () => {
+    expect(parseVideoUrl("https://youtu.be/dQw4w9WgXcQ?si=Xy12")).toEqual({ kind: "youtube", src: "https://www.youtube.com/embed/dQw4w9WgXcQ" });
+    expect(validateVideoUrl("https://youtu.be/dQw4w9WgXcQ?si=Xy12")).toBeNull();
+    expect(validateVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=youtu.be")).toBeNull();
+  });
+
+  it("reconhece os formatos de link do Google Drive e embute pelo /preview", () => {
+    const esperado = { kind: "drive", src: `https://drive.google.com/file/d/${DRIVE_ID}/preview` };
+    expect(parseVideoUrl(`https://drive.google.com/file/d/${DRIVE_ID}/view?usp=sharing`)).toEqual(esperado);
+    expect(parseVideoUrl(`https://drive.google.com/open?id=${DRIVE_ID}`)).toEqual(esperado);
+    expect(parseVideoUrl(`https://drive.google.com/uc?id=${DRIVE_ID}&export=download`)).toEqual(esperado);
+    expect(parseVideoUrl(`https://docs.google.com/file/d/${DRIVE_ID}/edit`)).toEqual(esperado);
+    expect(validateVideoUrl(`https://drive.google.com/file/d/${DRIVE_ID}/view?usp=drive_link`)).toBeNull();
+  });
+
+  it("valida antes de salvar com mensagem que diz o que fazer", () => {
+    expect(validateVideoUrl("")).toBeNull();
+    expect(validateVideoUrl(null)).toBeNull();
+    expect(validateVideoUrl("youtu.be/dQw4w9WgXcQ")).toMatch(/começando com https/);
+    expect(validateVideoUrl("https://youtu.be/abc")).toMatch(/YouTube incompleto/);
+    expect(validateVideoUrl("https://www.youtube.com/playlist?list=PL123")).toMatch(/playlist/);
+    expect(validateVideoUrl("https://studio.youtube.com/video/dQw4w9WgXcQ/edit")).toMatch(/YouTube Studio/);
+    expect(validateVideoUrl("https://drive.google.com/drive/folders/1xyz")).toMatch(/pasta do Drive/);
+    expect(validateVideoUrl("https://drive.google.com/file/d/curto/view")).toMatch(/Drive incompleto/);
+    expect(validateVideoUrl("https://example.com/video")).toMatch(/não reconhecido/);
+  });
+
+  it("vídeos enviados pelo upload e Vimeo continuam aceitos", () => {
+    expect(validateVideoUrl("https://x.supabase.co/storage/v1/object/public/onboarding-media/p1/videos/1.mp4")).toBeNull();
+    expect(validateVideoUrl("https://vimeo.com/123456789")).toBeNull();
+  });
+
+  it("aponta as seções com link inválido", () => {
+    const erros = invalidVideoSections([
+      emptySection({ id: "a", title: "Boas-vindas", video_url: "https://youtu.be/dQw4w9WgXcQ" }),
+      emptySection({ id: "b", title: "", video_url: "https://example.com/x" }),
+    ]);
+    expect(erros).toEqual([{ index: 1, id: "b", title: "Seção 2", message: expect.stringMatching(/não reconhecido/) }]);
+  });
+});
 
 describe("parseVideoUrl", () => {
   it("reconhece as formas de link do YouTube", () => {
@@ -36,7 +82,7 @@ describe("parseVideoUrl", () => {
   });
 
   it("link desconhecido vira link externo; vazio ou inválido vira null", () => {
-    expect(parseVideoUrl("https://drive.google.com/file/d/abc/view")?.kind).toBe("unknown");
+    expect(parseVideoUrl("https://example.com/meu-video")?.kind).toBe("unknown");
     expect(parseVideoUrl("")).toBeNull();
     expect(parseVideoUrl("nao é url")).toBeNull();
     expect(parseVideoUrl(null)).toBeNull();

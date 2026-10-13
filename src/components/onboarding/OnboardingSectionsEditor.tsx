@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, GripVertical, ImagePlus, Loader2, Plus, Trash2, Upload, Video, X } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, GripVertical, HelpCircle, ImagePlus, Loader2, Plus, Trash2, Upload, Video, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { RichTextField } from "@/components/settings/proposal-blocks/RichTextField";
 import { OnboardingView } from "./OnboardingView";
 import { uploadOnboardingMedia } from "@/hooks/useOnboardingTemplate";
-import { emptySection, moveSection, parseVideoUrl, SAMPLE_PLACEHOLDERS, type OnboardingSection } from "@/lib/onboarding";
+import { emptySection, moveSection, parseVideoUrl, SAMPLE_PLACEHOLDERS, validateVideoUrl, type OnboardingSection } from "@/lib/onboarding";
 
 interface Props {
   sections: OnboardingSection[];
@@ -23,11 +23,45 @@ interface Props {
 }
 
 const VIDEO_KIND_LABEL: Record<string, string> = {
-  youtube: "YouTube reconhecido",
+  youtube: "YouTube reconhecido (vale vídeo não listado)",
+  drive: "Google Drive reconhecido. O arquivo precisa estar em \"Qualquer pessoa com o link\".",
   vimeo: "Vimeo reconhecido",
   file: "Arquivo de vídeo",
-  unknown: "Link não reconhecido: vai aparecer como link externo",
+  unknown: "Link não reconhecido",
 };
+
+/** Passo a passo curto, no próprio campo (o guia completo está em docs/onboarding-videos.md). */
+function VideoHelp() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="text-[11px]">
+      <button type="button" className="inline-flex items-center gap-1 text-primary hover:underline" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <HelpCircle className="h-3 w-3" /> Como colocar o vídeo
+      </button>
+      {open && (
+        <div className="mt-1.5 rounded-md border bg-muted/40 p-2.5 space-y-2 text-muted-foreground" data-testid="video-help">
+          <div>
+            <p className="font-semibold text-foreground">YouTube (recomendado)</p>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              <li>No YouTube Studio, clique em Criar → Enviar vídeos e escolha o arquivo.</li>
+              <li>Em Visibilidade, marque <strong>Não listado</strong> (só quem tem o link assiste) e salve.</li>
+              <li>Abra o vídeo, clique em Compartilhar → Copiar e cole o link aqui.</li>
+            </ol>
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">Google Drive</p>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              <li>Envie o vídeo para o Drive e espere terminar o processamento.</li>
+              <li>Clique com o botão direito → Compartilhar → em Acesso geral escolha <strong>Qualquer pessoa com o link</strong>.</li>
+              <li>Clique em Copiar link e cole aqui.</li>
+            </ol>
+          </div>
+          <p>Depois de colar, confira o vídeo na prévia ao lado antes de salvar.</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SectionFields({
   section,
@@ -46,6 +80,7 @@ function SectionFields({
   const [imageUrlDraft, setImageUrlDraft] = useState("");
   const id = (f: string) => `onb-${section.id}-${f}`;
   const video = parseVideoUrl(section.video_url);
+  const videoError = validateVideoUrl(section.video_url);
 
   const upload = async (files: FileList | null, kind: "video" | "image") => {
     if (!files || files.length === 0) return;
@@ -86,14 +121,15 @@ function SectionFields({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor={id("video")} className="text-xs font-semibold flex items-center gap-1"><Video className="h-3.5 w-3.5" /> Vídeo (YouTube, Vimeo ou upload)</Label>
+        <Label htmlFor={id("video")} className="text-xs font-semibold flex items-center gap-1"><Video className="h-3.5 w-3.5" /> Vídeo (YouTube não listado ou Google Drive)</Label>
         <div className="flex gap-2">
           <Input
             id={id("video")}
             value={section.video_url ?? ""}
             disabled={disabled}
-            className="h-8 text-sm"
-            placeholder="https://youtu.be/..."
+            className={`h-8 text-sm ${videoError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+            aria-invalid={!!videoError}
+            placeholder="https://youtu.be/... ou https://drive.google.com/file/d/..."
             onChange={(e) => onPatch({ video_url: e.target.value.trim() ? e.target.value : null })}
           />
           <label className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border px-2 text-xs hover:bg-muted">
@@ -107,7 +143,18 @@ function SectionFields({
             </Button>
           )}
         </div>
-        {video && <p className="text-[11px] text-muted-foreground" data-testid={`video-kind-${section.id}`}>{VIDEO_KIND_LABEL[video.kind]}</p>}
+        {videoError ? (
+          <p className="text-[11px] text-destructive flex items-start gap-1" role="alert" data-testid={`video-error-${section.id}`}>
+            <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" /> {videoError}
+          </p>
+        ) : (
+          video && (
+            <p className="text-[11px] text-muted-foreground flex items-start gap-1" data-testid={`video-kind-${section.id}`}>
+              <CheckCircle2 className="h-3 w-3 mt-0.5 shrink-0 text-success" /> {VIDEO_KIND_LABEL[video.kind]}
+            </p>
+          )
+        )}
+        <VideoHelp />
       </div>
 
       <div className="space-y-2">

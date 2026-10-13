@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DeliveryChecklistItem } from "@/hooks/useDeliveryChecklist";
 import { DELIVERY_PRIORITY_CLASSES, DELIVERY_PRIORITY_LABELS, checklistProgress } from "@/lib/deliveryChecklist";
+import { ChecklistItemPhotos, type ChecklistPhotoHandlers } from "./ChecklistItemPhotos";
 
 export interface ChecklistHandlers {
   onToggle: (item: DeliveryChecklistItem) => void;
   onRemove: (id: string) => void;
   onAdd: () => void;
   disabled?: boolean;
+  /** Quando informado, cada item ganha miniaturas e botão de foto. */
+  photos?: ChecklistPhotoHandlers;
 }
 
 interface ActivityDeliveryChecklistProps extends ChecklistHandlers {
@@ -22,7 +25,7 @@ interface ActivityDeliveryChecklistProps extends ChecklistHandlers {
  * Lista de pendências de entrega de uma atividade (ou das gerais).
  * Sem percentual — só resolvido/pendente, como pedido na call de 16/04.
  */
-export function ActivityDeliveryChecklist({ items, onToggle, onRemove, onAdd, disabled, emptyText, addLabel }: ActivityDeliveryChecklistProps) {
+export function ActivityDeliveryChecklist({ items, onToggle, onRemove, onAdd, disabled, emptyText, addLabel, photos }: ActivityDeliveryChecklistProps) {
   return (
     <div className="space-y-2">
       {items.length === 0 ? (
@@ -56,7 +59,11 @@ export function ActivityDeliveryChecklist({ items, onToggle, onRemove, onAdd, di
                       {new Date(item.due_date + "T00:00:00").toLocaleDateString("pt-BR")}
                     </span>
                   )}
+                  {!photos && (item.photo_paths?.length ?? 0) > 0 && (
+                    <span>• {item.photo_paths.length} foto{item.photo_paths.length === 1 ? "" : "s"}</span>
+                  )}
                 </div>
+                {photos && <ChecklistItemPhotos item={item} disabled={disabled} {...photos} />}
               </div>
               <Button
                 size="icon"

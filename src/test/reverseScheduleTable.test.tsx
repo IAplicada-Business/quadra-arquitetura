@@ -37,6 +37,7 @@ function chk(partial: Partial<DeliveryChecklistItem> & { id: string; description
     priority: "media",
     resolved: false,
     resolved_at: null,
+    photo_paths: [],
     created_at: "2026-09-01T00:00:00Z",
     updated_at: "2026-09-01T00:00:00Z",
     ...partial,

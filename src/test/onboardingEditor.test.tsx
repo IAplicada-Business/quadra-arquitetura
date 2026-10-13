@@ -65,14 +65,40 @@ describe("editor de seções do onboarding", () => {
     expect(next[0].title).toBe("Bem-vindo à obra");
 
     rerender(<OnboardingSectionsEditor sections={next} onChange={onChange} uploadFolder="t" />);
-    fireEvent.change(screen.getByLabelText("Vídeo (YouTube, Vimeo ou upload)"), { target: { value: "https://youtu.be/abc123" } });
+    fireEvent.change(screen.getByLabelText("Vídeo (YouTube não listado ou Google Drive)"), { target: { value: "https://youtu.be/dQw4w9WgXcQ" } });
     next = onChange.mock.calls.at(-1)![0];
-    expect(next[0].video_url).toBe("https://youtu.be/abc123");
+    expect(next[0].video_url).toBe("https://youtu.be/dQw4w9WgXcQ");
 
     rerender(<OnboardingSectionsEditor sections={next} onChange={onChange} uploadFolder="t" />);
     expect(screen.getByTestId("video-kind-s1")).toHaveTextContent("YouTube reconhecido");
     const iframe = screen.getByTitle("Bem-vindo à obra") as HTMLIFrameElement;
-    expect(iframe.src).toBe("https://www.youtube.com/embed/abc123");
+    expect(iframe.src).toBe("https://www.youtube.com/embed/dQw4w9WgXcQ");
+  });
+
+  it("link de vídeo inválido mostra o erro no campo; Drive embute pelo /preview", () => {
+    const { rerender } = renderEditor();
+    fireEvent.click(screen.getByRole("button", { name: "Editar Boas-vindas" }));
+    fireEvent.change(screen.getByLabelText("Vídeo (YouTube não listado ou Google Drive)"), { target: { value: "https://drive.google.com/drive/folders/1xyz" } });
+    let next = onChange.mock.calls.at(-1)![0];
+    rerender(<OnboardingSectionsEditor sections={next} onChange={onChange} uploadFolder="t" />);
+    expect(screen.getByTestId("video-error-s1")).toHaveTextContent("pasta do Drive");
+
+    const drive = "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/view?usp=sharing";
+    fireEvent.change(screen.getByLabelText("Vídeo (YouTube não listado ou Google Drive)"), { target: { value: drive } });
+    next = onChange.mock.calls.at(-1)![0];
+    rerender(<OnboardingSectionsEditor sections={next} onChange={onChange} uploadFolder="t" />);
+    expect(screen.queryByTestId("video-error-s1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("video-kind-s1")).toHaveTextContent("Google Drive reconhecido");
+    const iframe = screen.getAllByTitle(/./).find((el) => el.tagName === "IFRAME") as HTMLIFrameElement;
+    expect(iframe.src).toBe("https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/preview");
+  });
+
+  it("passo a passo para subir o vídeo abre no próprio campo", () => {
+    renderEditor();
+    fireEvent.click(screen.getByRole("button", { name: "Editar Boas-vindas" }));
+    fireEvent.click(screen.getByRole("button", { name: /Como colocar o vídeo/ }));
+    expect(screen.getByTestId("video-help")).toHaveTextContent("Não listado");
+    expect(screen.getByTestId("video-help")).toHaveTextContent("Qualquer pessoa com o link");
   });
 
   it("adiciona imagem por URL", () => {

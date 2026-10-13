@@ -179,8 +179,10 @@ export type Database = {
       }
       budget_quotes: {
         Row: {
+          activity_id: string | null
           created_at: string
           delivery_time: string | null
+          discipline: string | null
           id: string
           is_current_revision: boolean | null
           material_estimate: number | null
@@ -198,8 +200,10 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          activity_id?: string | null
           created_at?: string
           delivery_time?: string | null
+          discipline?: string | null
           id?: string
           is_current_revision?: boolean | null
           material_estimate?: number | null
@@ -217,8 +221,10 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          activity_id?: string | null
           created_at?: string
           delivery_time?: string | null
+          discipline?: string | null
           id?: string
           is_current_revision?: boolean | null
           material_estimate?: number | null
@@ -1086,6 +1092,7 @@ export type Database = {
           discipline: string | null
           due_date: string | null
           id: string
+          photo_paths: string[]
           priority: string | null
           project_id: string
           resolved: boolean
@@ -1101,6 +1108,7 @@ export type Database = {
           discipline?: string | null
           due_date?: string | null
           id?: string
+          photo_paths?: string[]
           priority?: string | null
           project_id: string
           resolved?: boolean
@@ -1116,6 +1124,7 @@ export type Database = {
           discipline?: string | null
           due_date?: string | null
           id?: string
+          photo_paths?: string[]
           priority?: string | null
           project_id?: string
           resolved?: boolean
@@ -3014,6 +3023,7 @@ export type Database = {
           client_id: string | null
           client_name: string | null
           created_at: string
+          custom_block_keys: Json | null
           created_by: string | null
           custom_services: string | null
           deadline: string | null
@@ -3073,6 +3083,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string | null
           created_at?: string
+          custom_block_keys?: Json | null
           created_by?: string | null
           custom_services?: string | null
           deadline?: string | null
@@ -3132,6 +3143,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string | null
           created_at?: string
+          custom_block_keys?: Json | null
           created_by?: string | null
           custom_services?: string | null
           deadline?: string | null

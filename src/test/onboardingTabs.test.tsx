@@ -98,7 +98,7 @@ beforeEach(() => {
   mocks.sectionsByTemplate = {
     tpl: [
       emptySection({ id: "t1", title: "Boas-vindas", body: "Olá" }),
-      emptySection({ id: "t2", title: "Vídeo de apresentação", video_url: "https://youtu.be/tpl" }),
+      emptySection({ id: "t2", title: "Vídeo de apresentação", video_url: "https://youtu.be/tPLtPLtPLtP" }),
     ],
     tpl2: [emptySection({ id: "c1", title: "Bem-vindo à sua loja" })],
   };
@@ -206,7 +206,7 @@ describe("Projeto → Onboarding (modelo por obra)", () => {
   it("trocar o vídeo de uma seção salva uma cópia só da obra, sem tocar no modelo", () => {
     render(<ProjectOnboardingTab projectId="p1" />);
     fireEvent.click(screen.getByRole("button", { name: "Editar Vídeo de apresentação" }));
-    fireEvent.change(screen.getByLabelText("Vídeo (YouTube, Vimeo ou upload)"), { target: { value: "https://youtu.be/obra" } });
+    fireEvent.change(screen.getByLabelText("Vídeo (YouTube não listado ou Google Drive)"), { target: { value: "https://youtu.be/0bRa0bRa0bR" } });
     fireEvent.click(screen.getByRole("button", { name: /Salvar para esta obra/ }));
 
     expect(mocks.saveOverride).toHaveBeenCalledTimes(1);
@@ -215,11 +215,19 @@ describe("Projeto → Onboarding (modelo por obra)", () => {
     // ids novos (cópia), com a origem registrada
     expect(sections.map((s) => s.id)).not.toContain("t1");
     expect(sections[1].source_section_id).toBe("t2");
-    expect(sections[1].video_url).toBe("https://youtu.be/obra");
+    expect(sections[1].video_url).toBe("https://youtu.be/0bRa0bRa0bR");
     expect(sections[0].video_url).toBeNull();
     // modelo continua com o vídeo original
-    expect(mocks.sectionsByTemplate.tpl[1].video_url).toBe("https://youtu.be/tpl");
+    expect(mocks.sectionsByTemplate.tpl[1].video_url).toBe("https://youtu.be/tPLtPLtPLtP");
     expect(mocks.templateSave).not.toHaveBeenCalled();
+  });
+
+  it("link de vídeo inválido bloqueia o salvar e diz onde corrigir", () => {
+    render(<ProjectOnboardingTab projectId="p1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Editar Vídeo de apresentação" }));
+    fireEvent.change(screen.getByLabelText("Vídeo (YouTube não listado ou Google Drive)"), { target: { value: "https://example.com/video" } });
+    expect(screen.getByTestId("invalid-videos")).toHaveTextContent("Vídeo de apresentação");
+    expect(screen.getByRole("button", { name: /Salvar para esta obra/ })).toBeDisabled();
   });
 
   it("obra personalizada mostra o badge e permite voltar ao modelo com confirmação", () => {

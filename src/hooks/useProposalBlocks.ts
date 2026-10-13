@@ -7,8 +7,9 @@ import {
   resolveProposalBlocks,
   type ProposalBlockRow,
   type ProposalBlockUpsert,
-  type ResolvedProposalBlock,
+  type ProposalBlock,
 } from "@/lib/proposalBlocks";
+import { isCustomBlockKey } from "@/lib/proposalCustomBlocks";
 
 export const PROPOSAL_BLOCKS_QUERY_KEY = ["proposal-blocks"] as const;
 
@@ -36,7 +37,7 @@ export function useProposalBlocks() {
     enabled: !!user,
   });
 
-  const blocks: ResolvedProposalBlock[] = useMemo(() => resolveProposalBlocks(query.data), [query.data]);
+  const blocks: ProposalBlock[] = useMemo(() => resolveProposalBlocks(query.data), [query.data]);
 
   const save = useMutation({
     mutationFn: async (upserts: ProposalBlockUpsert[]) => {
@@ -47,6 +48,15 @@ export function useProposalBlocks() {
         .from("proposal_blocks")
         .upsert(rows as never, { onConflict: "team_id,key" });
       if (error) throw error;
+
+      // Blocos personalizados excluídos no editor: apaga as linhas do time
+      // que não vieram no salvar. Blocos fixos nunca são apagados.
+      const keep = new Set(upserts.map((u) => u.key));
+      const removedIds = (query.data ?? []).filter((r) => isCustomBlockKey(r.key) && !keep.has(r.key)).map((r) => r.id);
+      if (removedIds.length > 0) {
+        const { error: delError } = await supabase.from("proposal_blocks").delete().in("id", removedIds);
+        if (delError) throw delError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROPOSAL_BLOCKS_QUERY_KEY });

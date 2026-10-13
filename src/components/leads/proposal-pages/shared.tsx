@@ -55,6 +55,13 @@ export interface ProposalPageProps {
   pageWidth?: number;
   pageHeight?: number;
   validUntil?: string | null;
+  /**
+   * Blocos personalizados escolhidos nesta proposta (proposals.custom_block_keys).
+   * null/ausente => proposta sem escolha salva: entram os marcados "Incluir por padrão".
+   */
+  customBlockKeys?: string[] | null;
+  /** Só no preview do editor: mostra todos os blocos personalizados ativos. */
+  previewAllCustomBlocks?: boolean;
   /** Conteúdo editável do bloco (proposal_blocks.content_json). Ausente => padrão. */
   blockContent?: unknown;
   /** Logo enviado em Configurações → Logo para fundos escuros (navy/rosé). */

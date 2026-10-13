@@ -91,6 +91,41 @@ describe("Trilha do Cliente (/client/:token)", () => {
     expect(within(inicio).getByRole("button", { name: /Aprovar/ })).toBeInTheDocument();
   });
 
+  it("trilha simplificada mostra os cinco blocos com os dados da obra", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    mockFetch({
+      ...fixture,
+      project: { ...fixture.project, client_move_in_date: "2100-01-15" },
+      activities: [
+        { id: "a1", name: "Fundação", discipline: "Fundação", status: "concluida", progress_percent: 100, start_date: "2026-08-01", end_date: "2026-08-20" },
+        { id: "a2", name: "Pilares", discipline: "Estrutura", status: "em_andamento", progress_percent: 50, start_date: "2026-09-01", end_date: "2099-10-15" },
+        { id: "a3", name: "Tomadas", discipline: "Elétrica", status: "pendente", progress_percent: 0, start_date: "2099-11-01", end_date: "2099-11-20" },
+      ],
+      closing_items: [{ id: "c1", description: "Marcenaria da cozinha", closing_date: "2026-01-10", delivery_date: null, status: "comprado" }],
+      visits: [],
+    });
+    renderPortal();
+    const inicio = await screen.findByTestId("screen-inicio");
+    expect(within(inicio).getByTestId("trail-delivered")).toHaveTextContent("1 de 3 entregues");
+    expect(within(inicio).getByTestId("trail-delivered")).toHaveTextContent("Fundação");
+    expect(within(inicio).getByTestId("trail-blocks")).toHaveTextContent("Estrutura");
+    expect(within(inicio).getByTestId("trail-block-Elétrica")).toHaveTextContent("A iniciar");
+    // 1 decisão aberta => atenção
+    expect(within(inicio).getByTestId("trail-health-level")).toHaveTextContent("Atenção");
+    // decisões 0/1 e fechamento 1/1 => 50%
+    expect(within(inicio).getByTestId("trail-adoption")).toHaveTextContent("50% em dia");
+    expect(within(inicio).getByTestId("trail-upcoming")).toBeInTheDocument();
+  });
+
+  it("link antigo #cronograma cai na trilha", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    mockFetch();
+    window.history.replaceState(null, "", "/client/tok123#cronograma");
+    renderPortal("#cronograma");
+    expect(await screen.findByTestId("screen-inicio")).toBeInTheDocument();
+    window.history.replaceState(null, "", "/");
+  });
+
   it("navega pelas telas e guarda a tela na URL", async () => {
     localStorage.setItem("trilha:onboarding-seen:tok123", "1");
     mockFetch();
@@ -113,8 +148,10 @@ describe("Trilha do Cliente (/client/:token)", () => {
     fireEvent.click(within(nav).getByRole("button", { name: /Resumo semanal/ }));
     expect(screen.getByTestId("screen-resumos")).toHaveTextContent("Forro de gesso concluído");
 
-    fireEvent.click(within(nav).getByRole("button", { name: /Cronograma/ }));
-    expect(screen.getByTestId("screen-cronograma")).toBeInTheDocument();
+    // A antiga tela Cronograma foi substituída pela Trilha.
+    expect(within(nav).queryByRole("button", { name: /Cronograma/ })).not.toBeInTheDocument();
+    fireEvent.click(within(nav).getByRole("button", { name: /Trilha/ }));
+    expect(screen.getByTestId("screen-inicio")).toBeInTheDocument();
     window.history.replaceState(null, "", "/");
   });
 

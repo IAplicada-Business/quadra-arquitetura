@@ -62,6 +62,8 @@ export function useBudgetQuotes(projectId: string | undefined) {
   const create = useMutation({
     mutationFn: async (item: {
       scope_item_id?: string | null;
+      activity_id?: string | null;
+      discipline?: string | null;
       supplier_id?: string | null;
       supplier_name?: string | null;
       services_description?: string | null;
@@ -76,6 +78,8 @@ export function useBudgetQuotes(projectId: string | undefined) {
     }) => {
       const { data, error } = await supabase.from("budget_quotes").insert({
         scope_item_id: item.scope_item_id ?? null,
+        activity_id: item.activity_id ?? null,
+        discipline: item.discipline ?? null,
         supplier_id: item.supplier_id ?? null,
         supplier_name: item.supplier_name ?? null,
         services_description: item.services_description ?? null,

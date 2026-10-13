@@ -256,17 +256,20 @@ export function sectionsEqual(a: OnboardingSection[], b: OnboardingSection[]): b
 /* Vídeo                                                               */
 /* ------------------------------------------------------------------ */
 
-export type VideoKind = "youtube" | "vimeo" | "file" | "unknown";
+export type VideoKind = "youtube" | "vimeo" | "drive" | "file" | "unknown";
 
 export interface VideoEmbed {
   kind: VideoKind;
-  /** URL para iframe (youtube/vimeo) ou para <video> (file). */
+  /** URL para iframe (youtube/vimeo/drive) ou para <video> (file). */
   src: string;
 }
 
 /**
- * Reconhece links do YouTube (watch, youtu.be, shorts, embed, live),
- * Vimeo e arquivos de vídeo (upload do bucket ou link direto).
+ * Reconhece links do YouTube (watch, youtu.be, shorts, embed, live — vale
+ * para vídeo não listado, que tem o mesmo formato), Google Drive
+ * (/file/d/<id>/..., open?id=, uc?id=), Vimeo e arquivos de vídeo
+ * (upload do bucket ou link direto). É tolerante: serve para exibir.
+ * Para validar antes de salvar, use validateVideoUrl.
  */
 export function parseVideoUrl(url: string | null | undefined): VideoEmbed | null {
   const raw = (url ?? "").trim();
@@ -290,6 +293,8 @@ export function parseVideoUrl(url: string | null | undefined): VideoEmbed | null
     if (!id && parts.length >= 2 && ["embed", "shorts", "live", "v"].includes(parts[0])) id = parts[1];
     return id ? { kind: "youtube", src: `https://www.youtube.com/embed/${id}` } : null;
   }
+  const driveId = googleDriveFileId(u, host);
+  if (driveId) return { kind: "drive", src: `https://drive.google.com/file/d/${driveId}/preview` };
   if (host === "vimeo.com" || host === "player.vimeo.com") {
     const parts = u.pathname.split("/").filter(Boolean);
     const id = parts.find((p) => /^\d+$/.test(p));
@@ -299,4 +304,68 @@ export function parseVideoUrl(url: string | null | undefined): VideoEmbed | null
     return { kind: "file", src: raw };
   }
   return { kind: "unknown", src: raw };
+}
+
+function googleDriveFileId(u: URL, host: string): string | null {
+  if (host !== "drive.google.com" && host !== "docs.google.com") return null;
+  const parts = u.pathname.split("/").filter(Boolean);
+  const fileIdx = parts.indexOf("file");
+  if (fileIdx >= 0 && parts[fileIdx + 1] === "d" && parts[fileIdx + 2]) return parts[fileIdx + 2];
+  if (parts[0] === "open" || parts[0] === "uc") return u.searchParams.get("id");
+  return null;
+}
+
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+const DRIVE_ID = /^[A-Za-z0-9_-]{20,}$/;
+
+/**
+ * Valida o link de vídeo antes de salvar o onboarding. Devolve null quando
+ * está ok (ou vazio) e, senão, a mensagem para a pessoa corrigir.
+ * Principal: YouTube (inclusive não listado). Secundário: Google Drive.
+ */
+export function validateVideoUrl(url: string | null | undefined): string | null {
+  const raw = (url ?? "").trim();
+  if (!raw) return null;
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return "Isso não é um link. Cole o endereço completo do vídeo, começando com https://";
+  }
+  if (u.protocol !== "https:" && u.protocol !== "http:") {
+    return "Isso não é um link. Cole o endereço completo do vídeo, começando com https://";
+  }
+  const host = u.hostname.replace(/^www\.|^m\./, "").toLowerCase();
+
+  if (host === "youtube.com" && u.pathname.startsWith("/playlist")) {
+    return "Esse é o link de uma playlist. Abra o vídeo e copie o link dele (Compartilhar → Copiar).";
+  }
+  if (host === "studio.youtube.com") {
+    return "Esse é o link do YouTube Studio. Use o link do vídeo: no Studio, em Detalhes, copie o \"Link do vídeo\".";
+  }
+  if (host === "drive.google.com" && u.pathname.includes("/folders/")) {
+    return "Esse é o link de uma pasta do Drive. Abra o vídeo e use Compartilhar → Copiar link.";
+  }
+
+  const video = parseVideoUrl(raw);
+  if (!video || video.kind === "unknown") {
+    return "Link não reconhecido. Use um link do YouTube (pode ser não listado) ou do Google Drive.";
+  }
+  if (video.kind === "youtube") {
+    const id = video.src.split("/embed/")[1] ?? "";
+    if (!YOUTUBE_ID.test(id)) return "Link do YouTube incompleto. Confira se copiou o endereço inteiro.";
+  }
+  if (video.kind === "drive") {
+    const id = video.src.split("/file/d/")[1]?.split("/")[0] ?? "";
+    if (!DRIVE_ID.test(id)) return "Link do Google Drive incompleto. Confira se copiou o endereço inteiro.";
+  }
+  return null;
+}
+
+/** Seções com link de vídeo inválido (para bloquear o salvar e apontar onde corrigir). */
+export function invalidVideoSections(sections: OnboardingSection[]): { index: number; id: string; title: string; message: string }[] {
+  return sections.flatMap((s, index) => {
+    const message = validateVideoUrl(s.video_url);
+    return message ? [{ index, id: s.id, title: s.title.trim() || `Seção ${index + 1}`, message }] : [];
+  });
 }

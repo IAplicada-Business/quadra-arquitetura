@@ -19,6 +19,7 @@ import {
   type PortalPending,
   type PortalTab,
 } from "@/lib/portal";
+import { buildPortalTrail, trailActivities, type BlockState, type HealthLevel } from "@/lib/portalTrail";
 
 interface ScreenProps {
   data: PortalData;
@@ -68,17 +69,44 @@ function PendingActions({ p, onApprove, onRespond, submitting }: { p: PortalPend
 }
 
 /* ------------------------------------------------------------------ */
-/* Início (Tela 1 — Jornada / status)                                  */
+/* Trilha (tela principal) — versão simplificada                        */
 /* ------------------------------------------------------------------ */
+
+const HEALTH_STYLE: Record<HealthLevel, { dot: string; badge: string }> = {
+  ok: { dot: "bg-[var(--trilha-salvia)]", badge: "bg-[var(--trilha-salvia)]/15 text-[var(--trilha-navy)] border-[var(--trilha-salvia)]" },
+  atencao: { dot: "bg-amber-500", badge: "bg-amber-100 text-amber-900 border-amber-300" },
+  risco: { dot: "bg-[var(--trilha-terracota)]", badge: "bg-[var(--trilha-terracota)]/15 text-[var(--trilha-navy)] border-[var(--trilha-terracota)]" },
+};
+
+const BLOCK_STATE_LABEL: Record<BlockState, string> = {
+  concluido: "Concluído",
+  em_andamento: "Em andamento",
+  a_iniciar: "A iniciar",
+};
+
+function TrailCard({ eyebrow, title, children, testId }: { eyebrow: string; title: string; children: React.ReactNode; testId: string }) {
+  return (
+    <Card className="border-[var(--trilha-areia)] bg-white" data-testid={testId}>
+      <CardHeader className="pb-2">
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <CardTitle className="font-display text-xl font-medium text-[var(--trilha-navy)]">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">{children}</CardContent>
+    </Card>
+  );
+}
 
 export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }: ScreenProps) {
   const { project, tasks, weekly_reports, pending_responses } = data;
-  const progress = computeProgress(weekly_reports, tasks);
+  const trail = buildPortalTrail(data);
+  const progress = computeProgress(weekly_reports, tasks.length ? tasks : trailActivities(data).map((a) => ({
+    id: a.id, task_name: a.name, start_date: a.start_date, end_date: a.end_date, status: a.status,
+    discipline: a.discipline, color: null, progress_percentage: a.progress_percent,
+  })));
   const phase = currentPhase(tasks);
   const moveDays = daysUntil(project.client_move_in_date);
-  const pendings = extractPendings(weekly_reports, pending_responses);
-  const open = pendings.filter((p) => p.isOpen);
-  const latestReports = [...weekly_reports].sort((a, b) => b.week_start.localeCompare(a.week_start)).slice(0, 3);
+  const open = extractPendings(weekly_reports, pending_responses).filter((p) => p.isOpen);
+  const totalBlocks = trail.blocks.length;
 
   return (
     <div className="space-y-6" data-testid="screen-inicio">
@@ -93,13 +121,9 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
             </span>
           )}
         </h1>
-        {phase?.start_date && (
-          <p className="mt-1 text-sm text-[var(--trilha-navy)]/70">
-            {formatDateBR(phase.start_date)} a {formatDateBR(phase.end_date)}
-          </p>
-        )}
       </div>
 
+      {/* Resumo rápido */}
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="border-0 bg-[var(--trilha-navy)] text-[var(--trilha-areia)]">
           <CardContent className="p-5">
@@ -128,7 +152,7 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
         </button>
       </div>
 
-      {open.slice(0, 2).map((p) => (
+      {open.slice(0, 1).map((p) => (
         <Card key={`${p.reportId}-${p.item}`} className="border-[var(--trilha-terracota)]/50 bg-[var(--trilha-creme)]">
           <CardContent className="space-y-3 p-5">
             <p className="text-xs">
@@ -140,22 +164,115 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
         </Card>
       ))}
 
-      <Card className="border-[var(--trilha-areia)] bg-white">
-        <CardHeader className="pb-2">
-          <CardTitle className="font-display text-lg font-medium text-[var(--trilha-navy)]">Últimas atualizações</CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y divide-[var(--trilha-areia)] p-0">
-          {latestReports.length === 0 && <p className="p-5 text-sm text-[var(--trilha-navy)]/60">Assim que a equipe publicar o primeiro resumo semanal, ele aparece aqui.</p>}
-          {latestReports.map((r) => (
-            <button key={r.id} type="button" onClick={() => onGoTab("resumos")} className="flex w-full gap-4 px-5 py-3 text-left hover:bg-[var(--trilha-creme)]">
-              <span className="w-14 shrink-0 font-display text-xs italic text-[var(--trilha-terracota)]">{formatDateShort(r.week_start)}</span>
-              <span className="text-sm text-[var(--trilha-navy)]">
-                <span className="font-medium">Resumo semanal:</span> {r.summary.split("\n")[0]}
-              </span>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* 1. Escopos entregues */}
+        <TrailCard eyebrow="01 · Escopos entregues" title={totalBlocks ? `${trail.delivered.length} de ${totalBlocks} entregues` : "Ainda sem escopos"} testId="trail-delivered">
+          {trail.delivered.length === 0 ? (
+            <p className="text-sm text-[var(--trilha-navy)]/60">Assim que a primeira etapa for concluída, ela aparece aqui.</p>
+          ) : (
+            <ul className="space-y-2">
+              {trail.delivered.map((b) => (
+                <li key={b.name} className="flex items-center justify-between gap-3 text-sm text-[var(--trilha-navy)]">
+                  <span className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-[var(--trilha-salvia)]" /> {b.name}
+                  </span>
+                  {b.end && <span className="text-xs text-[var(--trilha-navy)]/60">{formatDateShort(b.end)}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </TrailCard>
+
+        {/* 3. Saúde do projeto */}
+        <TrailCard eyebrow="03 · Saúde do projeto" title={trail.health.label} testId="trail-health">
+          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-0.5 text-xs font-medium ${HEALTH_STYLE[trail.health.level].badge}`} data-testid="trail-health-level">
+            <span className={`h-2 w-2 rounded-full ${HEALTH_STYLE[trail.health.level].dot}`} /> {trail.health.label}
+          </span>
+          <ul className="space-y-2">
+            {trail.health.signals.map((sig) => (
+              <li key={sig.key} className="flex items-start gap-2 text-sm text-[var(--trilha-navy)]">
+                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${HEALTH_STYLE[sig.level].dot}`} aria-hidden />
+                <span>
+                  <span className="font-medium">{sig.label}:</span> {sig.detail}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </TrailCard>
+      </div>
+
+      {/* 2. Blocos de construção */}
+      <TrailCard eyebrow="02 · Blocos de construção" title="Etapas da obra" testId="trail-blocks">
+        {trail.blocks.length === 0 ? (
+          <p className="text-sm text-[var(--trilha-navy)]/60">O cronograma da obra está sendo montado pela equipe.</p>
+        ) : (
+          <ol className="space-y-3">
+            {trail.blocks.map((b) => (
+              <li key={b.name} className="space-y-1" data-testid={`trail-block-${b.name}`}>
+                <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm text-[var(--trilha-navy)]">
+                  <span className="font-medium">{b.name}</span>
+                  <span className="text-xs text-[var(--trilha-navy)]/70">
+                    {b.late ? "Além do prazo" : BLOCK_STATE_LABEL[b.state]}
+                    {b.start && ` · ${formatDateShort(b.start)}${b.end ? ` a ${formatDateShort(b.end)}` : ""}`}
+                  </span>
+                </div>
+                <Progress
+                  value={b.progress}
+                  aria-label={`Progresso de ${b.name}`}
+                  className={`h-1.5 bg-[var(--trilha-areia)] ${b.state === "concluido" ? "[&>div]:bg-[var(--trilha-salvia)]" : b.late ? "[&>div]:bg-amber-500" : "[&>div]:bg-[var(--trilha-terracota)]"}`}
+                />
+              </li>
+            ))}
+          </ol>
+        )}
+      </TrailCard>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* 4. Adoção */}
+        <TrailCard eyebrow="04 · Adoção" title={trail.adoption.score == null ? "Sua participação" : `${trail.adoption.score}% em dia`} testId="trail-adoption">
+          {trail.adoption.metrics.every((m) => m.total === 0) ? (
+            <p className="text-sm text-[var(--trilha-navy)]/60">Quando a equipe pedir uma decisão ou um fechamento, o andamento aparece aqui.</p>
+          ) : (
+            <ul className="space-y-3">
+              {trail.adoption.metrics.filter((m) => m.total > 0).map((m) => (
+                <li key={m.key} className="space-y-1 text-sm text-[var(--trilha-navy)]">
+                  <div className="flex justify-between gap-2">
+                    <span>{m.label}</span>
+                    <span className="font-medium tabular-nums">{m.done} de {m.total}</span>
+                  </div>
+                  <Progress value={(m.done / m.total) * 100} className="h-1.5 bg-[var(--trilha-areia)] [&>div]:bg-[var(--trilha-navy)]" />
+                </li>
+              ))}
+            </ul>
+          )}
+          {trail.adoption.avgResponseDays != null && (
+            <p className="text-xs text-[var(--trilha-navy)]/70">
+              Vocês respondem em média em {trail.adoption.avgResponseDays.toLocaleString("pt-BR")} {trail.adoption.avgResponseDays === 1 ? "dia" : "dias"}.
+            </p>
+          )}
+        </TrailCard>
+
+        {/* 5. Próximas entregas */}
+        <TrailCard eyebrow="05 · Próximas entregas" title="Próximos 60 dias e a mudança" testId="trail-upcoming">
+          {trail.upcoming.length === 0 ? (
+            <p className="text-sm text-[var(--trilha-navy)]/60">Nada agendado para os próximos 60 dias.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--trilha-areia)]">
+              {trail.upcoming.map((u, i) => (
+                <li key={`${u.date}-${i}`} className="flex gap-4 py-2 text-sm text-[var(--trilha-navy)]">
+                  <span className="w-14 shrink-0 font-display text-xs italic text-[var(--trilha-terracota)]">{formatDateShort(u.date)}</span>
+                  <span className="flex-1">
+                    {u.title}
+                    {u.clientAction && (
+                      <Badge className="ml-2 bg-[var(--trilha-terracota)] text-white text-[10px]">Depende de vocês</Badge>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </TrailCard>
+      </div>
     </div>
   );
 }

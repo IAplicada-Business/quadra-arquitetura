@@ -25,7 +25,7 @@ interface Props {
 function VideoBlock({ url, title, dark }: { url: string; title: string; dark?: boolean }) {
   const v = parseVideoUrl(url);
   if (!v) return null;
-  if (v.kind === "youtube" || v.kind === "vimeo") {
+  if (v.kind === "youtube" || v.kind === "vimeo" || v.kind === "drive") {
     return (
       <div className="aspect-video w-full overflow-hidden rounded-md bg-black">
         <iframe

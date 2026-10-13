@@ -10,7 +10,11 @@ import { ProposalValuesPage } from "./proposal-pages/ValuesPage";
 import { ProposalContactPage } from "./proposal-pages/ContactPage";
 import { ProposalPortfolioCardsPage } from "./proposal-pages/PortfolioCardsPage";
 import { ProposalAsset } from "@/hooks/useProposalAssets";
-import { defaultProposalBlocks, type ProposalBlockKey, type ResolvedProposalBlock } from "@/lib/proposalBlocks";
+import { ProposalCustomFinancialPage } from "./proposal-pages/CustomFinancialPage";
+import { ProposalCustomTimelinePage } from "./proposal-pages/CustomTimelinePage";
+import { ProposalCustomCardsPage } from "./proposal-pages/CustomCardsPage";
+import { defaultProposalBlocks, isCustomBlock, type ProposalBlock, type ProposalBlockKey } from "@/lib/proposalBlocks";
+import { includeCustomBlock } from "@/lib/proposalCustomBlocks";
 
 interface RendererProps {
   data: ProposalPageProps;
@@ -18,7 +22,7 @@ interface RendererProps {
    * Blocos configurados pelo time (useProposalBlocks). Ausente => padrão:
    * as 9 páginas de sempre, na ordem de sempre.
    */
-  blocks?: ResolvedProposalBlock[];
+  blocks?: ProposalBlock[];
   portfolioImages?: ProposalAsset[];
   feedbackImages?: ProposalAsset[];
   selectedPortfolioProjects?: string[];
@@ -32,7 +36,9 @@ interface RendererProps {
  *
  * Condições por proposta continuam valendo por cima do toggle do bloco:
  * "interiores" só entra com serviço projeto/ambos e "portfolio" só entra
- * quando a proposta tem cards selecionados.
+ * quando a proposta tem cards selecionados. Blocos personalizados entram
+ * quando a proposta os escolheu (ou, sem escolha salva, os marcados
+ * "Incluir por padrão").
  */
 export function buildProposalPages({ data, blocks }: RendererProps): React.ReactElement[] {
   const resolved = blocks ?? defaultProposalBlocks();
@@ -44,6 +50,16 @@ export function buildProposalPages({ data, blocks }: RendererProps): React.React
   for (const block of resolved) {
     if (!block.is_active) continue;
     const props: ProposalPageProps = { ...data, blockContent: block.content };
+
+    if (isCustomBlock(block)) {
+      const selected = data.previewAllCustomBlocks ? [block.key] : data.customBlockKeys;
+      if (!includeCustomBlock(block, selected)) continue;
+      if (block.type === "financial") pages.push(<ProposalCustomFinancialPage key={block.key} {...props} />);
+      else if (block.type === "timeline") pages.push(<ProposalCustomTimelinePage key={block.key} {...props} />);
+      else pages.push(<ProposalCustomCardsPage key={block.key} {...props} />);
+      continue;
+    }
+
     const key: ProposalBlockKey = block.key;
 
     switch (key) {
@@ -81,6 +97,6 @@ export function buildProposalPages({ data, blocks }: RendererProps): React.React
 }
 
 /** Chaves de bloco das páginas montadas, na ordem em que saem no PDF. */
-export function proposalPageKeys(pages: React.ReactElement[]): ProposalBlockKey[] {
-  return pages.map((p) => String(p.key) as ProposalBlockKey);
+export function proposalPageKeys(pages: React.ReactElement[]): string[] {
+  return pages.map((p) => String(p.key));
 }
