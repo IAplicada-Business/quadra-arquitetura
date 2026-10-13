@@ -29,6 +29,8 @@ import { NavLink } from "@/components/NavLink";
 import { useState, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import logoBege from "@/assets/logo-bege.png";
 import { InstallPwaButton } from "@/components/layout/InstallPwaButton";
@@ -262,7 +264,7 @@ export function AppSidebar({ onNavigate, collapsed = false }: AppSidebarProps) {
   if (collapsed) {
     return (
       <TooltipProvider delayDuration={0}>
-        <aside className="flex flex-col h-full w-16 border-r border-sidebar-border bg-sidebar transition-all duration-200">
+        <aside className="flex flex-col h-full w-16 border-r border-sidebar-border bg-sidebar bg-sidebar-gradient transition-all duration-200">
           <div className="flex items-center justify-center h-16 border-b border-sidebar-border">
             {/* Logo omitida: quando colapsada o header já exibe a logo */}
           </div>
@@ -325,7 +327,7 @@ export function AppSidebar({ onNavigate, collapsed = false }: AppSidebarProps) {
 
   // --- EXPANDED MODE ---
   return (
-    <aside className="flex flex-col h-full w-[260px] border-r border-sidebar-border bg-sidebar transition-all duration-200">
+    <aside className="flex flex-col h-full w-[260px] border-r border-sidebar-border bg-sidebar bg-sidebar-gradient transition-all duration-200">
       <div className="flex items-center px-5 h-16 border-b border-sidebar-border">
         <img src={logoBege} alt="Quadra Arquitetura" className="h-10 w-auto object-contain object-left animate-fade-in" />
       </div>
@@ -355,7 +357,7 @@ export function AppSidebar({ onNavigate, collapsed = false }: AppSidebarProps) {
                   <GroupIcon className="h-3.5 w-3.5" />
                 </span>
               )}
-              <span className="flex-1 text-left">{group.label}</span>
+              <span className="flex-1 text-left text-[11px] font-semibold uppercase tracking-[0.08em]">{group.label}</span>
               <span className="text-[10px] text-sidebar-foreground/40 tabular-nums">
                 {group.items.length}
               </span>
@@ -439,10 +441,48 @@ export function AppSidebar({ onNavigate, collapsed = false }: AppSidebarProps) {
           );
         })}
       </nav>
-      <div className="px-2 py-2 border-t border-sidebar-border/40 shrink-0">
+      <div className="px-2 py-2 border-t border-sidebar-border/40 shrink-0 space-y-1.5">
+        <SidebarUserCard />
         <InstallPwaButton variant="sidebar" />
       </div>
     </aside>
+  );
+}
+
+// Card do usuário no rodapé da sidebar (Onda 5 do padrão IAplicada).
+// Só mostra quem está logado — as ações continuam no menu de perfil do
+// header, que é onde elas sempre estiveram.
+function SidebarUserCard() {
+  const { user } = useAuth();
+  if (!user) return null;
+
+  const fullName = user.user_metadata?.full_name as string | undefined;
+  const email = user.email ?? "";
+  const initials = fullName
+    ? fullName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : email.charAt(0).toUpperCase();
+
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg bg-sidebar-accent/50 px-2.5 py-2 min-w-0">
+      <Avatar className="h-7 w-7 shrink-0">
+        <AvatarFallback className="bg-sidebar-primary/20 text-[11px] font-medium text-sidebar-primary">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-medium text-sidebar-foreground">
+          {fullName || email}
+        </p>
+        {fullName && (
+          <p className="truncate text-[11px] text-sidebar-foreground/60">{email}</p>
+        )}
+      </div>
+    </div>
   );
 }
 
