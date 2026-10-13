@@ -478,7 +478,7 @@ export default function DashboardObras() {
       {activeTab === "multiobras" && (<>
 
       {/* KPI bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-4 gap-3">
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Obras Ativas</p>

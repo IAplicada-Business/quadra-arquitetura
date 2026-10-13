@@ -291,7 +291,7 @@ export function AppSidebar({ onNavigate, collapsed = false }: AppSidebarProps) {
                         <button
                           onClick={() => { navigate(item.url); onNavigate?.(); }}
                           className={cn(
-                            "relative flex items-center justify-center w-full h-11 text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors group",
+                            "relative flex items-center justify-center w-full h-10 text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors group",
                             active && "text-sidebar-foreground"
                           )}
                         >

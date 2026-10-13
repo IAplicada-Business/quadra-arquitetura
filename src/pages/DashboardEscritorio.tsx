@@ -65,7 +65,7 @@ export default function DashboardEscritorio() {
     return (
       <div className="space-y-5">
         <SegmentedTabs tab={tab} onChange={setTab} />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="pt-6"><div className="h-16 bg-muted rounded" /></CardContent>
@@ -298,7 +298,7 @@ export default function DashboardEscritorio() {
       {tab === "parceiros" && (
         <div className="space-y-4">
           {partnerMetrics.isLoading || !partnerMetrics.data ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-4 gap-3">
               {[1, 2, 3, 4].map((i) => (
                 <Card key={i} className="animate-pulse">
                   <CardContent className="pt-6"><div className="h-16 bg-muted rounded" /></CardContent>
@@ -307,7 +307,7 @@ export default function DashboardEscritorio() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-4 gap-3">
                 <KpiCard icon={<Handshake className="h-4 w-4" />} label="Total de parceiros" value={String(partnerMetrics.data.totalParceiros)} />
                 <KpiCard icon={<Star className="h-4 w-4" />} label="Parceiros ativos" value={String(partnerMetrics.data.parceirosAtivos)} accent={C.success} />
                 <KpiCard icon={<Send className="h-4 w-4" />} label="Indicações no mês" value={String(partnerMetrics.data.indicacoesNoMes)} />
@@ -435,15 +435,23 @@ function KpiCard({
   badge?: { label: string; variant?: "default" | "destructive" | "outline" };
 }) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden min-w-0">
       {accent && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px]" style={{ background: accent }} />}
-      <CardContent className="pt-5 pb-4">
-        <div className="flex items-center gap-2 text-muted-foreground mb-2">
-          {icon}
-          <span className="text-[11px] font-medium uppercase tracking-wide">{label}</span>
+      <CardContent className="pt-5 pb-4 min-w-0">
+        {/* R5: o card encolhe (min-w-0) e o rótulo trunca em vez de quebrar
+            linha, para a faixa caber sempre numa linha só. */}
+        <div className="flex items-center gap-2 text-muted-foreground mb-2 min-w-0">
+          <span className="shrink-0">{icon}</span>
+          <span className="label-cat truncate">{label}</span>
         </div>
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-2xl font-bold tabular-nums">{value}</span>
+        <div className="flex items-baseline gap-2 min-w-0">
+          {/* R5: o número espreme com clamp() em vez de empurrar o card. */}
+          <span
+            className="font-bold tabular-nums truncate"
+            style={{ fontSize: "clamp(20px, 2.2vw, 30px)" }}
+          >
+            {value}
+          </span>
           {variation !== undefined && <VariationBadge value={variation} suffix={variationSuffix} invert={variationInvert} />}
           {badge && <Badge variant={badge.variant ?? "outline"} className="text-[10px] px-1.5 py-0">{badge.label}</Badge>}
         </div>
