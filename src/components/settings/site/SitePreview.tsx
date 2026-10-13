@@ -1,8 +1,12 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { AboutSection } from "@/components/landing/AboutSection";
+import { WhySection } from "@/components/landing/WhySection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
-import { PortfolioSection } from "@/components/landing/PortfolioSection";
+import { JourneySection } from "@/components/landing/JourneySection";
+import { TrailSection } from "@/components/landing/TrailSection";
+import { CasesSection } from "@/components/landing/CasesSection";
+import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
+import { AboutSection } from "@/components/landing/AboutSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import type { SiteContent, SiteSectionKey } from "@/lib/siteContent";
@@ -14,16 +18,36 @@ function Section({ section, content }: { section: SiteSectionKey; content: SiteC
   switch (section) {
     case "hero":
       return <HeroSection content={content.hero} />;
-    case "about":
-      return <AboutSection content={content.about} />;
+    case "why":
+      return <WhySection content={content.why} />;
     case "services":
       return <ServicesSection content={content.services} />;
+    case "journey":
+      return <JourneySection content={content.journey} />;
+    case "trail":
+      return <TrailSection content={content.trail} />;
     case "portfolio":
-      return <PortfolioSection content={content.portfolio} />;
+      return <CasesSection content={content.portfolio} />;
+    case "architects":
+      return <ArchitectsSection content={content.architects} />;
+    case "about":
+      return <AboutSection content={content.about} />;
     case "contact":
       return <ContactSection content={content.contact} preview />;
     case "footer":
       return <LandingFooter content={content.footer} />;
+    /* As dobras das etapas seguintes ainda não têm componente. O
+       TypeScript cobra cada chave do SiteSectionKey aqui, então a
+       ausência aparece em tempo de compilação, não como tela branca. */
+    case "testimonials":
+    case "leadMagnet":
+    case "faq":
+    case "blog":
+      return (
+        <div className="px-10 py-16 text-center text-sm text-muted-foreground">
+          Esta dobra ainda não foi publicada no site. O conteúdo já pode ser escrito e fica salvo.
+        </div>
+      );
   }
 }
 

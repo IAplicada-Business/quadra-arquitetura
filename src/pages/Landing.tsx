@@ -6,7 +6,8 @@ import { JourneySection } from "@/components/landing/JourneySection";
 import { TrailSection } from "@/components/landing/TrailSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
-import { PortfolioSection } from "@/components/landing/PortfolioSection";
+import { CasesSection } from "@/components/landing/CasesSection";
+import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { usePublicSiteContent } from "@/hooks/useSiteContent";
@@ -37,7 +38,8 @@ export default function Landing() {
         <ServicesSection content={content.services} />
         <JourneySection content={content.journey} />
         <TrailSection content={content.trail} />
-        <PortfolioSection content={content.portfolio} />
+        <CasesSection content={content.portfolio} />
+        <ArchitectsSection content={content.architects} />
         <AboutSection content={content.about} />
         <ContactSection content={content.contact} />
       </main>

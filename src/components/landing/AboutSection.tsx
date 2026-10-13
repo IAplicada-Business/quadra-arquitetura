@@ -1,123 +1,115 @@
 import { motion } from "framer-motion";
-import { Fragment } from "react";
 import foundersPhoto from "@/assets/founders-photo.png";
 import { RichText, stripRichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, splitParagraphs, type AboutContent } from "@/lib/siteContent";
 
+/**
+ * Quem é a Quadra: texto à esquerda, foto sangrando à direita.
+ *
+ * A foto perdeu a moldura decorativa e a entrada deslocada no eixo X —
+ * as duas coisas que empurravam a página e davam rolagem horizontal em
+ * 375px. Agora ela ocupa a metade direita inteira e para aí, o que
+ * dispensa o overflow-hidden que estava segurando o estrago.
+ *
+ * Cada sócia tem área e função próprias: é o que separa "duas
+ * arquitetas" de "uma empresa com duas donas", e responde à pergunta que
+ * o cliente não faz em voz alta — com quem eu falo sobre o quê.
+ */
 export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: AboutContent }) {
   return (
-    /* overflow-hidden não é enfeite: a moldura decorativa sai 16px para
-       fora à direita (-right-4) e a entrada anima a partir de x:40, então
-       antes de o bloco aparecer na tela ele fica deslocado. Os dois
-       empurravam a página e davam rolagem horizontal em 375px. */
-    <section id="sobre" className="relative overflow-hidden py-24 md:py-32 bg-brand-rosa">
-      <div className="max-w-7xl mx-auto px-6 md:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          {/* Photo */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-5 relative"
+    <section id="sobre" className="bg-brand-creme">
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        {/* ── Texto ──────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-12 lg:px-16 lg:py-24"
+        >
+          <p
+            className="text-brand-terracota mb-5"
+            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
           >
-            <div className="relative aspect-[3/4] overflow-hidden">
-              <img
-                src={content.photo || foundersPhoto}
-                alt={stripRichText(content.title) || "Quadra Arquitetura"}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {/* Decorative frame */}
-            <div
-              className="absolute -bottom-4 -right-4 w-full h-full border-2 pointer-events-none -z-0"
-              style={{ borderColor: "hsl(var(--brand-terracota))" }}
-            />
-          </motion.div>
+            {content.eyebrow}
+          </p>
 
-          {/* Text */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-7 lg:pl-8"
+          <h2
+            className="text-brand-navy mb-6"
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 400,
+              fontSize: "clamp(1.75rem, 3vw, 2.5rem)",
+              lineHeight: 1.2,
+              letterSpacing: "-0.02em",
+            }}
           >
-            <p
-              className="text-xs mb-6"
-              style={{
-                color: "hsl(var(--brand-terracota))",
-                letterSpacing: "6px",
-                fontFamily: "'Jost', sans-serif",
-                fontWeight: 500,
-              }}
-            >
-              {content.eyebrow}
-            </p>
+            <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }} />
+          </h2>
 
-            <h2
-              className="mb-8"
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(2.25rem, 5vw, 4rem)",
-                lineHeight: 1.1,
-                color: "hsl(var(--brand-vinho))",
-                fontWeight: 400,
-              }}
-            >
-              <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "normal" } }} />
-            </h2>
+          <div
+            className="text-brand-navy/60 space-y-4 max-w-xl"
+            style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
+          >
+            {splitParagraphs(content.body).map((p, i) => (
+              <p key={i}>
+                <RichText text={p} />
+              </p>
+            ))}
+          </div>
 
-            <div
-              className="w-12 h-px mb-8"
-              style={{ backgroundColor: "hsl(var(--brand-terracota))" }}
-            />
-
-            <div
-              className="space-y-5"
-              style={{
-                fontFamily: "'Jost', sans-serif",
-                fontSize: "clamp(0.95rem, 1.1vw, 1.0625rem)",
-                lineHeight: 1.85,
-                color: "hsl(var(--brand-navy))",
-                fontWeight: 300,
-              }}
-            >
-              {splitParagraphs(content.body).map((p, i) => (
-                <p key={i}>
-                  <RichText text={p} />
-                </p>
-              ))}
-            </div>
-
-            <div
-              className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2"
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                color: "hsl(var(--brand-vinho))",
-                fontSize: "1.125rem",
-                fontStyle: "italic",
-              }}
-            >
-              {content.credits.map((c, i) => (
-                <Fragment key={i}>
-                  {i > 0 && (
-                    <span
-                      className="hidden md:inline w-8 h-px"
-                      style={{ backgroundColor: "hsl(var(--brand-terracota))" }}
-                    />
+          {content.credits.length > 0 && (
+            <dl className="mt-10 space-y-7 max-w-xl">
+              {content.credits.map((socia, i) => (
+                <div key={i} className="min-w-0">
+                  <dt
+                    className="text-brand-navy"
+                    style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.25rem", lineHeight: 1.2, fontWeight: 500 }}
+                  >
+                    {socia.title}
+                  </dt>
+                  {socia.tag && (
+                    <p
+                      className="text-brand-terracota mt-1 mb-2"
+                      style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.14em", textTransform: "uppercase" }}
+                    >
+                      {socia.tag}
+                    </p>
                   )}
-                  <span>{c.title}</span>
-                  {c.desc && (
-                    <>
-                      <span style={{ color: "hsl(var(--brand-terracota))" }}>&middot;</span>
-                      <span>{c.desc}</span>
-                    </>
-                  )}
-                </Fragment>
+                  <dd
+                    className="text-brand-navy/60"
+                    style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.7, fontWeight: 300 }}
+                  >
+                    {socia.desc}
+                  </dd>
+                </div>
               ))}
-            </div>
-          </motion.div>
+            </dl>
+          )}
+
+          {content.badges.length > 0 && (
+            <ul className="mt-10 flex flex-wrap gap-3">
+              {content.badges.map((selo, i) => (
+                <li
+                  key={i}
+                  className="border border-brand-navy/20 px-4 py-2.5 text-brand-navy/60 whitespace-nowrap"
+                  style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase" }}
+                >
+                  {selo.title}
+                </li>
+              ))}
+            </ul>
+          )}
+        </motion.div>
+
+        {/* ── Foto ───────────────────────────────────────────────── */}
+        <div className="order-1 lg:order-2 relative min-h-[320px] lg:min-h-0">
+          <img
+            src={content.photo || foundersPhoto}
+            alt={stripRichText(content.title) || "Quadra Arquitetura"}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+          />
         </div>
       </div>
     </section>

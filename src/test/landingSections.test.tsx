@@ -3,7 +3,16 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { JourneySection } from "@/components/landing/JourneySection";
 import { TrailSection } from "@/components/landing/TrailSection";
-import { SITE_DEFAULTS, type JourneyContent, type ServicesContent, type TrailContent } from "@/lib/siteContent";
+import { CasesSection } from "@/components/landing/CasesSection";
+import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
+import { AboutSection } from "@/components/landing/AboutSection";
+import {
+  SITE_DEFAULTS,
+  type JourneyContent,
+  type PortfolioContent,
+  type ServicesContent,
+  type TrailContent,
+} from "@/lib/siteContent";
 
 const clone = <T,>(v: T): T => structuredClone(v);
 
@@ -126,5 +135,64 @@ describe("Trilha do Cliente — a amostra do painel", () => {
     render(<TrailSection />);
     expect(screen.getByRole("heading", { name: /A Trilha do Cliente/ })).toBeInTheDocument();
     expect(screen.getByText(/Prazo sempre honesto/)).toBeInTheDocument();
+  });
+});
+
+describe("Cases — a história em três parágrafos", () => {
+  it("separa história, o que foi evitado e as fases", () => {
+    render(<CasesSection />);
+    const card = screen.getByText("A reforma que quase começou errada").closest("article")!;
+    expect(within(card).getByText(/O orçamento inicial não previa/)).toBeInTheDocument();
+    expect(within(card).getByText(/uma parada de obra de seis semanas/)).toBeInTheDocument();
+    expect(within(card).getByText("Fases 01 + 02 · Sion, BH")).toBeInTheDocument();
+  });
+
+  /* Case recém-cadastrado tem só a história escrita; tem que publicar
+     assim mesmo, sem bloco vazio na tela. */
+  it("case com só a história não mostra os blocos que faltam", () => {
+    const content: PortfolioContent = clone(SITE_DEFAULTS.portfolio);
+    content.items = [{ tag: "RESIDENCIAL", title: "Em construção", desc: "Só a história por enquanto.", image: "" }];
+    const { container } = render(<CasesSection content={content} />);
+    expect(screen.getByText("Só a história por enquanto.")).toBeInTheDocument();
+    expect(container.querySelector(".border-l-2")).toBeNull();
+  });
+
+  it("usa foto padrão quando o case ainda não tem imagem", () => {
+    render(<CasesSection />);
+    const img = screen.getByAltText("A reforma que quase começou errada");
+    expect(img.getAttribute("src")).toBeTruthy();
+  });
+});
+
+describe("Para arquitetos — compromissos", () => {
+  it("separa o que fazemos do que nunca fazemos pela etiqueta", () => {
+    render(<ArchitectsSection />);
+    const nunca = screen.getByText("Nunca alteramos decisões de projeto sem alinhamento.").closest("li")!;
+    const sim = screen.getByText(/Mantemos o arquiteto informado/).closest("li")!;
+    expect(within(nunca).getByText("Nunca:")).toBeInTheDocument();
+    expect(within(sim).getByText("Sim:")).toBeInTheDocument();
+  });
+
+  it("lista os quatro ganhos", () => {
+    render(<ArchitectsSection />);
+    for (const g of ["Tempo", "Proteção", "Experiência", "Reputação"]) {
+      expect(screen.getByRole("heading", { name: g })).toBeInTheDocument();
+    }
+  });
+});
+
+describe("Sobre — sócias e selos", () => {
+  it("mostra cada sócia com a sua área", () => {
+    render(<AboutSection />);
+    expect(screen.getByText("Camilla")).toBeInTheDocument();
+    expect(screen.getByText("VISÃO, PROJETO E DECISÕES")).toBeInTheDocument();
+    expect(screen.getByText("Mariana")).toBeInTheDocument();
+    expect(screen.getByText("OPERAÇÃO, OBRA E SOLUÇÃO")).toBeInTheDocument();
+  });
+
+  it("mostra os selos de registro", () => {
+    render(<AboutSection />);
+    expect(screen.getByText("REGISTRO CAU")).toBeInTheDocument();
+    expect(screen.getByText("RRT POR OBRA")).toBeInTheDocument();
   });
 });

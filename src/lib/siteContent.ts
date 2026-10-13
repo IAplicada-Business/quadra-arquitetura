@@ -674,6 +674,7 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
         name: "items",
         type: "list",
         label: "Cases",
+        hint: "Na história, use três parágrafos separados por linha em branco: o que aconteceu, o que foi evitado e as fases + local. Parágrafo que faltar simplesmente não aparece.",
         itemLabels: { title: "Título do case", desc: "História" },
         itemTag: "Segmento e fases",
         itemImage: true,
