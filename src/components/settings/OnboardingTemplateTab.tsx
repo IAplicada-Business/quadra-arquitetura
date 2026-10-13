@@ -9,7 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Copy, Pencil, Plus, Save, Sparkles, Star, Trash2, Undo2 } from "lucide-react";
 import { useOnboardingTemplate, useOnboardingTemplates } from "@/hooks/useOnboardingTemplate";
 import { OnboardingSectionsEditor } from "@/components/onboarding/OnboardingSectionsEditor";
-import { sectionsEqual, starterSections, type OnboardingSection } from "@/lib/onboarding";
+import { invalidVideoSections, sectionsEqual, starterSections, type OnboardingSection } from "@/lib/onboarding";
+import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
 
 type TemplateDialog = { kind: "create"; copyFromId: string | null } | { kind: "rename"; id: string } | null;
 
@@ -92,6 +93,7 @@ export default function OnboardingTemplateTab() {
   };
 
   const others = list.templates.filter((t) => t.id !== template?.id);
+  const videoErrors = draft ? invalidVideoSections(draft) : [];
   const canDelete = !!template && (!template.is_default || others.length === 0);
 
   return (
@@ -108,7 +110,7 @@ export default function OnboardingTemplateTab() {
           <Button size="sm" variant="ghost" onClick={() => setDraft(sections)} disabled={!dirty || save.isPending}>
             <Undo2 className="h-4 w-4 mr-1" /> Descartar
           </Button>
-          <Button size="sm" onClick={() => save.mutate(draft)} disabled={!dirty || save.isPending}>
+          <Button size="sm" onClick={() => save.mutate(draft)} disabled={!dirty || save.isPending || videoErrors.length > 0}>
             <Save className="h-4 w-4 mr-1" /> {save.isPending ? "Salvando…" : "Salvar modelo"}
           </Button>
         </div>
@@ -183,6 +185,8 @@ export default function OnboardingTemplateTab() {
           </Button>
         </div>
       )}
+
+      <InvalidVideosNotice errors={videoErrors} />
 
       <OnboardingSectionsEditor sections={draft} onChange={setDraft} uploadFolder={template ? `template-${template.id}` : "template"} disabled={save.isPending} />
 

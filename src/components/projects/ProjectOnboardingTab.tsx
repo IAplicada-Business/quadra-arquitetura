@@ -8,7 +8,8 @@ import { toast } from "@/hooks/use-toast";
 import { useProjectOnboarding } from "@/hooks/useProjectOnboarding";
 import { useClientPortalToken } from "@/hooks/useClientPortalToken";
 import { OnboardingSectionsEditor } from "@/components/onboarding/OnboardingSectionsEditor";
-import { cloneSectionsForProject, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
+import { cloneSectionsForProject, invalidVideoSections, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
+import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
 
 interface Props {
   projectId: string;
@@ -82,6 +83,8 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
     setDraft(cloneSectionsForProject(templateSections));
     setPulledFromTemplate(true);
   };
+
+  const videoErrors = invalidVideoSections(draft);
 
   const handleSave = () => {
     saveOverride.mutate({ sections: draft }, { onSuccess: () => setPulledFromTemplate(false) });
@@ -181,7 +184,7 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
           <Button size="sm" variant="ghost" onClick={() => { setDraft(baseline); setPulledFromTemplate(false); }} disabled={!dirty || saveOverride.isPending}>
             <Undo2 className="h-4 w-4 mr-1" /> Descartar
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!dirty || saveOverride.isPending}>
+          <Button size="sm" onClick={handleSave} disabled={!dirty || saveOverride.isPending || videoErrors.length > 0}>
             <Save className="h-4 w-4 mr-1" /> {saveOverride.isPending ? "Salvando…" : "Salvar para esta obra"}
           </Button>
         </div>
@@ -192,6 +195,8 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
           Nenhuma seção ainda. Monte um modelo em Configurações → Onboarding, ou adicione seções só para esta obra.
         </p>
       )}
+
+      <InvalidVideosNotice errors={videoErrors} />
 
       <OnboardingSectionsEditor sections={draft} onChange={setDraft} uploadFolder={projectId} disabled={saveOverride.isPending} previewHeading={projectName} />
 
