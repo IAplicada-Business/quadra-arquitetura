@@ -3,16 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   HardHat,
-  AlertCircle,
   Clock,
-  CheckCircle2,
-  Package,
   Truck,
   CreditCard,
-  TrendingUp,
-  Users,
   BarChart3,
-  Bell,
   ChevronRight,
   Search,
 } from "lucide-react";
@@ -20,12 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
+import { MultiObrasView } from "@/components/dashboard/MultiObrasView";
+import { buildMultiObras } from "@/lib/multiObras";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, parseISO, differenceInDays, getISOWeek, addDays, min as dateMin, max as dateMax } from "date-fns";
+import { format, parseISO, differenceInDays, addDays } from "date-fns";
 import { C } from "@/lib/chartColors";
 
 /* ── paleta obras — alinhada ao brand navy/terra ── */
@@ -263,89 +258,14 @@ export default function DashboardObras() {
       .sort((a, b) => b.orcado - a.orcado);
   }, [projects, payments]);
 
-  // ── Multi-Obras (mantido) ──
+  // ── Multi-Obras ──
   const multiObras = useMemo(() => {
-    const activeProjects = projects.filter((p) =>
-      (p.status === "execucao" || p.status === "mobilizacao" || p.status === "planejamento") &&
+    const visible = projects.filter((p) =>
       (filterStatus === "all" || p.status === filterStatus) &&
       (!filterSearch || p.name?.toLowerCase().includes(filterSearch.toLowerCase()))
     );
-    const activeProjectIds = new Set(activeProjects.map((p) => p.id));
-
-    // Supplier Matrix
-    const relevantTasks = scheduleTasks.filter(
-      (t) => activeProjectIds.has(t.project_id) && t.supplier_name && t.start_date && t.end_date
-    );
-    const supplierWeeks: Record<string, Record<string, Set<number>>> = {};
-    const supplierWeekProjects: Record<string, Record<number, Set<string>>> = {};
-
-    relevantTasks.forEach((t) => {
-      const supplier = t.supplier_name!;
-      if (!supplierWeeks[supplier]) { supplierWeeks[supplier] = {}; supplierWeekProjects[supplier] = {}; }
-      if (!supplierWeeks[supplier][t.project_id]) supplierWeeks[supplier][t.project_id] = new Set();
-      let current = parseISO(t.start_date!);
-      const end = parseISO(t.end_date!);
-      while (current <= end) {
-        const week = getISOWeek(current);
-        supplierWeeks[supplier][t.project_id].add(week);
-        if (!supplierWeekProjects[supplier][week]) supplierWeekProjects[supplier][week] = new Set();
-        supplierWeekProjects[supplier][week].add(t.project_id);
-        current = addDays(current, 7);
-      }
-    });
-
-    const suppliers = Object.keys(supplierWeeks).sort();
-    const matrix: Record<string, Record<string, { weeks: number[]; conflict: boolean }>> = {};
-    suppliers.forEach((supplier) => {
-      matrix[supplier] = {};
-      activeProjects.forEach((proj) => {
-        const weeks = Array.from(supplierWeeks[supplier]?.[proj.id] ?? []).sort((a, b) => a - b);
-        const hasConflict = weeks.some((w) => (supplierWeekProjects[supplier]?.[w]?.size ?? 0) > 1);
-        matrix[supplier][proj.id] = { weeks, conflict: hasConflict };
-      });
-    });
-
-    // Timeline
-    const projectDates = activeProjects.map((proj) => {
-      const projTasks = scheduleTasks.filter((t) => t.project_id === proj.id);
-      const starts = projTasks.filter((t) => t.start_date).map((t) => parseISO(t.start_date!));
-      const ends = projTasks.filter((t) => t.end_date).map((t) => parseISO(t.end_date!));
-      const minDate = starts.length > 0 ? dateMin(starts) : null;
-      const maxDate = ends.length > 0 ? dateMax(ends) : null;
-      const total = projTasks.length;
-      const done = projTasks.filter((t) => t.status === "executado" || t.status === "concluido").length;
-      const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-      const nextTask = projTasks.filter((t) => t.start_date && t.start_date >= todayStr && t.status !== "executado" && t.status !== "concluido").sort((a, b) => (a.start_date ?? "").localeCompare(b.start_date ?? ""))[0];
-
-      let expectedProgress = 0;
-      if (minDate && maxDate) {
-        const totalDays = differenceInDays(maxDate, minDate) || 1;
-        const elapsed = differenceInDays(today, minDate);
-        expectedProgress = Math.min(100, Math.max(0, Math.round((elapsed / totalDays) * 100)));
-      }
-      let barColor: string = C.success;
-      if (progress < expectedProgress - 20) barColor = C.danger;
-      else if (progress < expectedProgress - 5) barColor = C.warning;
-
-      return { projectId: proj.id, name: proj.name, minDate, maxDate, progress, barColor, nextDelivery: nextTask?.task_name ?? null };
-    }).filter((p) => p.minDate && p.maxDate);
-
-    const allDates = projectDates.flatMap((p) => [p.minDate!, p.maxDate!]);
-    const globalStart = allDates.length > 0 ? dateMin(allDates) : null;
-    const globalEnd = allDates.length > 0 ? dateMax(allDates) : null;
-    const globalRange = globalStart && globalEnd ? differenceInDays(globalEnd, globalStart) || 1 : 1;
-
-    const timelineItems = projectDates.map((p) => ({
-      ...p,
-      leftPct: globalStart ? (differenceInDays(p.minDate!, globalStart) / globalRange) * 100 : 0,
-      widthPct: globalStart ? (differenceInDays(p.maxDate!, p.minDate!) / globalRange) * 100 : 100,
-    }));
-
-    return {
-      supplierMatrix: { suppliers, projects: activeProjects, matrix },
-      timeline: { items: timelineItems, globalStart, globalEnd },
-    };
-  }, [projects, scheduleTasks, todayStr, today, filterStatus, filterSearch]);
+    return buildMultiObras(visible, scheduleTasks, new Date(`${todayStr}T12:00:00`));
+  }, [projects, scheduleTasks, todayStr, filterStatus, filterSearch]);
 
   return (
     <div className="space-y-5">
@@ -537,156 +457,8 @@ export default function DashboardObras() {
 
       </>)}
 
-      {/* ═══ ABA MULTI-OBRAS ═══ */}
-      {activeTab === "multiobras" && (<>
-
-      {/* KPI bar */}
-      <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-4 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Obras Ativas</p>
-            <p className="text-2xl font-semibold" style={{ color: C.navy }}>{multiObras.supplierMatrix.projects.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Fornecedores</p>
-            <p className="text-2xl font-semibold" style={{ color: C.terra }}>{multiObras.supplierMatrix.suppliers.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Progresso Médio</p>
-            <p className="text-2xl font-semibold" style={{ color: C.success }}>
-              {multiObras.timeline.items.length > 0 ? Math.round(multiObras.timeline.items.reduce((s, i) => s + i.progress, 0) / multiObras.timeline.items.length) : 0}%
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Conflitos</p>
-            <p className="text-2xl font-semibold" style={{ color: C.warning }}>
-              {multiObras.supplierMatrix.suppliers.filter(s => multiObras.supplierMatrix.projects.some(p => multiObras.supplierMatrix.matrix[s]?.[p.id]?.conflict)).length}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Mapa de Fornecedores */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Users className="h-4 w-4" style={{ color: AZUL.destaque }} />
-            Mapa de Fornecedores por Obra
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {multiObras.supplierMatrix.suppliers.length > 0 ? (
-            <div className="overflow-auto max-h-[400px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="sticky left-0 bg-background z-10 min-w-[140px]">Fornecedor</TableHead>
-                    {multiObras.supplierMatrix.projects.map((p) => (
-                      <TableHead key={p.id} className="text-center min-w-[100px] text-xs">{p.name}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {multiObras.supplierMatrix.suppliers.map((supplier) => (
-                    <TableRow key={supplier}>
-                      <TableCell className="sticky left-0 bg-background z-10 font-medium text-sm">{supplier}</TableCell>
-                      {multiObras.supplierMatrix.projects.map((proj) => {
-                        const cell = multiObras.supplierMatrix.matrix[supplier]?.[proj.id];
-                        if (!cell || cell.weeks.length === 0) {
-                          return <TableCell key={proj.id} className="text-center"><div className="h-6 w-full rounded bg-muted" /></TableCell>;
-                        }
-                        const bgColor = cell.conflict ? "hsl(32, 88%, 88%)" : "hsl(152, 50%, 85%)";
-                        const textColor = cell.conflict ? C.warning : C.success;
-                        return (
-                          <TableCell key={proj.id} className="text-center">
-                            <div className="rounded px-1 py-0.5 text-xs font-medium" style={{ backgroundColor: bgColor, color: textColor }}>
-                              S{cell.weeks.join(", S")}
-                              {cell.conflict && " "}
-                            </div>
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Nenhum fornecedor alocado nas obras ativas</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Timeline Comparativa */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" style={{ color: AZUL.destaque }} />
-            Timeline Comparativa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {multiObras.timeline.items.length > 0 ? (
-            <TooltipProvider>
-              <div className="space-y-3">
-                {multiObras.timeline.globalStart && (
-                  <div className="flex justify-between text-xs text-muted-foreground px-[140px]">
-                    <span>{format(multiObras.timeline.globalStart, "dd/MM/yy")}</span>
-                    <span>{format(multiObras.timeline.globalEnd!, "dd/MM/yy")}</span>
-                  </div>
-                )}
-                {multiObras.timeline.items.map((item) => (
-                  <div key={item.projectId} className="flex items-center gap-3">
-                    <Link to={`/projects/${item.projectId}`} className="w-[130px] text-sm font-medium truncate hover:underline" style={{ color: AZUL.textoDestaque }}>
-                      {item.name}
-                    </Link>
-                    <div className="flex-1 relative h-7 rounded" style={{ backgroundColor: AZUL.fundoSuave }}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="absolute h-full rounded cursor-pointer transition-all"
-                            style={{
-                              left: `${item.leftPct}%`,
-                              width: `${Math.max(item.widthPct, 2)}%`,
-                              backgroundColor: item.barColor,
-                              opacity: 0.85,
-                            }}
-                          >
-                            <div
-                              className="h-full rounded-l"
-                              style={{
-                                width: `${item.progress}%`,
-                                backgroundColor: item.barColor,
-                                opacity: 1,
-                                filter: "brightness(0.8)",
-                              }}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-xs">Progresso: {item.progress}%</p>
-                          {item.nextDelivery && <p className="text-xs">Próx: {item.nextDelivery}</p>}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <span className="text-xs font-semibold w-10 text-right" style={{ color: item.barColor }}>{item.progress}%</span>
-                  </div>
-                ))}
-              </div>
-            </TooltipProvider>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Nenhuma obra com cronograma definido</p>
-          )}
-        </CardContent>
-      </Card>
-      </>)}
+      {/* ═══ MULTI-OBRAS ═══ */}
+      {activeTab === "multiobras" && <MultiObrasView data={multiObras} />}
     </div>
   );
 }

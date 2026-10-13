@@ -358,7 +358,7 @@ function RankBars({ items }: { items: { key: string; label: string; value: numbe
             <div className="flex-1 relative h-7 rounded-md overflow-hidden bg-muted/40">
               <div
                 className="absolute inset-y-0 left-0 transition-all rounded-r-[4px]"
-                style={{ width: `${it.value > 0 ? Math.max(4, (it.value / max) * 100) : 0}%`, background: `${C.navy}30`, borderLeft: `3px solid ${C.navy}` }}
+                style={{ width: `${it.value > 0 ? Math.max(4, (it.value / max) * 100) : 0}%`, background: C.navyTint, borderLeft: `3px solid ${C.navy}` }}
               />
               <div className="absolute inset-0 flex items-center px-3">
                 <span className="text-xs font-semibold tabular-nums text-foreground">{it.value}</span>

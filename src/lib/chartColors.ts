@@ -15,6 +15,7 @@ export const C = {
   navyMid:   "hsl(220, 40%, 45%)",   // navy intermediário
   navyFaint: "hsl(220, 30%, 72%)",   // navy suave (barras de fundo)
   navyBg:    "hsl(220, 30%, 96%)",   // fundo tintado navy
+  navyTint:  "hsla(220, 47%, 22%, 0.16)", // preenchimento translúcido de barra
   terra:     "hsl(6, 40%, 60%)",     // --accent / terracota
 
   // Semânticos
