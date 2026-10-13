@@ -12,6 +12,8 @@
  *             (linha em branco separa parágrafos onde o bloco tem parágrafos)
  *   image     URL pública; "" = imagem padrão que vem com o site
  *   list      lista de itens { title, desc, image?, tag?, bullets? }
+ *   select    uma das opções declaradas no campo; valor fora da lista
+ *             volta ao padrão em vez de quebrar a dobra
  */
 
 export type SiteSectionKey =
@@ -51,7 +53,7 @@ export const SITE_SECTION_KEYS: SiteSectionKey[] = [
   "footer",
 ];
 
-export type SiteFieldType = "text" | "richtext" | "image" | "list";
+export type SiteFieldType = "text" | "richtext" | "image" | "list" | "select";
 
 export interface SiteListItem {
   title: string;
@@ -87,6 +89,8 @@ export interface WhyContent {
 }
 
 export interface JourneyContent {
+  /** Modelo da dobra: etapas, linha do tempo ou cards. */
+  layout: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -126,6 +130,8 @@ export interface ArchitectsContent {
 }
 
 export interface TestimonialsContent {
+  /** Modelo da dobra: cards ou destaque. */
+  layout: string;
   eyebrow: string;
   title: string;
   linkLabel: string;
@@ -151,6 +157,8 @@ export interface FaqContent {
 }
 
 export interface BlogContent {
+  /** Modelo da dobra: cards ou lista. */
+  layout: string;
   eyebrow: string;
   title: string;
   linkLabel: string;
@@ -170,6 +178,8 @@ export interface AboutContent {
 }
 
 export interface ServicesContent {
+  /** Modelo da dobra: fases, lista ou cards. */
+  layout: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -178,6 +188,8 @@ export interface ServicesContent {
 }
 
 export interface PortfolioContent {
+  /** Modelo da dobra: cards ou lista. */
+  layout: string;
   eyebrow: string;
   title: string;
   linkLabel: string;
@@ -257,6 +269,7 @@ export const SITE_DEFAULTS: SiteContent = {
     closing: "A Quadra trabalha *só para você*, do número ao tijolo.",
   },
   services: {
+    layout: "fases",
     eyebrow: "NOSSOS SERVIÇOS",
     title: "Duas fases, *não contratos soltos*",
     subtitle:
@@ -292,6 +305,7 @@ export const SITE_DEFAULTS: SiteContent = {
     ],
   },
   journey: {
+    layout: "etapas",
     eyebrow: "JORNADA DE GERENCIAMENTO",
     title: "Um caminho claro, do primeiro contato até *a obra em andamento*",
     subtitle:
@@ -380,6 +394,7 @@ export const SITE_DEFAULTS: SiteContent = {
     demoDecisionText: "Aprovar a bancada da cozinha para não atravessar o prazo de fabricação de 30 dias.",
   },
   portfolio: {
+    layout: "cards",
     eyebrow: "CASES",
     title: "O que foi evitado, *não só o que ficou pronto*",
     linkLabel: "Ver todos os cases",
@@ -449,6 +464,7 @@ export const SITE_DEFAULTS: SiteContent = {
     ],
   },
   testimonials: {
+    layout: "cards",
     eyebrow: "PROVA SOCIAL",
     title: "“Eu jamais faria outra obra *sem a Quadra*”",
     linkLabel: "Ver depoimentos no @quadraarq",
@@ -494,6 +510,7 @@ export const SITE_DEFAULTS: SiteContent = {
     ],
   },
   blog: {
+    layout: "cards",
     eyebrow: "BLOG",
     title: "Obra sem Surto",
     linkLabel: "Ver todos os artigos",
@@ -560,6 +577,8 @@ export interface SiteFieldDef {
   itemBullets?: string;
   /** Para image: largura máxima após redimensionar. */
   maxWidth?: number;
+  /** Para select: as opções válidas, na ordem em que aparecem. */
+  options?: { value: string; label: string; hint?: string }[];
 }
 
 export interface SiteSectionDef {
@@ -603,6 +622,16 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Serviços",
     description: "As duas fases, cada uma com o que está incluso.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "fases", label: "Duas fases lado a lado", hint: "O escopo abre no clique." },
+          { value: "lista", label: "Fases empilhadas", hint: "Uma embaixo da outra, com o escopo sempre à mostra." },
+          { value: "cards", label: "Cards compactos", hint: "Só resumo, sem o escopo." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "subtitle", type: "richtext", label: "Subtítulo" },
@@ -621,6 +650,16 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Jornada",
     description: "As nove etapas do gerenciamento, agrupadas em três momentos.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "etapas", label: "Lista numerada", hint: "Agrupada por momento, com o texto fixo ao lado." },
+          { value: "linha", label: "Linha do tempo", hint: "Marcadores ligados por um fio vertical." },
+          { value: "cards", label: "Cards numerados", hint: "Grade de cards, três por linha." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "subtitle", type: "richtext", label: "Subtítulo" },
@@ -666,6 +705,15 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Cases",
     description: "Os cases, com o que foi evitado em cada um.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "cards", label: "Cards com foto em cima", hint: "Três por linha." },
+          { value: "lista", label: "Lista com foto ao lado", hint: "Um por linha, foto à esquerda." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "linkLabel", type: "text", label: "Texto do link" },
@@ -726,6 +774,15 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Prova social",
     description: "Depoimentos de clientes e arquitetos parceiros.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "cards", label: "Cards lado a lado", hint: "Todos do mesmo tamanho." },
+          { value: "destaque", label: "Um em destaque", hint: "O primeiro grande, os outros menores." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "linkLabel", type: "text", label: "Texto do link" },
@@ -767,6 +824,15 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Blog",
     description: "Chamadas dos artigos do Obra sem Surto.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "cards", label: "Cards com foto", hint: "Três por linha." },
+          { value: "lista", label: "Lista de chamadas", hint: "Sem foto, uma por linha." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "linkLabel", type: "text", label: "Texto do link" },
@@ -864,7 +930,12 @@ function cleanList(value: unknown, def: SiteFieldDef): SiteListItem[] | null {
 /** Valida o valor salvo contra o tipo do campo; null = inválido (usa padrão). */
 function parseValue(def: SiteFieldDef, value: unknown): unknown {
   if (def.type === "list") return cleanList(value, def);
-  return typeof value === "string" ? value : null;
+  if (typeof value !== "string") return null;
+  /* Modelo que não existe mais (renomeado, removido numa versão nova do
+     site) volta ao padrão em vez de deixar a dobra sem nada para
+     renderizar. */
+  if (def.type === "select" && !def.options?.some((o) => o.value === value)) return null;
+  return value;
 }
 
 /** Mescla as linhas do banco com o padrão. Chaves desconhecidas são ignoradas. */

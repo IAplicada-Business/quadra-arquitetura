@@ -181,3 +181,28 @@ describe("apoio à renderização", () => {
     expect(targetSize(800, 600, 2400)).toEqual({ width: 800, height: 600 });
   });
 });
+
+describe("modelo da dobra", () => {
+  it("toda dobra com modelo tem o campo no admin e um padrão válido", () => {
+    for (const def of SITE_SECTION_DEFINITIONS) {
+      const campo = def.fields.find((f) => f.name === "layout");
+      if (!campo) continue;
+      expect(campo.type).toBe("select");
+      expect(campo.options?.length).toBeGreaterThan(1);
+      const padrao = (SITE_DEFAULTS as unknown as Record<string, Record<string, unknown>>)[def.key].layout;
+      expect(campo.options?.map((o) => o.value)).toContain(padrao);
+    }
+  });
+
+  /* Modelo removido ou renomeado numa versão nova do site não pode
+     deixar a dobra sem nada para renderizar. */
+  it("modelo salvo que não existe mais volta ao padrão", () => {
+    const c = resolveSiteContent([row("journey.layout", "carrossel-que-nunca-existiu", "select")]);
+    expect(c.journey.layout).toBe(SITE_DEFAULTS.journey.layout);
+  });
+
+  it("modelo válido salvo é aplicado", () => {
+    const c = resolveSiteContent([row("journey.layout", "linha", "select")]);
+    expect(c.journey.layout).toBe("linha");
+  });
+});

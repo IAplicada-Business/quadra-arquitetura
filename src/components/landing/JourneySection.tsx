@@ -31,8 +31,149 @@ function agrupar(moments: SiteListItem[], steps: SiteListItem[]) {
   return orfas.length > 0 ? [...comEtapas, { momento: null, etapas: orfas }] : comEtapas;
 }
 
+type Grupo = ReturnType<typeof agrupar>[number];
+
+/** Rótulo do momento, repetido pelos três modelos. */
+function TituloDoMomento({ texto }: { texto: string }) {
+  return (
+    <p
+      className="text-brand-terracota/80 border-b border-brand-navy/10 pb-2 mb-6"
+      style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 500 }}
+    >
+      {texto}
+    </p>
+  );
+}
+
+const entrada = {
+  initial: { opacity: 0, y: 16 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-40px" },
+  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
+};
+
+/** Modelo "etapas": número ao lado, separados por linha. */
+function ListaNumerada({ grupos }: { grupos: Grupo[] }) {
+  return (
+    <>
+      {grupos.map((grupo, gi) => (
+        <div key={gi} className={gi > 0 ? "mt-12" : undefined}>
+          {grupo.momento && <TituloDoMomento texto={grupo.momento.title} />}
+          <ol>
+            {grupo.etapas.map(({ n, etapa }) => (
+              <motion.li key={n} {...entrada} className="flex gap-5 md:gap-7 border-b border-brand-navy/10 py-6 last:border-0 min-w-0">
+                <span
+                  aria-hidden
+                  className="text-brand-terracota/70 shrink-0 tabular-nums"
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", lineHeight: 1.2 }}
+                >
+                  {String(n).padStart(2, "0")}
+                </span>
+                <div className="min-w-0">
+                  <h3
+                    className="text-brand-navy mb-2"
+                    style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.25rem", lineHeight: 1.3, fontWeight: 500 }}
+                  >
+                    {etapa.title}
+                  </h3>
+                  <p
+                    className="text-brand-navy/60"
+                    style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
+                  >
+                    {etapa.desc}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** Modelo "linha": marcadores ligados por um fio vertical. */
+function LinhaDoTempo({ grupos }: { grupos: Grupo[] }) {
+  return (
+    <>
+      {grupos.map((grupo, gi) => (
+        <div key={gi} className={gi > 0 ? "mt-10" : undefined}>
+          {grupo.momento && <TituloDoMomento texto={grupo.momento.title} />}
+          {/* O fio é a borda esquerda da lista, não um elemento solto:
+              assim ele acompanha a altura do conteúdo sem precisar de
+              medida em JS. */}
+          <ol className="border-l border-brand-navy/15 pl-7 md:pl-9">
+            {grupo.etapas.map(({ n, etapa }) => (
+              <motion.li key={n} {...entrada} className="relative pb-9 last:pb-0 min-w-0">
+                <span
+                  aria-hidden
+                  className="absolute top-1.5 grid place-items-center h-6 w-6 rounded-full bg-brand-terracota text-brand-navy tabular-nums"
+                  style={{ left: "-2.4rem", fontFamily: "'Jost', sans-serif", fontSize: "10px", fontWeight: 600 }}
+                >
+                  {n}
+                </span>
+                <h3
+                  className="text-brand-navy mb-2"
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.25rem", lineHeight: 1.3, fontWeight: 500 }}
+                >
+                  {etapa.title}
+                </h3>
+                <p
+                  className="text-brand-navy/60"
+                  style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
+                >
+                  {etapa.desc}
+                </p>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** Modelo "cards": grade de blocos numerados. */
+function CardsNumerados({ grupos }: { grupos: Grupo[] }) {
+  return (
+    <>
+      {grupos.map((grupo, gi) => (
+        <div key={gi} className={gi > 0 ? "mt-10" : undefined}>
+          {grupo.momento && <TituloDoMomento texto={grupo.momento.title} />}
+          <ol className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4">
+            {grupo.etapas.map(({ n, etapa }) => (
+              <motion.li key={n} {...entrada} className="border border-brand-navy/12 bg-brand-creme/60 p-5 min-w-0">
+                <span
+                  aria-hidden
+                  className="text-brand-terracota/70 tabular-nums"
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.375rem", lineHeight: 1 }}
+                >
+                  {String(n).padStart(2, "0")}
+                </span>
+                <h3
+                  className="text-brand-navy mt-2 mb-2"
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.125rem", lineHeight: 1.3, fontWeight: 500 }}
+                >
+                  {etapa.title}
+                </h3>
+                <p
+                  className="text-brand-navy/60"
+                  style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
+                >
+                  {etapa.desc}
+                </p>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </>
+  );
+}
+
 export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: JourneyContent }) {
   const grupos = agrupar(content.moments, content.steps);
+  const modelo = content.layout;
 
   return (
     <section id="jornada" className="bg-brand-creme py-20 md:py-28">
@@ -90,53 +231,13 @@ export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: 
 
           {/* ── Coluna das etapas ───────────────────────────────── */}
           <div className="lg:col-span-7 min-w-0">
-            {grupos.map((grupo, gi) => (
-              <div key={gi} className={gi > 0 ? "mt-12" : undefined}>
-                {grupo.momento && (
-                  <p
-                    className="text-brand-terracota/80 border-b border-brand-navy/10 pb-2 mb-6"
-                    style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 500 }}
-                  >
-                    {grupo.momento.title}
-                  </p>
-                )}
-
-                <ol className="space-y-0">
-                  {grupo.etapas.map(({ n, etapa }) => (
-                    <motion.li
-                      key={n}
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-40px" }}
-                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                      className="flex gap-5 md:gap-7 border-b border-brand-navy/10 py-6 last:border-0 min-w-0"
-                    >
-                      <span
-                        aria-hidden
-                        className="text-brand-terracota/70 shrink-0 tabular-nums"
-                        style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", lineHeight: 1.2 }}
-                      >
-                        {String(n).padStart(2, "0")}
-                      </span>
-                      <div className="min-w-0">
-                        <h3
-                          className="text-brand-navy mb-2"
-                          style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.25rem", lineHeight: 1.3, fontWeight: 500 }}
-                        >
-                          {etapa.title}
-                        </h3>
-                        <p
-                          className="text-brand-navy/60"
-                          style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
-                        >
-                          {etapa.desc}
-                        </p>
-                      </div>
-                    </motion.li>
-                  ))}
-                </ol>
-              </div>
-            ))}
+            {modelo === "linha" ? (
+              <LinhaDoTempo grupos={grupos} />
+            ) : modelo === "cards" ? (
+              <CardsNumerados grupos={grupos} />
+            ) : (
+              <ListaNumerada grupos={grupos} />
+            )}
           </div>
         </div>
       </div>

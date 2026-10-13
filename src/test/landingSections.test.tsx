@@ -6,6 +6,8 @@ import { TrailSection } from "@/components/landing/TrailSection";
 import { CasesSection } from "@/components/landing/CasesSection";
 import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
 import { AboutSection } from "@/components/landing/AboutSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { BlogSection } from "@/components/landing/BlogSection";
 import {
   SITE_DEFAULTS,
   type JourneyContent,
@@ -194,5 +196,67 @@ describe("Sobre — sócias e selos", () => {
     render(<AboutSection />);
     expect(screen.getByText("REGISTRO CAU")).toBeInTheDocument();
     expect(screen.getByText("RRT POR OBRA")).toBeInTheDocument();
+  });
+});
+
+describe("Modelo da dobra (escolhido no admin)", () => {
+  const com = <T extends { layout: string }>(base: T, layout: string): T => ({ ...clone(base), layout });
+
+  it("Jornada: linha do tempo numera os marcadores sem repetir o zero à esquerda", () => {
+    render(<JourneySection content={com(SITE_DEFAULTS.journey, "linha")} />);
+    // na linha do tempo o marcador é "1", não "01"
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.queryByText("01")).toBeNull();
+  });
+
+  it("Jornada: lista numerada mantém o zero à esquerda", () => {
+    render(<JourneySection content={com(SITE_DEFAULTS.journey, "etapas")} />);
+    expect(screen.getByText("01")).toBeInTheDocument();
+  });
+
+  it("Jornada: os três modelos mostram as nove etapas", () => {
+    for (const layout of ["etapas", "linha", "cards"]) {
+      const { unmount } = render(<JourneySection content={com(SITE_DEFAULTS.journey, layout)} />);
+      expect(screen.getByText("Contratação da Quadra")).toBeInTheDocument();
+      expect(screen.getByText("Contratações conforme cronograma")).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  /* "lista" mostra o escopo direto: sem botão para abrir, porque não há
+     nada fechado. */
+  it("Serviços: modelo lista mostra o escopo sem botão", () => {
+    render(<ServicesSection content={com(SITE_DEFAULTS.services, "lista")} />);
+    expect(screen.getByText("EVF · Estudo de Viabilidade Financeira")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Ver o que está incluso/ })).toBeNull();
+  });
+
+  it("Serviços: modelo cards não mostra escopo nem botão", () => {
+    render(<ServicesSection content={com(SITE_DEFAULTS.services, "cards")} />);
+    expect(screen.getByText("Viabilidade")).toBeInTheDocument();
+    expect(screen.queryByText("EVF · Estudo de Viabilidade Financeira")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ver o que está incluso/ })).toBeNull();
+  });
+
+  it("Cases: os dois modelos mostram os três cases", () => {
+    for (const layout of ["cards", "lista"]) {
+      const { unmount } = render(<CasesSection content={com(SITE_DEFAULTS.portfolio, layout)} />);
+      expect(screen.getByText("A reforma que quase começou errada")).toBeInTheDocument();
+      expect(screen.getByText("A clínica que não caberia naquele imóvel")).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("Blog: modelo lista esconde a foto, mas mantém a chamada", () => {
+    const { container } = render(<BlogSection content={com(SITE_DEFAULTS.blog, "lista")} />);
+    expect(screen.getByText(/O orçamento da sua obra pode estar mentindo/)).toBeInTheDocument();
+    expect(container.querySelector(".hidden img")).toBeInTheDocument();
+  });
+
+  it("Prova social: modelo destaque aumenta só o primeiro", () => {
+    const { container } = render(<TestimonialsSection content={com(SITE_DEFAULTS.testimonials, "destaque")} />);
+    const figuras = container.querySelectorAll("figure");
+    expect(figuras[0].className).toContain("md:col-span-2");
+    expect(figuras[1].className).not.toContain("md:col-span-2");
   });
 });

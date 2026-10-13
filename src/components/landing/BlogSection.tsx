@@ -18,6 +18,7 @@ const FOTOS_PADRAO = [carousel2, carousel3, carousel1];
  * destino não finge ser clicável.
  */
 export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogContent }) {
+  const lista = content.layout === "lista";
   return (
     <section id="blog" className="bg-brand-pedra py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
@@ -62,12 +63,14 @@ export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogCo
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={lista ? "divide-y divide-brand-navy/10 border-t border-brand-navy/10" : "grid grid-cols-1 md:grid-cols-3 gap-6"}>
           {content.items.map((artigo, i) => {
             const link = (artigo.desc ?? "").trim();
+            /* No modelo lista a chamada é o conteúdo: sem foto, a leitura
+               fica em coluna única e cabe mais artigo na mesma altura. */
             const Capa = (
               <>
-                <div className="aspect-[16/10] overflow-hidden">
+                <div className={lista ? "hidden" : "aspect-[16/10] overflow-hidden"}>
                   <img
                     src={artigo.image || FOTOS_PADRAO[i % FOTOS_PADRAO.length]}
                     alt={artigo.title}
@@ -75,7 +78,7 @@ export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogCo
                     loading="lazy"
                   />
                 </div>
-                <div className="pt-5 min-w-0">
+                <div className={lista ? "py-5 min-w-0" : "pt-5 min-w-0"}>
                   {artigo.tag && (
                     <p
                       className="text-brand-terracota mb-2"

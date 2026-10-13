@@ -22,6 +22,7 @@ const FOTOS_PADRAO = [carousel1, carousel2, carousel3];
  * com só a história escrita, continua publicável.
  */
 export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: PortfolioContent }) {
+  const lista = content.layout === "lista";
   return (
     <section id="projetos" className="bg-brand-pedra py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
@@ -66,7 +67,7 @@ export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: 
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={lista ? "space-y-6" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}>
           {content.items.map((caso, i) => {
             const [historia, evitado, meta] = splitParagraphs(caso.desc);
 
@@ -77,9 +78,13 @@ export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-brand-creme flex flex-col min-w-0"
+                className={
+                  lista
+                    ? "bg-brand-creme grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] min-w-0"
+                    : "bg-brand-creme flex flex-col min-w-0"
+                }
               >
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className={lista ? "aspect-[4/3] md:aspect-auto overflow-hidden" : "aspect-[4/3] overflow-hidden"}>
                   <img
                     src={caso.image || FOTOS_PADRAO[i % FOTOS_PADRAO.length]}
                     alt={caso.title}

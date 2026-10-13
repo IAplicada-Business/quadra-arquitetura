@@ -13,6 +13,7 @@ import { SITE_DEFAULTS, type TestimonialsContent } from "@/lib/siteContent";
  * desenhada para recebê-los.
  */
 export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { content?: TestimonialsContent }) {
+  const destaque = content.layout === "destaque";
   return (
     <section id="depoimentos" className="bg-brand-creme py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
@@ -57,7 +58,7 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {content.items.map((dep, i) => (
             <motion.figure
               key={i}
@@ -65,11 +66,18 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-              className="border border-brand-navy/10 p-7 flex flex-col min-w-0"
+              className={`border border-brand-navy/10 p-7 flex flex-col min-w-0 ${
+                destaque && i === 0 ? "md:col-span-2 md:row-span-2 bg-brand-pedra/40" : ""
+              }`}
             >
               <blockquote
                 className="text-brand-navy/65 flex-1"
-                style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
+                style={{
+                  fontFamily: "'Jost', sans-serif",
+                  fontSize: destaque && i === 0 ? "1.125rem" : "0.9375rem",
+                  lineHeight: 1.75,
+                  fontWeight: 300,
+                }}
               >
                 {dep.desc}
               </blockquote>
