@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import DashboardEscritorio from "./pages/DashboardEscritorio";
 import DashboardFinanceiro from "./pages/DashboardFinanceiro";
 import DashboardObras from "./pages/DashboardObras";
@@ -72,6 +74,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/esqueci-senha" element={<ForgotPassword />} />
+            <Route path="/redefinir-senha" element={<ResetPassword />} />
             <Route
               element={
                 <ProtectedRoute>
