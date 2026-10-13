@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, splitParagraphs, type TrailContent } from "@/lib/siteContent";
+import { ItemLista, Revelar, Rotulo, SequenciaUl } from "@/components/landing/Motion";
 
 /**
  * A Trilha do Cliente: o texto à esquerda, uma amostra do painel à
@@ -36,19 +36,8 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <div className="border-t border-brand-navy/10 pt-16 md:pt-20 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-start">
           {/* ── Texto ──────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="min-w-0"
-          >
-            <p
-              className="text-brand-terracota mb-5"
-              style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-            >
-              {content.eyebrow}
-            </p>
+          <Revelar className="min-w-0">
+            <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
             <h2
               className="title-balance text-brand-navy mb-6"
               style={{
@@ -73,9 +62,9 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
               ))}
             </div>
 
-            <ul className="space-y-4">
+            <SequenciaUl className="space-y-4">
               {content.items.map((item, i) => (
-                <li key={i} className="flex gap-3 min-w-0">
+                <ItemLista key={i} className="flex gap-3 min-w-0">
                   <span aria-hidden className="text-brand-terracota shrink-0">
                     ·
                   </span>
@@ -86,9 +75,9 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
                     <span className="text-brand-navy font-medium">{item.title}</span>
                     {item.desc ? <>: {item.desc}</> : null}
                   </p>
-                </li>
+                </ItemLista>
               ))}
-            </ul>
+            </SequenciaUl>
 
             {content.note && (
               <p
@@ -98,18 +87,10 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
                 {content.note}
               </p>
             )}
-          </motion.div>
+          </Revelar>
 
           {/* ── Amostra do painel ──────────────────────────────── */}
-          <motion.div
-            aria-hidden
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-brand-navy p-6 md:p-8 min-w-0"
-            style={{ fontFamily: "'Jost', sans-serif" }}
-          >
+          <Revelar aria-hidden className="bg-brand-navy p-6 md:p-8 min-w-0">
             <div className="flex items-start justify-between gap-4 min-w-0">
               <div className="min-w-0">
                 <p
@@ -190,7 +171,7 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
                 </p>
               </div>
             )}
-          </motion.div>
+          </Revelar>
         </div>
       </div>
     </section>

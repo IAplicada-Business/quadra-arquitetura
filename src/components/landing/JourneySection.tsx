@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type JourneyContent, type SiteListItem } from "@/lib/siteContent";
+import { ItemLista, Revelar, Rotulo, SequenciaLista } from "@/components/landing/Motion";
 
 /**
  * As nove etapas do gerenciamento, agrupadas nos três momentos.
@@ -45,13 +45,6 @@ function TituloDoMomento({ texto }: { texto: string }) {
   );
 }
 
-const entrada = {
-  initial: { opacity: 0, y: 16 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: "-40px" },
-  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
-};
-
 /** Modelo "etapas": número ao lado, separados por linha. */
 function ListaNumerada({ grupos }: { grupos: Grupo[] }) {
   return (
@@ -59,9 +52,9 @@ function ListaNumerada({ grupos }: { grupos: Grupo[] }) {
       {grupos.map((grupo, gi) => (
         <div key={gi} className={gi > 0 ? "mt-12" : undefined}>
           {grupo.momento && <TituloDoMomento texto={grupo.momento.title} />}
-          <ol>
+          <SequenciaLista>
             {grupo.etapas.map(({ n, etapa }) => (
-              <motion.li key={n} {...entrada} className="flex gap-5 md:gap-7 border-b border-brand-navy/10 py-6 last:border-0 min-w-0">
+              <ItemLista key={n} className="flex gap-5 md:gap-7 border-b border-brand-navy/10 py-6 last:border-0 min-w-0">
                 <span
                   aria-hidden
                   className="text-brand-terracota/70 shrink-0 tabular-nums"
@@ -83,9 +76,9 @@ function ListaNumerada({ grupos }: { grupos: Grupo[] }) {
                     {etapa.desc}
                   </p>
                 </div>
-              </motion.li>
+              </ItemLista>
             ))}
-          </ol>
+          </SequenciaLista>
         </div>
       ))}
     </>
@@ -102,9 +95,9 @@ function LinhaDoTempo({ grupos }: { grupos: Grupo[] }) {
           {/* O fio é a borda esquerda da lista, não um elemento solto:
               assim ele acompanha a altura do conteúdo sem precisar de
               medida em JS. */}
-          <ol className="border-l border-brand-navy/15 pl-7 md:pl-9">
+          <SequenciaLista className="border-l border-brand-navy/15 pl-7 md:pl-9">
             {grupo.etapas.map(({ n, etapa }) => (
-              <motion.li key={n} {...entrada} className="relative pb-9 last:pb-0 min-w-0">
+              <ItemLista key={n} className="relative pb-9 last:pb-0 min-w-0">
                 <span
                   aria-hidden
                   className="absolute top-1.5 grid place-items-center h-6 w-6 rounded-full bg-brand-terracota text-brand-navy tabular-nums"
@@ -124,9 +117,9 @@ function LinhaDoTempo({ grupos }: { grupos: Grupo[] }) {
                 >
                   {etapa.desc}
                 </p>
-              </motion.li>
+              </ItemLista>
             ))}
-          </ol>
+          </SequenciaLista>
         </div>
       ))}
     </>
@@ -140,9 +133,9 @@ function CardsNumerados({ grupos }: { grupos: Grupo[] }) {
       {grupos.map((grupo, gi) => (
         <div key={gi} className={gi > 0 ? "mt-10" : undefined}>
           {grupo.momento && <TituloDoMomento texto={grupo.momento.title} />}
-          <ol className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4">
+          <SequenciaLista className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4">
             {grupo.etapas.map(({ n, etapa }) => (
-              <motion.li key={n} {...entrada} className="border border-brand-navy/12 bg-brand-creme/60 p-5 min-w-0">
+              <ItemLista key={n} className="border border-brand-navy/12 bg-brand-creme/60 p-5 min-w-0">
                 <span
                   aria-hidden
                   className="text-brand-terracota/70 tabular-nums"
@@ -162,9 +155,9 @@ function CardsNumerados({ grupos }: { grupos: Grupo[] }) {
                 >
                   {etapa.desc}
                 </p>
-              </motion.li>
+              </ItemLista>
             ))}
-          </ol>
+          </SequenciaLista>
         </div>
       ))}
     </>
@@ -180,20 +173,9 @@ export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: 
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
           {/* ── Coluna fixa: o que é a jornada ──────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-5 min-w-0"
-          >
+          <Revelar className="lg:col-span-5 min-w-0">
             <div className="lg:sticky lg:top-28">
-              <p
-                className="text-brand-terracota mb-5"
-                style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-              >
-                {content.eyebrow}
-              </p>
+              <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
               <h2
                 className="title-balance text-brand-navy mb-5"
                 style={{
@@ -227,7 +209,7 @@ export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: 
                 ))}
               </ul>
             </div>
-          </motion.div>
+          </Revelar>
 
           {/* ── Coluna das etapas ───────────────────────────────── */}
           <div className="lg:col-span-7 min-w-0">

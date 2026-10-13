@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type TestimonialsContent } from "@/lib/siteContent";
+import { ItemFigura, Revelar, Rotulo, Sequencia } from "@/components/landing/Motion";
 
 /**
  * Prova social.
@@ -17,19 +17,8 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
   return (
     <section id="depoimentos" className="bg-brand-creme py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-12 md:mb-14"
-        >
-          <p
-            className="text-brand-terracota mb-5"
-            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-          >
-            {content.eyebrow}
-          </p>
+        <Revelar className="mb-12 md:mb-14">
+          <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h2
               className="title-balance text-brand-navy max-w-2xl min-w-0"
@@ -56,20 +45,13 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
               </a>
             )}
           </div>
-        </motion.div>
+        </Revelar>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <Sequencia className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {content.items.map((dep, i) => (
-            <motion.figure
-              key={i}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-              className={`border border-brand-navy/10 p-7 flex flex-col min-w-0 ${
+            <ItemFigura key={i} className={`border border-brand-navy/10 p-7 flex flex-col min-w-0 ${
                 destaque && i === 0 ? "md:col-span-2 md:row-span-2 bg-brand-pedra/40" : ""
-              }`}
-            >
+              }`}>
               <blockquote
                 className="text-brand-navy/65 flex-1"
                 style={{
@@ -97,9 +79,9 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
                   </p>
                 )}
               </figcaption>
-            </motion.figure>
+            </ItemFigura>
           ))}
-        </div>
+        </Sequencia>
       </div>
     </section>
   );

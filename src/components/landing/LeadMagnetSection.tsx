@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type LeadMagnetContent } from "@/lib/siteContent";
+import { Revelar } from "@/components/landing/Motion";
 
 /**
  * O checklist gratuito.
@@ -23,13 +23,7 @@ export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { cont
   return (
     <section id="material" className="bg-brand-rosa py-16 md:py-20">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-8 md:gap-12 items-center"
-        >
+        <Revelar className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-8 md:gap-12 items-center">
           <div className="min-w-0">
             <p
               className="text-brand-vinho mb-4"
@@ -83,7 +77,7 @@ export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { cont
               </div>
             )}
           </div>
-        </motion.div>
+        </Revelar>
       </div>
     </section>
   );

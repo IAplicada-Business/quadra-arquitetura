@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,6 +22,14 @@ export function LandingNavbar() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  /* Quanto da página já foi percorrido. É o único indicador de
+     progressão que a landing tem: a barra fixa não diz em que ponto do
+     assunto o leitor está, e numa página de catorze dobras isso é
+     informação útil, não enfeite. O spring tira o degrau da rolagem de
+     trackpad, que chega em saltos. */
+  const { scrollYProgress } = useScroll();
+  const progresso = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -133,6 +142,14 @@ export function LandingNavbar() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Decorativa: a mesma informação já está na posição da rolagem,
+          então não há o que anunciar para leitor de tela. */}
+      <motion.div
+        aria-hidden
+        className="absolute bottom-0 left-0 right-0 h-px origin-left bg-brand-terracota"
+        style={{ scaleX: progresso }}
+      />
     </nav>
   );
 }

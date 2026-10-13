@@ -1,7 +1,10 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import coverImg from "@/assets/socias-cover.jpg";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type HeroContent } from "@/lib/siteContent";
+import { Item, Rotulo, SequenciaEntrada } from "@/components/landing/Motion";
+import { useParalaxe } from "@/hooks/useParalaxe";
 
 /**
  * Primeira dobra no formato da referência: painel navy à esquerda com a
@@ -16,6 +19,12 @@ import { SITE_DEFAULTS, type HeroContent } from "@/lib/siteContent";
  * que precisa ser lido primeiro — a foto ilustra, não informa.
  */
 export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroContent }) {
+  const secao = useRef<HTMLElement>(null);
+  /* A foto anda 40px contra a rolagem. É curto de propósito: a primeira
+     dobra sai de cena rápido, e curso maior aqui vira solavanco em vez
+     de profundidade. */
+  const y = useParalaxe(secao, 40);
+
   const smoothTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
@@ -23,22 +32,18 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
   return (
     /* pt-[68px]: a navbar é fixa e opaca, então a primeira dobra precisa
        começar abaixo dela em vez de passar por baixo. */
-    <section id="inicio" className="relative w-full bg-brand-navy pt-[68px] lg:pt-[72px]">
+    <section ref={secao} id="inicio" className="relative w-full overflow-hidden bg-brand-navy pt-[68px] lg:pt-[72px]">
       <div className="grid lg:grid-cols-2 min-h-[640px]">
         {/* ── Painel ─────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        <SequenciaEntrada
+          atraso={0.15}
           className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-10 lg:pl-container lg:pr-12 lg:py-20"
         >
-          <p
-            className="text-brand-terracota mb-6"
-            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-          >
-            {content.eyebrow}
-          </p>
+          <Item>
+          <Rotulo className="mb-6">{content.eyebrow}</Rotulo>
+          </Item>
 
+          <Item>
           <h1
             className="title-balance text-brand-areia mb-6"
             style={{
@@ -54,15 +59,18 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
               styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }}
             />
           </h1>
+          </Item>
 
+          <Item>
           <p
             className="text-brand-areia/85 max-w-xl mb-9"
             style={{ fontFamily: "'Jost', sans-serif", fontSize: "clamp(0.95rem, 1.1vw, 1.0625rem)", lineHeight: 1.75, fontWeight: 300 }}
           >
             <RichText text={content.subtitle} />
           </p>
+          </Item>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+          <Item className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <button
               onClick={() => smoothTo("#contato")}
               className="bg-brand-terracota text-brand-navy px-8 py-4 text-sm transition-colors hover:bg-brand-rosa"
@@ -77,11 +85,11 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
             >
               {content.ctaSecondary}
             </button>
-          </div>
+          </Item>
 
           {/* ── Números ──────────────────────────────────────────── */}
           {content.stats.length > 0 && (
-            <>
+            <Item>
               <div className="h-px bg-brand-areia/20 my-10 max-w-xl" />
               <dl className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-x-10 gap-y-7 max-w-xl">
                 {content.stats.map((stat, i) => (
@@ -106,19 +114,25 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
                   </div>
                 ))}
               </dl>
-            </>
+            </Item>
           )}
-        </motion.div>
+        </SequenciaEntrada>
 
         {/* ── Foto ───────────────────────────────────────────────── */}
         <div className="order-1 lg:order-2 relative min-h-[280px] lg:min-h-0">
-          <img
+          {/* A foto é 18% mais alta que o quadro e começa deslocada para
+              cima na mesma medida. Essa folga é o que o paralaxe consome:
+              sem ela, deslocar a imagem abriria faixa vazia na borda. */}
+          <motion.img
             src={content.image || coverImg}
             alt="Camilla e Mariana, sócias da Quadra Arquitetura"
-            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute left-0 w-full object-cover"
             /* O recorte sobe no original para não cortar as cabeças: com
                object-cover centralizado, a foto em pé perde o topo. */
-            style={{ objectPosition: "center 18%" }}
+            style={{ objectPosition: "center 18%", y, top: "-9%", height: "118%" }}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type ArchitectsContent } from "@/lib/siteContent";
+import { Item, Revelar, Rotulo, Sequencia } from "@/components/landing/Motion";
 
 /**
  * O programa de parceria, em fundo escuro.
@@ -27,19 +27,8 @@ export function ArchitectsSection({ content = SITE_DEFAULTS.architects }: { cont
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
           {/* ── Promessa e compromissos ────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="min-w-0"
-          >
-            <p
-              className="text-brand-terracota mb-5"
-              style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-            >
-              {content.eyebrow}
-            </p>
+          <Revelar className="min-w-0">
+            <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
             <h2
               className="title-balance text-brand-areia mb-5"
               style={{
@@ -91,19 +80,12 @@ export function ArchitectsSection({ content = SITE_DEFAULTS.architects }: { cont
                 {content.ctaLabel}
               </button>
             )}
-          </motion.div>
+          </Revelar>
 
           {/* ── Ganhos ─────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-5 content-start">
+          <Sequencia className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-5 content-start">
             {content.benefits.map((b, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-                className="border border-brand-areia/15 p-6 min-w-0"
-              >
+              <Item key={i} className="border border-brand-areia/15 p-6 min-w-0">
                 <h3
                   className="text-brand-terracota mb-3"
                   style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.25rem", lineHeight: 1.2, fontWeight: 500 }}
@@ -116,9 +98,9 @@ export function ArchitectsSection({ content = SITE_DEFAULTS.architects }: { cont
                 >
                   {b.desc}
                 </p>
-              </motion.div>
+              </Item>
             ))}
-          </div>
+          </Sequencia>
         </div>
       </div>
     </section>

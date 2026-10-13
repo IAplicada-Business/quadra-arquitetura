@@ -1,7 +1,10 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import foundersPhoto from "@/assets/founders-photo.png";
 import { RichText, stripRichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, splitParagraphs, type AboutContent } from "@/lib/siteContent";
+import { Item, ItemLista, Revelar, Rotulo, SequenciaDl, SequenciaUl } from "@/components/landing/Motion";
+import { useParalaxe } from "@/hooks/useParalaxe";
 
 /**
  * Quem é a Quadra: texto à esquerda, foto sangrando à direita.
@@ -16,23 +19,17 @@ import { SITE_DEFAULTS, splitParagraphs, type AboutContent } from "@/lib/siteCon
  * o cliente não faz em voz alta — com quem eu falo sobre o quê.
  */
 export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: AboutContent }) {
+  const secao = useRef<HTMLElement>(null);
+  /* Curso maior que o do hero: esta dobra fica muito mais tempo em
+     cena, então a foto tem espaço para andar sem parecer apressada. */
+  const y = useParalaxe(secao, 70);
+
   return (
-    <section id="sobre" className="bg-brand-creme">
+    <section ref={secao} id="sobre" className="bg-brand-creme overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         {/* ── Texto ──────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-10 lg:pl-container lg:pr-12 lg:py-24"
-        >
-          <p
-            className="text-brand-terracota mb-5"
-            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-          >
-            {content.eyebrow}
-          </p>
+        <Revelar className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-10 lg:pl-container lg:pr-12 lg:py-24">
+          <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
 
           <h2
             className="title-balance text-brand-navy mb-6"
@@ -59,9 +56,9 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
           </div>
 
           {content.credits.length > 0 && (
-            <dl className="mt-10 space-y-7 max-w-xl">
+            <SequenciaDl className="mt-10 space-y-7 max-w-xl">
               {content.credits.map((socia, i) => (
-                <div key={i} className="min-w-0">
+                <Item key={i} className="min-w-0">
                   <dt
                     className="text-brand-navy"
                     style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.25rem", lineHeight: 1.2, fontWeight: 500 }}
@@ -82,32 +79,35 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
                   >
                     {socia.desc}
                   </dd>
-                </div>
+                </Item>
               ))}
-            </dl>
+            </SequenciaDl>
           )}
 
           {content.badges.length > 0 && (
-            <ul className="mt-10 flex flex-wrap gap-3">
+            <SequenciaUl className="mt-10 flex flex-wrap gap-3">
               {content.badges.map((selo, i) => (
-                <li
+                <ItemLista
                   key={i}
                   className="border border-brand-navy/20 px-4 py-2.5 text-brand-navy/60 whitespace-nowrap"
                   style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase" }}
                 >
                   {selo.title}
-                </li>
+                </ItemLista>
               ))}
-            </ul>
+            </SequenciaUl>
           )}
-        </motion.div>
+        </Revelar>
 
         {/* ── Foto ───────────────────────────────────────────────── */}
         <div className="order-1 lg:order-2 relative min-h-[320px] lg:min-h-0">
-          <img
+          {/* Mesma folga do hero: a imagem é mais alta que o quadro
+              para o paralaxe ter o que consumir nas bordas. */}
+          <motion.img
             src={content.photo || foundersPhoto}
             alt={stripRichText(content.title) || "Quadra Arquitetura"}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute left-0 w-full object-cover"
+            style={{ y, top: "-10%", height: "120%" }}
             loading="lazy"
           />
         </div>
