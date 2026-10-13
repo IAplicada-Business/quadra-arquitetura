@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { subMonths, startOfMonth, startOfYear } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,6 +96,8 @@ const emptyForm = {
   address_state: "",
   address_zip: "",
 };
+
+const CLIENTS_LIMIT = 5;
 
 export default function Clients() {
   const { user } = useAuth();
@@ -249,6 +252,9 @@ export default function Clients() {
     }
     return matchesSearch && matchesType && matchesPeriod;
   });
+
+  // No máximo 5 na tela; "Ver todos" abre o resto. Volta ao curto ao filtrar.
+  const more = useShowMore(filtered, CLIENTS_LIMIT, `${search}|${filterType}|${filterPeriod}`);
 
   const typeLabel = (val: string) =>
     clientTypes.find((t) => t.value === val)?.label ?? val;
@@ -488,7 +494,7 @@ export default function Clients() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((client) => (
+                {more.visible.map((client) => (
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -547,6 +553,13 @@ export default function Clients() {
               </TableBody>
             </Table>
           </div>
+          <ShowMoreButton
+            expanded={more.expanded}
+            hasMore={more.hasMore}
+            total={filtered.length}
+            onToggle={more.toggle}
+            noun="clientes"
+          />
         </Card>
       )}
     </div>
