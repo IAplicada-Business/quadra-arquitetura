@@ -37,11 +37,11 @@ const stats = [
 
 export function ResultsSection() {
   return (
-    <section className="relative py-20 md:py-28 bg-[#F5E0D0] overflow-hidden">
+    <section className="relative py-20 md:py-28 bg-brand-rosa overflow-hidden">
       {/* Decorative */}
       <div
         className="absolute top-0 right-0 w-[420px] h-[420px] rounded-full opacity-20 blur-3xl"
-        style={{ background: "#C4756E" }}
+        style={{ background: "hsl(var(--brand-terracota))" }}
       />
 
       <div className="relative max-w-7xl mx-auto px-6 md:px-10">
@@ -55,7 +55,7 @@ export function ResultsSection() {
           <p
             className="text-xs mb-5"
             style={{
-              color: "#8B4557",
+              color: "hsl(var(--brand-vinho))",
               letterSpacing: "6px",
               fontFamily: "'Jost', sans-serif",
               fontWeight: 500,
@@ -67,17 +67,17 @@ export function ResultsSection() {
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "clamp(2rem, 4.5vw, 3.25rem)",
-              color: "#1B2A4A",
+              color: "hsl(var(--brand-navy))",
               fontWeight: 300,
               lineHeight: 1.15,
               letterSpacing: "-0.01em",
             }}
           >
             Obra{" "}
-            <em style={{ color: "#8B4557", fontStyle: "italic" }}>sem surpresas</em>
+            <em style={{ color: "hsl(var(--brand-vinho))", fontStyle: "italic" }}>sem surpresas</em>
             , em números.
           </h2>
-          <div className="w-12 h-px mx-auto mt-6" style={{ backgroundColor: "#8B4557" }} />
+          <div className="w-12 h-px mx-auto mt-6" style={{ backgroundColor: "hsl(var(--brand-vinho))" }} />
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -94,15 +94,15 @@ export function ResultsSection() {
               >
                 <div
                   className="w-14 h-14 mx-auto mb-5 flex items-center justify-center rounded-full border"
-                  style={{ borderColor: "#8B4557", backgroundColor: "rgba(139,69,87,0.06)" }}
+                  style={{ borderColor: "hsl(var(--brand-vinho))", backgroundColor: "rgba(139,69,87,0.06)" }}
                 >
-                  <Icon className="h-6 w-6" style={{ color: "#8B4557" }} strokeWidth={1.5} />
+                  <Icon className="h-6 w-6" style={{ color: "hsl(var(--brand-vinho))" }} strokeWidth={1.5} />
                 </div>
                 <p
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "clamp(2.5rem, 5vw, 3.5rem)",
-                    color: "#1B2A4A",
+                    color: "hsl(var(--brand-navy))",
                     fontWeight: 300,
                     lineHeight: 1,
                     letterSpacing: "-0.02em",
@@ -115,7 +115,7 @@ export function ResultsSection() {
                   style={{
                     fontFamily: "'Jost', sans-serif",
                     fontSize: "0.9375rem",
-                    color: "#1B2A4A",
+                    color: "hsl(var(--brand-navy))",
                     fontWeight: 500,
                     letterSpacing: "1px",
                     textTransform: "uppercase",
@@ -127,7 +127,7 @@ export function ResultsSection() {
                   style={{
                     fontFamily: "'Jost', sans-serif",
                     fontSize: "0.8125rem",
-                    color: "#1B2A4A",
+                    color: "hsl(var(--brand-navy))",
                     opacity: 0.65,
                     lineHeight: 1.5,
                     fontWeight: 300,

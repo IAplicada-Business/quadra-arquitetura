@@ -11,9 +11,9 @@ export function LandingFooter({ content = SITE_DEFAULTS.footer }: { content?: Fo
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <footer className="bg-[#0F1A2E] text-[#F0DCC8] pt-16 pb-8">
+    <footer className="bg-[#0F1A2E] text-brand-areia pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16 pb-12 border-b border-[#F0DCC8]/10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16 pb-12 border-b border-brand-areia/10">
           {/* Brand */}
           <div>
             <img src={content.logo || logoBege} alt="Quadra Arquitetura" className="h-24 w-auto mb-6" />
@@ -36,7 +36,7 @@ export function LandingFooter({ content = SITE_DEFAULTS.footer }: { content?: Fo
             <p
               className="text-xs mb-5"
               style={{
-                color: "#C4756E",
+                color: "hsl(var(--brand-terracota))",
                 letterSpacing: "4px",
                 fontFamily: "'Jost', sans-serif",
                 fontWeight: 500,
@@ -71,7 +71,7 @@ export function LandingFooter({ content = SITE_DEFAULTS.footer }: { content?: Fo
             <p
               className="text-xs mb-5"
               style={{
-                color: "#C4756E",
+                color: "hsl(var(--brand-terracota))",
                 letterSpacing: "4px",
                 fontFamily: "'Jost', sans-serif",
                 fontWeight: 500,

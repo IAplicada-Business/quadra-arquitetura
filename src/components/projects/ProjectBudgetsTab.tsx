@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { BudgetQuoteCard } from "./BudgetQuoteCard";
+import { BudgetQuoteTable } from "./BudgetQuoteTable";
 import { BudgetQuoteForm } from "./BudgetQuoteForm";
 import { ProjectPurchasesTab } from "./ProjectPurchasesTab";
 import { ShoppingListDialog } from "./ShoppingListDialog";
@@ -414,17 +414,12 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                           Nenhuma cotação. Clique em "Cotação" para adicionar.
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {discQuotes.map((q) => (
-                            <BudgetQuoteCard
-                              key={q.id}
-                              quote={q as Record<string, unknown>}
-                              onEdit={() => handleEditQuote(q as Record<string, unknown>)}
-                              onDelete={() => remove.mutate(q.id)}
-                              onApprove={() => handleApprove(q.id, q.scope_item_id)}
-                            />
-                          ))}
-                        </div>
+                        <BudgetQuoteTable
+                          quotes={discQuotes as unknown as Record<string, unknown>[]}
+                          onEdit={handleEditQuote}
+                          onDelete={(id) => remove.mutate(id)}
+                          onApprove={(q) => handleApprove(q.id as string, (q.scope_item_id as string) ?? null)}
+                        />
                       )}
                     </CardContent>
                   </Card>
@@ -451,17 +446,12 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {(groupedQuotes["sem_disciplina"] ?? []).map((q) => (
-                        <BudgetQuoteCard
-                          key={q.id}
-                          quote={q as Record<string, unknown>}
-                          onEdit={() => handleEditQuote(q as Record<string, unknown>)}
-                          onDelete={() => remove.mutate(q.id)}
-                          onApprove={() => handleApprove(q.id, q.scope_item_id)}
-                        />
-                      ))}
-                    </div>
+                    <BudgetQuoteTable
+                      quotes={(groupedQuotes["sem_disciplina"] ?? []) as unknown as Record<string, unknown>[]}
+                      onEdit={handleEditQuote}
+                      onDelete={(id) => remove.mutate(id)}
+                      onApprove={(q) => handleApprove(q.id as string, (q.scope_item_id as string) ?? null)}
+                    />
                   </CardContent>
                 </Card>
               )}

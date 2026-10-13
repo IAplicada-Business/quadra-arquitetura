@@ -40,7 +40,7 @@
     --input: 30 20% 88%;
     --ring: 6 40% 60%;                   /* terracota nas formas focadas */
 
-    --radius: 0.75rem;                   /* respiro maior, vibe SaaS */
+    --radius: 1rem;                      /* 16px — base do padrão IAplicada */
 
     /* Sidebar — navy escuro com texto bege */
     --sidebar-background: 220 47% 14%;
@@ -66,6 +66,58 @@
     --shadow-sm: 0 1px 3px hsl(220 30% 20% / 0.05), 0 1px 2px hsl(220 30% 20% / 0.03);
     --shadow-md: 0 4px 12px hsl(220 30% 20% / 0.06), 0 2px 4px hsl(220 30% 20% / 0.04);
     --shadow-lg: 0 12px 28px hsl(220 30% 20% / 0.08), 0 4px 10px hsl(220 30% 20% / 0.05);
+
+    /* ╔══════ MARCA — valores exatos da identidade Quadra ══════╗
+       Os hex da landing viram token aqui, com casa decimal, para a
+       conversão ser idêntica ao pixel (#1B2A4A arredondado para
+       "220 47% 20%" volta como #1B2A4B — por isso a precisão). */
+    --brand-navy: 220.9 46.5% 19.8%;       /* #1B2A4A */
+    --brand-terracota: 4.9 42.2% 60.0%;    /* #C4756E */
+    --brand-areia: 30.0 57.1% 86.3%;       /* #F0DCC8 */
+    --brand-vinho: 344.6 33.7% 40.8%;      /* #8B4557 */
+    --brand-creme: 37.5 44.4% 96.5%;       /* #FAF7F2 */
+    --brand-rosa: 25.9 64.9% 88.8%;        /* #F5E0D0 */
+    --brand-pedra: 28.0 22.4% 86.9%;       /* #E5DDD6 */
+    --brand-font-display: 'Cormorant Garamond';
+    /* ╚═════════════════════════════════════════════════════════╝ */
+
+    /* Nomes do padrão IAplicada sobre a paleta que já existe.
+       Nada aqui inventa cor: --deep e --accent-brand são os valores
+       que a sidebar e o realce já usavam, só passaram a ter nome. */
+    --primary-hover: 221.1 46.3% 16.1%;    /* navy ~20% mais escuro */
+    --deep: 220 47% 14%;
+    --deep-foreground: 30 25% 90%;
+    --accent-brand: 6 40% 60%;             /* terracota */
+    --soft-foreground: 220 30% 32%;
+
+    /* Status — semântica fixa, cor derivada da marca */
+    --status-now: 220 47% 22%;
+    --status-now-foreground: 30 30% 97%;
+    --status-doing: 6 40% 88%;
+    --status-doing-foreground: 220 47% 22%;
+    --status-next: 30 25% 94%;
+    --status-next-foreground: 220 30% 32%;
+    --status-back: 32 88% 52%;
+    --status-back-foreground: 32 70% 22%;
+
+    /* Séries de gráfico — navy, terracota, deep, vinho, sálvia */
+    --chart-1: 220 47% 22%;
+    --chart-2: 6 40% 60%;
+    --chart-3: 220 47% 14%;
+    --chart-4: 344.6 33.7% 40.8%;
+    --chart-5: 152 50% 38%;
+
+    /* Escala de raio sobre --radius */
+    --radius-sm: calc(var(--radius) - 2px);
+    --radius-md: var(--radius);
+    --radius-lg: calc(var(--radius) + 2px);
+    --radius-xl: calc(var(--radius) + 4px);
+
+    /* Sombras do padrão. As xs/sm/md/lg continuam: centenas de usos
+       dependem delas; a Onda 4 é que passa a apontar para estas. */
+    --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.06);
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.12);
   }
 
   .dark {
@@ -106,6 +158,31 @@
     --sidebar-border: 220 35% 14%;
     --sidebar-ring: 6 40% 60%;
 
+    --primary-hover: 6 40% 52%;
+    --deep: 220 50% 7%;
+    --deep-foreground: 30 25% 80%;
+    --accent-brand: 6 40% 60%;
+    --soft-foreground: 30 15% 78%;
+
+    --status-now: 6 40% 60%;
+    --status-now-foreground: 220 47% 10%;
+    --status-doing: 220 30% 28%;
+    --status-doing-foreground: 30 25% 90%;
+    --status-next: 220 30% 18%;
+    --status-next-foreground: 30 15% 78%;
+    --status-back: 32 78% 50%;
+    --status-back-foreground: 220 47% 10%;
+
+    --chart-1: 6 40% 60%;
+    --chart-2: 30 57% 70%;
+    --chart-3: 220 35% 45%;
+    --chart-4: 344.6 33.7% 55%;
+    --chart-5: 152 45% 45%;
+
+    --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.35);
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45);
+    --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.55);
+
     --success: 152 45% 40%;
     --success-foreground: 0 0% 100%;
     --warning: 32 78% 50%;
@@ -122,11 +199,25 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
     font-feature-settings: "ss01", "cv11";
+    /* Escala do padrão: corpo em 14px com altura 1.5. As classes text-*
+       do Tailwind são em rem e continuam valendo — isto define só o que
+       herda, que antes pegava os 16px do browser. */
+    font-size: 14px;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+    /* Os dois radiais de profundidade do padrão. O padrão usa a cor cheia
+       no centro; aqui ela entra com alfa baixo porque o navy da Quadra é
+       escuro e sobre o bege viraria mancha, não profundidade. */
+    background-image:
+      radial-gradient(1200px 600px at 100% -10%, hsl(var(--primary) / 0.07) 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 0%, hsl(var(--accent-brand) / 0.09) 0%, transparent 55%);
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
   h1 { @apply font-light; }
@@ -134,6 +225,15 @@
 }
 
 @layer utilities {
+  /* Rótulo de categoria do padrão: maiúscula espaçada, peso médio. */
+  .label-cat {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
   .text-display {
     font-family: var(--font-display);
   }
@@ -145,6 +245,39 @@
   }
   .font-body {
     font-family: var(--font-body);
+  }
+
+  /* Sidebar do padrão: gradiente da cor escura, de cima para baixo. */
+  .bg-sidebar-gradient {
+    /* Só valores que já estão na paleta: --primary (navy 22%) descendo
+       para --deep (14%), que é a cor sólida que a sidebar tinha. */
+    background-image: linear-gradient(
+      180deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--deep)) 60%,
+      hsl(var(--deep)) 100%
+    );
+  }
+
+  /* Card interativo do padrão: eleva e tinge a borda ao hover. */
+  .card-interactive {
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  .card-interactive:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.22);
+  }
+
+  /* Chip de ícone do padrão. */
+  .icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.04));
+    color: hsl(var(--primary));
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.12);
   }
 
   /* Cards "Rocket": sombra multi-layer com transição sutil ao hover. */

@@ -6,7 +6,7 @@ import { SITE_DEFAULTS, splitParagraphs, type AboutContent } from "@/lib/siteCon
 
 export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: AboutContent }) {
   return (
-    <section id="sobre" className="relative py-24 md:py-32 bg-[#F5E0D0]">
+    <section id="sobre" className="relative py-24 md:py-32 bg-brand-rosa">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Photo */}
@@ -27,7 +27,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
             {/* Decorative frame */}
             <div
               className="absolute -bottom-4 -right-4 w-full h-full border-2 pointer-events-none -z-0"
-              style={{ borderColor: "#C4756E" }}
+              style={{ borderColor: "hsl(var(--brand-terracota))" }}
             />
           </motion.div>
 
@@ -42,7 +42,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
             <p
               className="text-xs mb-6"
               style={{
-                color: "#C4756E",
+                color: "hsl(var(--brand-terracota))",
                 letterSpacing: "6px",
                 fontFamily: "'Jost', sans-serif",
                 fontWeight: 500,
@@ -57,16 +57,16 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: "clamp(2.25rem, 5vw, 4rem)",
                 lineHeight: 1.1,
-                color: "#8B4557",
+                color: "hsl(var(--brand-vinho))",
                 fontWeight: 400,
               }}
             >
-              <RichText text={content.title} styles={{ em: { color: "#C4756E", fontStyle: "normal" } }} />
+              <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "normal" } }} />
             </h2>
 
             <div
               className="w-12 h-px mb-8"
-              style={{ backgroundColor: "#C4756E" }}
+              style={{ backgroundColor: "hsl(var(--brand-terracota))" }}
             />
 
             <div
@@ -75,7 +75,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
                 fontFamily: "'Jost', sans-serif",
                 fontSize: "clamp(0.95rem, 1.1vw, 1.0625rem)",
                 lineHeight: 1.85,
-                color: "#1B2A4A",
+                color: "hsl(var(--brand-navy))",
                 fontWeight: 300,
               }}
             >
@@ -90,7 +90,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
               className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                color: "#8B4557",
+                color: "hsl(var(--brand-vinho))",
                 fontSize: "1.125rem",
                 fontStyle: "italic",
               }}
@@ -100,13 +100,13 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
                   {i > 0 && (
                     <span
                       className="hidden md:inline w-8 h-px"
-                      style={{ backgroundColor: "#C4756E" }}
+                      style={{ backgroundColor: "hsl(var(--brand-terracota))" }}
                     />
                   )}
                   <span>{c.title}</span>
                   {c.desc && (
                     <>
-                      <span style={{ color: "#C4756E" }}>&middot;</span>
+                      <span style={{ color: "hsl(var(--brand-terracota))" }}>&middot;</span>
                       <span>{c.desc}</span>
                     </>
                   )}
