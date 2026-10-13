@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Instagram, Phone, Mail, MapPin, Loader2, Link2, type LucideIcon } from "lucide-react";
 import { useSiteLead, type SiteLeadPayload } from "@/hooks/useSiteLead";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, contactIconKind, splitParagraphs, type ContactContent, type ContactIconKind } from "@/lib/siteContent";
+import { ItemLista, Revelar, Rotulo, SequenciaUl } from "@/components/landing/Motion";
 
 const CONTACT_ICONS: Record<ContactIconKind, LucideIcon> = {
   instagram: Instagram,
@@ -84,19 +84,8 @@ export function ContactSection({ content = SITE_DEFAULTS.contact, preview = fals
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* ── Texto e canais ─────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="min-w-0"
-          >
-            <p
-              className="text-brand-terracota mb-5"
-              style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-            >
-              {content.eyebrow}
-            </p>
+          <Revelar className="min-w-0">
+            <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
             <h2
               className="title-balance text-brand-areia mb-6"
               style={{
@@ -120,11 +109,11 @@ export function ContactSection({ content = SITE_DEFAULTS.contact, preview = fals
               ))}
             </div>
 
-            <ul className="space-y-3.5">
+            <SequenciaUl className="space-y-3.5">
               {content.contacts.map((c, i) => {
                 const Icon = CONTACT_ICONS[contactIconKind(c.desc)];
                 return (
-                  <li key={i} className="min-w-0">
+                  <ItemLista key={i} className="min-w-0">
                     <a
                       href={c.desc || undefined}
                       target="_blank"
@@ -135,20 +124,14 @@ export function ContactSection({ content = SITE_DEFAULTS.contact, preview = fals
                       <Icon aria-hidden className="h-4 w-4 mt-0.5 shrink-0 text-brand-terracota" />
                       <span className="min-w-0 break-words [overflow-wrap:anywhere]">{c.title}</span>
                     </a>
-                  </li>
+                  </ItemLista>
                 );
               })}
-            </ul>
-          </motion.div>
+            </SequenciaUl>
+          </Revelar>
 
           {/* ── Formulário ─────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="border border-brand-areia/20 p-7 md:p-9 min-w-0"
-          >
+          <Revelar className="border border-brand-areia/20 p-7 md:p-9 min-w-0">
             <h3 className="sr-only">{content.formTitle}</h3>
 
             {enviado ? (
@@ -263,7 +246,7 @@ export function ContactSection({ content = SITE_DEFAULTS.contact, preview = fals
                 </button>
               </form>
             )}
-          </motion.div>
+          </Revelar>
         </div>
       </div>
     </section>

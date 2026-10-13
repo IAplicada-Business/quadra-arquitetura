@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,6 +22,14 @@ export function LandingNavbar() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  /* Quanto da página já foi percorrido. É o único indicador de
+     progressão que a landing tem: a barra fixa não diz em que ponto do
+     assunto o leitor está, e numa página de catorze dobras isso é
+     informação útil, não enfeite. O spring tira o degrau da rolagem de
+     trackpad, que chega em saltos. */
+  const { scrollYProgress } = useScroll();
+  const progresso = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -45,10 +54,16 @@ export function LandingNavbar() {
       }`}
       style={{ fontFamily: "'Jost', sans-serif" }}
     >
-      <div className="max-w-6xl mx-auto px-6 md:px-10 flex items-center justify-between">
+      {/* Três zonas em vez de um container centralizado. O container
+          deixava o logo nascer na calha da página — 409px num monitor de
+          1890px, 744px num de 2560 —, o que lia como logo solto no meio
+          da barra em vez de assinatura no canto. As colunas 1fr nas
+          pontas garantem que o menu fique no centro da tela, e não no
+          centro do que sobra entre logo e link. */}
+      <div className="w-full px-6 md:px-10 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="flex items-center"
+          className="flex items-center justify-self-start"
           aria-label="Quadra Arquitetura"
         >
           <img
@@ -59,7 +74,7 @@ export function LandingNavbar() {
         </button>
 
         {/* Desktop menu */}
-        <div className="hidden lg:flex items-center gap-6 min-w-0">
+        <div className="hidden lg:flex items-center gap-6 min-w-0 justify-self-center">
           {links.map((l) => (
             <button
               key={l.href}
@@ -72,7 +87,11 @@ export function LandingNavbar() {
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-4 shrink-0">
+        {/* Só a área da equipe. O "Fale conosco" saiu daqui: a mesma
+            chamada já está no hero, logo abaixo, e um botão emoldurado
+            ao lado de links em caixa alta puxava o olho para o canto
+            errado da barra. */}
+        <div className="hidden lg:flex items-center justify-self-end shrink-0">
           <button
             onClick={() => navigate("/login")}
             className="text-brand-navy/50 text-[11px] tracking-wider uppercase whitespace-nowrap transition-colors hover:text-brand-navy"
@@ -80,19 +99,12 @@ export function LandingNavbar() {
           >
             Area da Equipe
           </button>
-          <button
-            onClick={() => smoothTo("#contato")}
-            className="border border-brand-navy px-5 py-2.5 text-[11px] tracking-wider uppercase whitespace-nowrap text-brand-navy transition-colors hover:bg-brand-navy hover:text-brand-areia"
-            style={{ letterSpacing: "1.5px", fontWeight: 500 }}
-          >
-            Fale conosco
-          </button>
         </div>
 
         {/* Mobile menu */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <button className="lg:hidden" aria-label="Menu">
+            <button className="lg:hidden justify-self-end col-start-3" aria-label="Menu">
               <Menu className="h-6 w-6 text-brand-navy" />
             </button>
           </SheetTrigger>
@@ -133,6 +145,14 @@ export function LandingNavbar() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Decorativa: a mesma informação já está na posição da rolagem,
+          então não há o que anunciar para leitor de tela. */}
+      <motion.div
+        aria-hidden
+        className="absolute bottom-0 left-0 right-0 h-px origin-left bg-brand-terracota"
+        style={{ scaleX: progresso }}
+      />
     </nav>
   );
 }

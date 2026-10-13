@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type FaqContent } from "@/lib/siteContent";
+import { Item, Revelar, Rotulo, SequenciaDl } from "@/components/landing/Motion";
 
 /**
  * As perguntas que aparecem antes de fechar.
@@ -30,19 +30,8 @@ export function FaqSection({ content = SITE_DEFAULTS.faq }: { content?: FaqConte
     <section id="faq" className="bg-brand-creme py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-5 min-w-0"
-          >
-            <p
-              className="text-brand-terracota mb-5"
-              style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-            >
-              {content.eyebrow}
-            </p>
+          <Revelar className="lg:col-span-5 min-w-0">
+            <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
             <h2
               className="title-balance text-brand-navy mb-5"
               style={{
@@ -63,13 +52,13 @@ export function FaqSection({ content = SITE_DEFAULTS.faq }: { content?: FaqConte
                 {content.note}
               </p>
             )}
-          </motion.div>
+          </Revelar>
 
-          <dl className="lg:col-span-7 min-w-0">
+          <SequenciaDl className="lg:col-span-7 min-w-0">
             {content.items.map((item, i) => {
               const aberta = abertas.has(i);
               return (
-                <div key={i} className="border-b border-brand-navy/10 min-w-0">
+                <Item key={i} className="border-b border-brand-navy/10 min-w-0">
                   <dt>
                     <button
                       type="button"
@@ -96,10 +85,10 @@ export function FaqSection({ content = SITE_DEFAULTS.faq }: { content?: FaqConte
                       <RichText text={item.desc} />
                     </dd>
                   )}
-                </div>
+                </Item>
               );
             })}
-          </dl>
+          </SequenciaDl>
         </div>
       </div>
     </section>

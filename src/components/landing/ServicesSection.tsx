@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, splitParagraphs, type ServicesContent } from "@/lib/siteContent";
+import { Item, Revelar, Rotulo, Sequencia } from "@/components/landing/Motion";
 
 /**
  * As duas fases do serviço, cada uma com o escopo escondido atrás de um
@@ -35,19 +35,8 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
   return (
     <section id="servicos" className="bg-brand-pedra py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-2xl mb-12 md:mb-16"
-        >
-          <p
-            className="text-brand-terracota mb-5"
-            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-          >
-            {content.eyebrow}
-          </p>
+        <Revelar className="max-w-2xl mb-12 md:mb-16">
+          <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
           <h2
             className="title-balance text-brand-navy mb-5"
             style={{
@@ -66,9 +55,9 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
           >
             <RichText text={content.subtitle} />
           </p>
-        </motion.div>
+        </Revelar>
 
-        <div
+        <Sequencia
           className={
             modelo === "lista"
               ? "space-y-6 max-w-3xl mx-auto"
@@ -82,14 +71,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
             const itens = (fase.bullets ?? "").split("\n").map((t) => t.trim()).filter(Boolean);
 
             return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-brand-creme border border-brand-navy/10 p-7 md:p-9 min-w-0 flex flex-col"
-              >
+              <Item key={i} className="bg-brand-creme border border-brand-navy/10 p-7 md:p-9 min-w-0 flex flex-col">
                 {fase.tag && (
                   <p
                     className="text-brand-terracota mb-3"
@@ -173,10 +155,10 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                     ))}
                   </ul>
                 )}
-              </motion.div>
+              </Item>
             );
           })}
-        </div>
+        </Sequencia>
       </div>
     </section>
   );

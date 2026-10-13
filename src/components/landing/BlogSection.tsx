@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import carousel2 from "@/assets/carousel-2.jpg";
 import carousel3 from "@/assets/carousel-3.jpg";
 import carousel1 from "@/assets/carousel-1.jpg";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type BlogContent } from "@/lib/siteContent";
+import { ItemArtigo, Revelar, Rotulo, Sequencia } from "@/components/landing/Motion";
 
 const FOTOS_PADRAO = [carousel2, carousel3, carousel1];
 
@@ -22,19 +22,8 @@ export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogCo
   return (
     <section id="blog" className="bg-brand-pedra py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="border-b border-brand-navy/10 pb-6 mb-10 md:mb-12"
-        >
-          <p
-            className="text-brand-terracota mb-4"
-            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
-          >
-            {content.eyebrow}
-          </p>
+        <Revelar className="border-b border-brand-navy/10 pb-6 mb-10 md:mb-12">
+          <Rotulo className="mb-4">{content.eyebrow}</Rotulo>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h2
               className="title-balance text-brand-navy min-w-0"
@@ -61,9 +50,9 @@ export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogCo
               </a>
             )}
           </div>
-        </motion.div>
+        </Revelar>
 
-        <div className={lista ? "divide-y divide-brand-navy/10 border-t border-brand-navy/10" : "grid grid-cols-1 md:grid-cols-3 gap-6"}>
+        <Sequencia className={lista ? "divide-y divide-brand-navy/10 border-t border-brand-navy/10" : "grid grid-cols-1 md:grid-cols-3 gap-6"}>
           {content.items.map((artigo, i) => {
             const link = (artigo.desc ?? "").trim();
             /* No modelo lista a chamada é o conteúdo: sem foto, a leitura
@@ -98,14 +87,7 @@ export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogCo
             );
 
             return (
-              <motion.article
-                key={i}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="min-w-0"
-              >
+              <ItemArtigo key={i} className="min-w-0">
                 {link ? (
                   <a href={link} target="_blank" rel="noreferrer" className="group block min-w-0">
                     {Capa}
@@ -113,10 +95,10 @@ export function BlogSection({ content = SITE_DEFAULTS.blog }: { content?: BlogCo
                 ) : (
                   <div className="group min-w-0">{Capa}</div>
                 )}
-              </motion.article>
+              </ItemArtigo>
             );
           })}
-        </div>
+        </Sequencia>
       </div>
     </section>
   );
