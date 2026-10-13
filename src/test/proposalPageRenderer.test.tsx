@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { buildProposalPages, proposalPageKeys } from "@/components/leads/ProposalPageRenderer";
 import type { ProposalPageProps } from "@/components/leads/proposal-pages/shared";
-import { defaultProposalBlocks, moveProposalBlock, type ResolvedProposalBlock } from "@/lib/proposalBlocks";
+import { defaultProposalBlocks, moveProposalBlock, type ProposalBlock, type ResolvedProposalBlock } from "@/lib/proposalBlocks";
 
 const baseData: ProposalPageProps = {
   clientName: "Ana",
@@ -12,7 +12,7 @@ const baseData: ProposalPageProps = {
   portfolioCards: [{ id: "p1", nome: "Casa X", foto_url: "https://example.com/x.jpg" }],
 };
 
-function withBlock(blocks: ResolvedProposalBlock[], key: string, patch: Partial<ResolvedProposalBlock>) {
+function withBlock(blocks: ProposalBlock[], key: string, patch: Partial<ResolvedProposalBlock>) {
   return blocks.map((b) => (b.key === key ? ({ ...b, ...patch } as ResolvedProposalBlock) : b));
 }
 
@@ -120,7 +120,7 @@ describe("buildProposalPages com blocos", () => {
             },
           }
         : b,
-    ) as ResolvedProposalBlock[];
+    ) as ProposalBlock[];
 
     // Proposta com Briefing ativo e prazo de 4 dias; etapa nova também ativa.
     const pages = buildProposalPages({ data: { ...baseData, etapasAtivas: ["Briefing", "etapa-nova"], timelineBriefing: 4 }, blocks });
@@ -143,7 +143,7 @@ describe("buildProposalPages com blocos", () => {
       if (b.key === "cover") return { ...b, content: { ...b.content, imageUrl: "https://cdn/capa.jpg" } };
       if (b.key === "about") return { ...b, content: { ...b.content, photoUrl: "https://cdn/socias.jpg" } };
       return b;
-    }) as ResolvedProposalBlock[];
+    }) as ProposalBlock[];
     const pages = buildProposalPages({ data: baseData, blocks });
     const { container, unmount } = render(pages.find((p) => p.key === "cover")!);
     expect(container.innerHTML).toContain("https://cdn/capa.jpg");

@@ -13,7 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useProposalAssets } from "@/hooks/useProposalAssets";
 import { useProposalBlocks } from "@/hooks/useProposalBlocks";
-import { flowStepsFromBlocks, FLOW_STEP_TIMELINE, type FlowTimelineKey } from "@/lib/proposalBlocks";
+import { flowStepsFromBlocks, isCustomBlock, FLOW_STEP_TIMELINE, type FlowTimelineKey } from "@/lib/proposalBlocks";
+import { customTypeDef } from "@/lib/proposalCustomBlocks";
 import { useLeads } from "@/hooks/useLeads";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +47,11 @@ export interface ProposalFormData {
   ambientes: string[];
   total_area: number | null;
   etapas_ativas: string[];
+  /**
+   * Blocos personalizados do PDF escolhidos nesta proposta.
+   * null = sem escolha salva: entram os marcados "Incluir por padrão".
+   */
+  custom_block_keys: string[] | null;
   valid_until: string | null;
 }
 
@@ -123,6 +129,7 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
     ambientes: initialData?.ambientes || [],
     total_area: initialData?.total_area ?? null,
     etapas_ativas: initialData?.etapas_ativas || [...ALL_ETAPAS],
+    custom_block_keys: initialData?.custom_block_keys ?? null,
     valid_until: initialData?.valid_until ?? new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
   });
 
@@ -134,6 +141,20 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocksFetched, allStepKeys.join("|")]);
 
+
+  // Blocos personalizados ativos (Configurações → Proposta → Blocos do PDF).
+  const customBlocks = useMemo(() => proposalBlocks.filter(isCustomBlock).filter((b) => b.is_active), [proposalBlocks]);
+  const customDefaultKeys = useMemo(() => customBlocks.filter((b) => b.content.includeByDefault).map((b) => b.key), [customBlocks]);
+  // Sem escolha salva (proposta nova ou antiga), valem os "Incluir por padrão".
+  const effectiveCustomKeys = data.custom_block_keys ?? customDefaultKeys;
+  /** Dados como saem do formulário: a escolha de blocos fica gravada. */
+  const withCustomKeys = (d: ProposalFormData): ProposalFormData => ({ ...d, custom_block_keys: d.custom_block_keys ?? customDefaultKeys });
+  const toggleCustomBlock = (key: string) => {
+    setData(prev => {
+      const current = prev.custom_block_keys ?? customDefaultKeys;
+      return { ...prev, custom_block_keys: current.includes(key) ? current.filter(k => k !== key) : [...current, key] };
+    });
+  };
 
   const set = <K extends keyof ProposalFormData>(key: K, val: ProposalFormData[K]) =>
     setData(prev => ({ ...prev, [key]: val }));
@@ -335,6 +356,33 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
         </CardContent>
       </Card>
 
+      {/* Blocos personalizados do PDF */}
+      {customBlocks.length > 0 && (
+        <Card data-testid="proposal-custom-blocks">
+          <CardHeader><CardTitle className="text-base">Blocos personalizados do PDF</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Escolha quais blocos criados pela equipe entram nesta proposta (estudos de viabilidade, linhas do tempo, cartões). Eles são editados em Configurações → Proposta → Blocos do PDF.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {customBlocks.map(block => (
+                <label key={block.key} className="flex items-start gap-2 p-2 border rounded cursor-pointer">
+                  <Checkbox
+                    checked={effectiveCustomKeys.includes(block.key)}
+                    aria-label={`Incluir bloco ${block.label}`}
+                    onCheckedChange={() => toggleCustomBlock(block.key)}
+                  />
+                  <span className="text-sm">
+                    {block.label}
+                    <span className="block text-xs text-muted-foreground">{customTypeDef(block.type).label}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Section 5: Timeline */}
       <Card>
         <CardHeader><CardTitle className="text-base">5. Prazos</CardTitle></CardHeader>
@@ -528,13 +576,13 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
 
       {/* Section 6: Actions */}
       <div className="flex gap-3 justify-end sticky bottom-0 bg-background py-4 border-t">
-        <Button variant="outline" onClick={() => onSave({ ...data, installment_value: calcInstallmentValue ?? data.installment_value }, "rascunho")} disabled={saving}>
+        <Button variant="outline" onClick={() => onSave({ ...withCustomKeys(data), installment_value: calcInstallmentValue ?? data.installment_value }, "rascunho")} disabled={saving}>
           <Save className="h-4 w-4 mr-1" /> Salvar Rascunho
         </Button>
-        <Button variant="secondary" onClick={() => onPreview({ ...data, installment_value: calcInstallmentValue ?? data.installment_value })}>
+        <Button variant="secondary" onClick={() => onPreview({ ...withCustomKeys(data), installment_value: calcInstallmentValue ?? data.installment_value })}>
           <Eye className="h-4 w-4 mr-1" /> Preview
         </Button>
-        <Button onClick={() => onGeneratePdf({ ...data, installment_value: calcInstallmentValue ?? data.installment_value })} disabled={saving}>
+        <Button onClick={() => onGeneratePdf({ ...withCustomKeys(data), installment_value: calcInstallmentValue ?? data.installment_value })} disabled={saving}>
           <FileText className="h-4 w-4 mr-1" /> Gerar PDF
         </Button>
       </div>

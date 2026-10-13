@@ -3023,6 +3023,7 @@ export type Database = {
           client_id: string | null
           client_name: string | null
           created_at: string
+          custom_block_keys: Json | null
           created_by: string | null
           custom_services: string | null
           deadline: string | null
@@ -3082,6 +3083,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string | null
           created_at?: string
+          custom_block_keys?: Json | null
           created_by?: string | null
           custom_services?: string | null
           deadline?: string | null
@@ -3141,6 +3143,7 @@ export type Database = {
           client_id?: string | null
           client_name?: string | null
           created_at?: string
+          custom_block_keys?: Json | null
           created_by?: string | null
           custom_services?: string | null
           deadline?: string | null

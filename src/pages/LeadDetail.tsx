@@ -147,6 +147,7 @@ export default function LeadDetail() {
         ambientes: (proposal.ambientes as string[]) || [],
         totalArea: proposal.total_area ?? undefined,
         etapasAtivas: (proposal.etapas_ativas as string[]) || [],
+        customBlockKeys: Array.isArray(proposal.custom_block_keys) ? (proposal.custom_block_keys as string[]) : null,
         timelineBriefing: proposal.timeline_briefing ?? undefined,
         timelineStudy: proposal.timeline_study ?? undefined,
         timelineAnteprojeto: proposal.timeline_anteprojeto ?? undefined,

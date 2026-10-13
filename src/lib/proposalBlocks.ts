@@ -98,7 +98,7 @@ export function newFlowStepKey(): string {
 }
 
 /** Etapas do fluxo configuradas (do bloco "scope"), para o formulário da proposta. */
-export function flowStepsFromBlocks(blocks: ResolvedProposalBlock[] | undefined): BlockCard[] {
+export function flowStepsFromBlocks(blocks: ProposalBlock[] | undefined): BlockCard[] {
   const scope = blocks?.find((b) => b.key === "scope");
   const steps = scope ? (scope.content as ScopeContent).steps : BLOCK_DEFAULTS.scope.steps;
   return steps.filter((s) => !!s.key);
@@ -494,6 +494,15 @@ export function isProposalBlockKey(key: string): key is ProposalBlockKey {
   return key in DEFINITION_BY_KEY;
 }
 
+import {
+  customBlockContent,
+  customBlockType,
+  customTypeDef,
+  type CustomBlockKey,
+  type CustomBlockType,
+  type CustomContentMap,
+} from "@/lib/proposalCustomBlocks";
+
 /** Linha da tabela proposal_blocks. */
 export interface ProposalBlockRow {
   id: string;
@@ -517,6 +526,24 @@ export interface ResolvedProposalBlock<K extends ProposalBlockKey = ProposalBloc
   content: BlockContentMap[K];
   /** true quando não existe linha no banco (bloco ainda no padrão). */
   isDefault: boolean;
+}
+
+/** Bloco criado pela equipe a partir de um tipo (financeiro, linha do tempo, cartões). */
+export interface CustomProposalBlock<T extends CustomBlockType = CustomBlockType> {
+  key: CustomBlockKey;
+  type: T;
+  label: string;
+  display_order: number;
+  is_active: boolean;
+  content: CustomContentMap[T];
+  isDefault: false;
+}
+
+/** Qualquer bloco da lista: um dos 9 fixos ou um personalizado. */
+export type ProposalBlock = ResolvedProposalBlock | CustomProposalBlock;
+
+export function isCustomBlock(b: ProposalBlock): b is CustomProposalBlock {
+  return "type" in b;
 }
 
 function isBlockCard(v: unknown): v is BlockCard {
@@ -559,20 +586,34 @@ export function blockContent<K extends ProposalBlockKey>(key: K, raw?: unknown):
 /**
  * Resolve a lista final de blocos a partir das linhas do banco.
  * - Linhas com chave desconhecida são ignoradas.
- * - Blocos sem linha entram no fim, ativos e com o conteúdo padrão.
+ * - Blocos personalizados (custom-<tipo>-<id>) entram na ordem salva.
+ * - Blocos fixos sem linha entram no fim, ativos e com o conteúdo padrão.
  * - display_order é renumerado sequencialmente (0..n-1).
  */
-export function resolveProposalBlocks(rows?: ProposalBlockRow[] | null): ResolvedProposalBlock[] {
+export function resolveProposalBlocks(rows?: ProposalBlockRow[] | null): ProposalBlock[] {
   const known = (rows ?? [])
-    .filter((r) => isProposalBlockKey(r.key))
+    .filter((r) => isProposalBlockKey(r.key) || customBlockType(r.key) != null)
     .sort((a, b) => a.display_order - b.display_order || a.key.localeCompare(b.key));
 
   const seen = new Set<string>();
-  const resolved: ResolvedProposalBlock[] = [];
+  const resolved: ProposalBlock[] = [];
 
   for (const row of known) {
     if (seen.has(row.key)) continue;
     seen.add(row.key);
+    const type = customBlockType(row.key);
+    if (type) {
+      resolved.push({
+        key: row.key as CustomBlockKey,
+        type,
+        label: row.label?.trim() || customTypeDef(type).label,
+        display_order: resolved.length,
+        is_active: row.is_active !== false,
+        content: customBlockContent(type, row.content_json),
+        isDefault: false,
+      } as CustomProposalBlock);
+      continue;
+    }
     const key = row.key as ProposalBlockKey;
     const def = DEFINITION_BY_KEY[key];
     resolved.push({
@@ -601,12 +642,12 @@ export function resolveProposalBlocks(rows?: ProposalBlockRow[] | null): Resolve
 }
 
 /** Blocos no padrão (tabela vazia). */
-export function defaultProposalBlocks(): ResolvedProposalBlock[] {
+export function defaultProposalBlocks(): ProposalBlock[] {
   return resolveProposalBlocks([]);
 }
 
 /** Move um bloco de posição e renumera display_order. */
-export function moveProposalBlock(blocks: ResolvedProposalBlock[], from: number, to: number): ResolvedProposalBlock[] {
+export function moveProposalBlock<B extends { display_order: number }>(blocks: B[], from: number, to: number): B[] {
   if (from === to || from < 0 || to < 0 || from >= blocks.length || to >= blocks.length) return blocks;
   const next = [...blocks];
   const [moved] = next.splice(from, 1);
@@ -615,7 +656,7 @@ export function moveProposalBlock(blocks: ResolvedProposalBlock[], from: number,
 }
 
 export function findProposalBlock<K extends ProposalBlockKey>(
-  blocks: ResolvedProposalBlock[],
+  blocks: ProposalBlock[],
   key: K,
 ): ResolvedProposalBlock<K> | undefined {
   return blocks.find((b) => b.key === key) as ResolvedProposalBlock<K> | undefined;
@@ -623,14 +664,14 @@ export function findProposalBlock<K extends ProposalBlockKey>(
 
 /** Payload que vai pro upsert em proposal_blocks (sem team_id: o banco preenche). */
 export interface ProposalBlockUpsert {
-  key: ProposalBlockKey;
+  key: string;
   label: string;
   display_order: number;
   is_active: boolean;
   content_json: Record<string, unknown>;
 }
 
-export function toProposalBlockUpserts(blocks: ResolvedProposalBlock[]): ProposalBlockUpsert[] {
+export function toProposalBlockUpserts(blocks: ProposalBlock[]): ProposalBlockUpsert[] {
   return blocks.map((b, i) => ({
     key: b.key,
     label: b.label,
@@ -641,7 +682,7 @@ export function toProposalBlockUpserts(blocks: ResolvedProposalBlock[]): Proposa
 }
 
 /** Compara dois conjuntos de blocos (ordem, ativo e conteúdo). */
-export function proposalBlocksEqual(a: ResolvedProposalBlock[], b: ResolvedProposalBlock[]): boolean {
+export function proposalBlocksEqual(a: ProposalBlock[], b: ProposalBlock[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i].key !== b[i].key) return false;

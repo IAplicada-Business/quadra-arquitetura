@@ -115,6 +115,7 @@ export default function LeadsProposals() {
       ambientes: formData.ambientes,
       totalArea: formData.total_area,
       etapasAtivas: formData.etapas_ativas,
+      customBlockKeys: formData.custom_block_keys,
       portfolioCards: formData.portfolio_cards?.filter(c => c.foto_url) || [],
       validUntil: formData.valid_until,
     };
@@ -159,6 +160,7 @@ export default function LeadsProposals() {
       ambientes: formData.ambientes,
       total_area: formData.total_area,
       etapas_ativas: formData.etapas_ativas,
+      custom_block_keys: formData.custom_block_keys,
       value: formData.price_full,
       final_value: formData.price_full && formData.discount_cash_percent && formData.discount_cash_percent > 0
         ? formData.price_full * (1 - formData.discount_cash_percent / 100)
@@ -304,6 +306,7 @@ export default function LeadsProposals() {
       ambientes: (p as any).ambientes || [],
       total_area: (p as any).total_area ?? null,
       etapas_ativas: (p as any).etapas_ativas || [],
+      custom_block_keys: Array.isArray((p as any).custom_block_keys) ? ((p as any).custom_block_keys as string[]) : null,
       valid_until: (p as any).valid_until ?? null,
     };
   }, [editingProposal]);
