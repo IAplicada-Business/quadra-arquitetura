@@ -15,6 +15,7 @@ import {
   applyOnboardingPlaceholders,
   splitHeroTitle,
   onboardingMode,
+  buildOnboardingPlaceholders,
   type OnboardingSectionRow,
 } from "@/lib/onboarding";
 
@@ -199,5 +200,44 @@ describe("onboardingMode (regra da obra, igual à edge function)", () => {
     expect(onboardingMode({ is_enabled: true, sections_json: [] })).toBe("custom");
     expect(onboardingMode({ is_enabled: true, sections_json: [{ id: "a" }] })).toBe("custom");
     expect(onboardingMode({ is_enabled: false, sections_json: [{ id: "a" }] })).toBe("hidden");
+  });
+});
+
+describe("variáveis do onboarding com dados da obra", () => {
+  it("troca todas as variáveis e cai no genérico sem dado", () => {
+    const txt = "{cliente}: obra {projeto} em {fase}, {progresso}. Início {inicio}, entrega {entrega}, mudança {mudanca}, em {endereco}.";
+    expect(fillPlaceholders(txt, { cliente: "Ana", projeto: "Apto 101", fase: "Marcenaria", progresso: "45%", inicio: "01 de outubro", entrega: "20 de dezembro", mudanca: "10 de janeiro", endereco: "Rua A, 1 · BH" })).toBe(
+      "Ana: obra Apto 101 em Marcenaria, 45%. Início 01 de outubro, entrega 20 de dezembro, mudança 10 de janeiro, em Rua A, 1 · BH.",
+    );
+    expect(fillPlaceholders("{ Entrega } / {fase}", {})).toBe("data a definir / a etapa atual");
+  });
+
+  it("monta as variáveis a partir do projeto, do cronograma e do relatório", () => {
+    const p = buildOnboardingPlaceholders(
+      {
+        clientName: "Madalena",
+        projectName: "Casa Pampulha",
+        address: "Rua das Acácias, 120",
+        city: "Belo Horizonte",
+        startDate: "2026-09-09",
+        expectedEndDate: "2026-12-20",
+        moveInDate: null,
+        tasks: [
+          { id: "1", task_name: "Marcenaria", discipline: "Marcenaria", status: "em_execucao", start_date: "2026-10-01", end_date: "2026-10-30", color: null, progress_percentage: 40 },
+        ],
+        reports: [{ id: "r", week_start: "2026-10-05", summary: "", next_steps: "", completion_percent: 45, photo_urls: [], client_pending: null, created_at: "" }],
+      },
+      new Date(2026, 9, 14),
+    );
+    expect(p).toEqual({
+      cliente: "Madalena",
+      projeto: "Casa Pampulha",
+      fase: "Marcenaria",
+      progresso: "45%",
+      inicio: "09 de setembro",
+      entrega: "20 de dezembro",
+      mudanca: null,
+      endereco: "Rua das Acácias, 120 · Belo Horizonte",
+    });
   });
 });

@@ -153,7 +153,16 @@ export default function ProjectDetail() {
             <ProjectTrackingTab projectId={project.id} />
           </TabsContent>
           <TabsContent value="onboarding">
-            <ProjectOnboardingTab projectId={project.id} projectName={project.name} />
+            <ProjectOnboardingTab
+              projectId={project.id}
+              projectName={project.name}
+              clientName={clientName}
+              address={project.address}
+              city={project.city}
+              startDate={project.start_date}
+              expectedEndDate={project.expected_end_date}
+              moveInDate={project.client_move_in_date}
+            />
           </TabsContent>
         </div>
       </Tabs>
