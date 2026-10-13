@@ -67,18 +67,33 @@ const publicar = () => screen.getByRole("button", { name: /Publicar/ });
 const preview = () => screen.getByTestId("site-preview");
 
 describe("aba Site", () => {
-  it("abre no Hero, com as 6 seções e sem alterações pendentes", () => {
+  it("abre no Hero, com as catorze dobras e sem alterações pendentes", () => {
     render(<SiteContentTab />);
     const tabs = within(screen.getByRole("tablist", { name: "Seções do site" })).getAllByRole("tab");
-    expect(tabs.map((t) => t.textContent)).toEqual(["Hero", "Sobre", "Serviços", "Portfólio", "Contato", "Rodapé"]);
+    expect(tabs.map((t) => t.textContent)).toEqual([
+      "Hero",
+      "Por que a Quadra",
+      "Serviços",
+      "Jornada",
+      "Trilha do Cliente",
+      "Cases",
+      "Para arquitetos",
+      "Sobre",
+      "Prova social",
+      "Material gratuito",
+      "Perguntas frequentes",
+      "Blog",
+      "Contato",
+      "Rodapé",
+    ]);
     expect(publicar()).toBeDisabled();
-    expect(within(preview()).getByText("sob controle.")).toBeInTheDocument();
+    expect(within(preview()).getByText(/do número ao tijolo/)).toBeInTheDocument();
   });
 
   it("Camilla edita o texto do Sobre: preview atualiza e Publicar grava about.body", () => {
     render(<SiteContentTab />);
     fireEvent.click(screen.getByRole("tab", { name: "Sobre" }));
-    expect(within(preview()).getByText(/A Quadra nasceu do encontro/)).toBeInTheDocument();
+    expect(within(preview()).getByText(/A Quadra nasceu de uma dúvida/)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Texto"), {
       target: { value: "Somos a Quadra.\n\nFazemos obra **sem surpresa**." },
@@ -87,7 +102,7 @@ describe("aba Site", () => {
     expect(screen.getByText("Alterações não publicadas")).toBeInTheDocument();
     expect(within(preview()).getByText("Somos a Quadra.")).toBeInTheDocument();
     expect(within(preview()).getByText("sem surpresa").tagName).toBe("STRONG");
-    expect(within(preview()).queryByText(/A Quadra nasceu do encontro/)).not.toBeInTheDocument();
+    expect(within(preview()).queryByText(/A Quadra nasceu de uma dúvida/)).not.toBeInTheDocument();
 
     fireEvent.click(publicar());
     expect(publishMutate).toHaveBeenCalledWith({
@@ -101,7 +116,7 @@ describe("aba Site", () => {
     render(<SiteContentTab />);
 
     const file = new File(["x"], "obra.jpg", { type: "image/jpeg" });
-    fireEvent.change(screen.getByLabelText("Enviar Foto de fundo"), { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText("Enviar Foto"), { target: { files: [file] } });
 
     await waitFor(() =>
       expect(screen.getByTestId("site-hero-image-thumb")).toHaveAttribute("src", "https://cdn.test/site-media/hero/nova.jpg"),

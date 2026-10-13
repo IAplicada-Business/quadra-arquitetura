@@ -107,7 +107,17 @@ export function SiteListField({ id, field, items, folder, defaultImageFor, onCha
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
   };
-  const add = () => onChange([...items, field.itemImage ? { title: "", desc: "", image: "" } : { title: "", desc: "" }]);
+  const add = () =>
+    onChange([
+      ...items,
+      {
+        title: "",
+        desc: "",
+        ...(field.itemImage ? { image: "" } : null),
+        ...(field.itemTag ? { tag: "" } : null),
+        ...(field.itemBullets ? { bullets: "" } : null),
+      },
+    ]);
 
   return (
     <div className="space-y-2">
@@ -121,6 +131,15 @@ export function SiteListField({ id, field, items, folder, defaultImageFor, onCha
       {items.length === 0 && <p className="text-xs text-muted-foreground">Nenhum item. O bloco fica vazio no site.</p>}
       {items.map((item, i) => (
         <div key={i} className="border rounded-md p-2.5 space-y-2 bg-background" data-testid={`${id}-item-${i}`}>
+          {field.itemTag && (
+            <Input
+              value={item.tag ?? ""}
+              placeholder={field.itemTag}
+              aria-label={`${field.label} ${i + 1}: ${field.itemTag}`}
+              onChange={(e) => update(i, { tag: e.target.value })}
+              className="h-8 text-xs"
+            />
+          )}
           <div className="flex items-center gap-2">
             <Input
               value={item.title}
@@ -155,6 +174,16 @@ export function SiteListField({ id, field, items, folder, defaultImageFor, onCha
               aria-label={`${field.label} ${i + 1}: ${labels.desc}`}
               onChange={(e) => update(i, { desc: e.target.value })}
               className="h-8 text-sm"
+            />
+          )}
+          {field.itemBullets && (
+            <Textarea
+              value={item.bullets ?? ""}
+              rows={4}
+              placeholder={field.itemBullets}
+              aria-label={`${field.label} ${i + 1}: ${field.itemBullets}`}
+              onChange={(e) => update(i, { bullets: e.target.value })}
+              className="text-sm"
             />
           )}
           {field.itemImage && (
