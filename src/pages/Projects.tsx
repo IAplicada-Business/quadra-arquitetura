@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ProjectForm } from "@/components/projects/ProjectForm";
+import { PROJECT_NUMBERS_QUERY_KEY, prepareProjectNumber } from "@/hooks/useProjectNumbers";
 import {
   PROJECT_STATUSES,
   statusLabels,
@@ -62,14 +63,9 @@ export default function Projects() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      // Get next Q-prefixed project_number
-      const { data: rows } = await supabase.from("projects").select("project_number");
-      const maxNum = (rows ?? []).reduce((max, r) => {
-        const n = parseInt(String(r.project_number ?? "").replace("Q", ""), 10);
-        return isNaN(n) ? max : Math.max(max, n);
-      }, 0);
-      const nextNumber = `Q${Math.max(maxNum, 144) + 1}`;
+    mutationFn: async (raw: Record<string, unknown>) => {
+      // Código digitado no formulário (ou sugestão automática), revalidado no banco.
+      const data = await prepareProjectNumber(raw);
 
       const insertData = {
         name: data.name as string,
@@ -85,13 +81,16 @@ export default function Projects() {
         estimated_budget: (data.estimated_budget as number) || null,
         finish_level: (data.finish_level as number) || null,
         user_id: user!.id,
-        project_number: nextNumber,
+        client_move_in_date: (data.client_move_in_date as string) || null,
+        sub_status: (data.sub_status as string) || null,
+        project_number: (data.project_number as string) || null,
       };
       const { error } = await supabase.from("projects").insert([insertData] as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: PROJECT_NUMBERS_QUERY_KEY });
       setFormOpen(false);
       toast({ title: "Projeto criado com sucesso" });
     },
@@ -99,12 +98,14 @@ export default function Projects() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...data }: { id: string } & Record<string, unknown>) => {
+    mutationFn: async ({ id, ...raw }: { id: string } & Record<string, unknown>) => {
+      const data = await prepareProjectNumber(raw, id);
       const { error } = await supabase.from("projects").update(data).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: PROJECT_NUMBERS_QUERY_KEY });
       setFormOpen(false);
       setEditingProject(null);
       toast({ title: "Projeto atualizado" });

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { nextProjectNumber } from "@/hooks/useProjectNumbers";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { handleDeleteError } from "@/lib/handleDeleteError";
@@ -253,13 +254,8 @@ export function useLeads(type: LeadType = "comercial") {
         .limit(1)
         .single();
 
-      // 5. Get next Q-prefixed project_number
-      const { data: rows } = await supabase.from("projects").select("project_number");
-      const maxNum = (rows ?? []).reduce((max: number, r: any) => {
-        const n = parseInt(String(r.project_number ?? "").replace("Q", ""), 10);
-        return isNaN(n) ? max : Math.max(max, n);
-      }, 0);
-      const nextNumber = `Q${Math.max(maxNum, 144) + 1}`;
+      // Próximo código automático (Q<n>); ver src/lib/projectNumber.ts
+      const nextNumber = await nextProjectNumber();
 
       // 6. Create project
       const projectName = `${lead.name} — ${lead.project_type || "projeto"}`;

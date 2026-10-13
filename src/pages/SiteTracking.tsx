@@ -12,6 +12,8 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ProjectForm } from "@/components/projects/ProjectForm";
+import { PROJECT_NUMBERS_QUERY_KEY, prepareProjectNumber } from "@/hooks/useProjectNumbers";
+import { DuplicateProjectNumberError } from "@/lib/projectNumber";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -93,31 +95,35 @@ export default function SiteTracking() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (values: Record<string, unknown>) => {
+    mutationFn: async (raw: Record<string, unknown>) => {
+      const values = await prepareProjectNumber(raw);
       const { error } = await supabase.from("projects").insert({ ...values, user_id: user!.id } as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active_projects_tracking"] });
+      queryClient.invalidateQueries({ queryKey: PROJECT_NUMBERS_QUERY_KEY });
       toast.success("Obra criada com sucesso!");
       setFormOpen(false);
     },
-    onError: () => toast.error("Erro ao criar obra."),
+    onError: (e: Error) => toast.error(e instanceof DuplicateProjectNumberError ? e.message : "Erro ao criar obra."),
   });
 
   const updateMutation = useMutation({
     mutationFn: async (values: Record<string, unknown>) => {
-      const { id, ...rest } = values;
+      const { id, ...raw } = values;
+      const rest = await prepareProjectNumber(raw, id as string);
       const { error } = await supabase.from("projects").update(rest as any).eq("id", id as string);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active_projects_tracking"] });
+      queryClient.invalidateQueries({ queryKey: PROJECT_NUMBERS_QUERY_KEY });
       toast.success("Obra atualizada!");
       setFormOpen(false);
       setEditingProject(null);
     },
-    onError: () => toast.error("Erro ao atualizar obra."),
+    onError: (e: Error) => toast.error(e instanceof DuplicateProjectNumberError ? e.message : "Erro ao atualizar obra."),
   });
 
   const deleteMutation = useMutation({

@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertTriangle, Wand2 } from "lucide-react";
 import { PROJECT_STATUSES, statusLabels, subStatusOptions } from "@/lib/projectConstants";
+import { useProjectNumbers } from "@/hooks/useProjectNumbers";
+import { duplicateCodeMessage, findProjectsWithCode, normalizeProjectNumber } from "@/lib/projectNumber";
 
 const typeLabels: Record<string, string> = {
   residencial: "Residencial",
@@ -39,6 +43,14 @@ export function ProjectForm({ open, onOpenChange, onSubmit, initialData, isLoadi
   const [clientMoveInDate, setClientMoveInDate] = useState("");
   const [estimatedBudget, setEstimatedBudget] = useState("");
   const [finishLevel, setFinishLevel] = useState("");
+  const [projectNumber, setProjectNumber] = useState("");
+  const [codeTouched, setCodeTouched] = useState(false);
+  const [allowDuplicate, setAllowDuplicate] = useState(false);
+
+  const { rows: codeRows, suggestion } = useProjectNumbers(open);
+  const editingId = (initialData?.id as string | undefined) ?? null;
+  const duplicateOwners = findProjectsWithCode(projectNumber, codeRows, editingId);
+  const isDuplicate = duplicateOwners.length > 0;
 
   const { data: clients } = useQuery({
     queryKey: ["clients"],
@@ -65,16 +77,33 @@ export function ProjectForm({ open, onOpenChange, onSubmit, initialData, isLoadi
       setClientMoveInDate((initialData.client_move_in_date as string) || "");
       setEstimatedBudget(initialData.estimated_budget ? String(initialData.estimated_budget) : "");
       setFinishLevel(initialData.finish_level ? String(initialData.finish_level) : "");
+      setProjectNumber((initialData.project_number as string) || "");
     } else {
       setName(""); setClientId(""); setStatus("proposta"); setSubStatus(""); setProjectType("residencial");
       setAddress(""); setNeighborhood(""); setCity(""); setAreaSqm(""); setStartDate("");
       setExpectedEndDate(""); setClientMoveInDate(""); setEstimatedBudget(""); setFinishLevel("");
+      setProjectNumber("");
     }
+    setCodeTouched(false);
+    setAllowDuplicate(false);
   }, [initialData, open]);
+
+  // Projeto novo: a numeração automática é o padrão sugerido, até a
+  // pessoa digitar outro código.
+  useEffect(() => {
+    if (open && !initialData && !codeTouched) setProjectNumber(suggestion);
+  }, [open, initialData, codeTouched, suggestion]);
+
+  useEffect(() => {
+    setAllowDuplicate(false);
+  }, [projectNumber]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDuplicate && !allowDuplicate) return;
     onSubmit({
+      project_number: normalizeProjectNumber(projectNumber) || null,
+      allow_duplicate_code: isDuplicate && allowDuplicate,
       name,
       client_id: clientId || null,
       status,
@@ -100,6 +129,47 @@ export function ProjectForm({ open, onOpenChange, onSubmit, initialData, isLoadi
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 sm:col-span-1">
+              <Label htmlFor="project_number">Código do projeto</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="project_number"
+                  value={projectNumber}
+                  onChange={(e) => { setProjectNumber(e.target.value); setCodeTouched(true); }}
+                  placeholder={suggestion}
+                  className="font-mono uppercase"
+                  aria-invalid={isDuplicate}
+                  aria-describedby="project_number_help"
+                />
+                {normalizeProjectNumber(projectNumber) !== suggestion && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10 shrink-0"
+                    onClick={() => { setProjectNumber(suggestion); setCodeTouched(true); }}
+                    title="Usar a numeração automática"
+                  >
+                    <Wand2 className="h-3.5 w-3.5 mr-1" /> {suggestion}
+                  </Button>
+                )}
+              </div>
+              <p id="project_number_help" className="text-[11px] text-muted-foreground mt-1">
+                Sugestão automática: {suggestion}. Pode trocar por um código legado de projeto antigo.
+              </p>
+            </div>
+            {isDuplicate && (
+              <div className="col-span-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm space-y-2" role="alert" data-testid="project-number-duplicate">
+                <p className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                  <span>{duplicateCodeMessage(projectNumber, duplicateOwners)}</span>
+                </p>
+                <label className="flex items-center gap-2 cursor-pointer text-xs">
+                  <Checkbox checked={allowDuplicate} onCheckedChange={(v) => setAllowDuplicate(v === true)} aria-label="Reutilizar este código" />
+                  Reutilizar este código mesmo assim (código legado)
+                </label>
+              </div>
+            )}
             <div className="col-span-2">
               <Label htmlFor="name">Nome do Projeto *</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -195,7 +265,7 @@ export function ProjectForm({ open, onOpenChange, onSubmit, initialData, isLoadi
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={isLoading || !name}>{initialData ? "Salvar" : "Criar Projeto"}</Button>
+            <Button type="submit" disabled={isLoading || !name || (isDuplicate && !allowDuplicate)}>{initialData ? "Salvar" : "Criar Projeto"}</Button>
           </div>
         </form>
       </DialogContent>
