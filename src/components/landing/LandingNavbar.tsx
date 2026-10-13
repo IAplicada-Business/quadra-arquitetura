@@ -57,7 +57,7 @@ export function LandingNavbar() {
               key={l.href}
               onClick={() => smoothTo(l.href)}
               className={`text-sm tracking-wider uppercase transition-colors hover:opacity-70 ${
-                scrolled ? "text-[#1B2A4A]" : "text-[#F0DCC8]"
+                scrolled ? "text-brand-navy" : "text-brand-areia"
               }`}
               style={{ letterSpacing: "2px", fontWeight: 400 }}
             >
@@ -70,7 +70,7 @@ export function LandingNavbar() {
           <button
             onClick={() => navigate("/login")}
             className={`text-xs tracking-wider uppercase transition-opacity hover:opacity-70 ${
-              scrolled ? "text-[#1B2A4A]/60" : "text-[#F0DCC8]/70"
+              scrolled ? "text-brand-navy/60" : "text-brand-areia/70"
             }`}
             style={{ letterSpacing: "2px" }}
           >
@@ -80,8 +80,8 @@ export function LandingNavbar() {
             onClick={() => smoothTo("#contato")}
             className={`px-5 py-2.5 text-xs tracking-wider uppercase transition-all ${
               scrolled
-                ? "bg-[#1B2A4A] text-[#F0DCC8] hover:bg-[#2d4373]"
-                : "bg-[#F0DCC8] text-[#1B2A4A] hover:bg-white"
+                ? "bg-brand-navy text-brand-areia hover:bg-[#2d4373]"
+                : "bg-brand-areia text-brand-navy hover:bg-white"
             }`}
             style={{ letterSpacing: "2px", fontWeight: 500 }}
           >
@@ -93,37 +93,37 @@ export function LandingNavbar() {
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <button className="md:hidden" aria-label="Menu">
-              <Menu className={`h-6 w-6 ${scrolled ? "text-[#1B2A4A]" : "text-[#F0DCC8]"}`} />
+              <Menu className={`h-6 w-6 ${scrolled ? "text-brand-navy" : "text-brand-areia"}`} />
             </button>
           </SheetTrigger>
-          <SheetContent side="right" className="bg-[#1B2A4A] border-none w-full sm:w-96">
+          <SheetContent side="right" className="bg-brand-navy border-none w-full sm:w-96">
             <div className="flex flex-col h-full pt-8">
               <button onClick={() => setMobileOpen(false)} className="self-end mb-8">
-                <X className="h-6 w-6 text-[#F0DCC8]" />
+                <X className="h-6 w-6 text-brand-areia" />
               </button>
               <div className="flex flex-col gap-6 flex-1">
                 {links.map((l) => (
                   <button
                     key={l.href}
                     onClick={() => smoothTo(l.href)}
-                    className="text-[#F0DCC8] text-lg text-left tracking-wider uppercase"
+                    className="text-brand-areia text-lg text-left tracking-wider uppercase"
                     style={{ letterSpacing: "3px", fontFamily: "'Cormorant Garamond', serif" }}
                   >
                     {l.label}
                   </button>
                 ))}
               </div>
-              <div className="border-t border-[#F0DCC8]/20 pt-6 flex flex-col gap-4">
+              <div className="border-t border-brand-areia/20 pt-6 flex flex-col gap-4">
                 <button
                   onClick={() => smoothTo("#contato")}
-                  className="bg-[#F0DCC8] text-[#1B2A4A] py-3 text-sm tracking-widest uppercase"
+                  className="bg-brand-areia text-brand-navy py-3 text-sm tracking-widest uppercase"
                   style={{ letterSpacing: "3px" }}
                 >
                   Fale conosco
                 </button>
                 <button
                   onClick={() => navigate("/login")}
-                  className="text-[#F0DCC8]/70 text-xs tracking-widest uppercase"
+                  className="text-brand-areia/70 text-xs tracking-widest uppercase"
                   style={{ letterSpacing: "2px" }}
                 >
                   Area da Equipe

@@ -25,7 +25,7 @@ export default function Landing() {
 
   // Segura a página na primeira leitura (limitada por timeout no hook) pra
   // não piscar o texto padrão antes do publicado.
-  if (isLoading) return <div className="min-h-screen bg-[#1B2A4A]" aria-busy="true" />;
+  if (isLoading) return <div className="min-h-screen bg-brand-navy" aria-busy="true" />;
 
   return (
     <div className="min-h-screen bg-white">

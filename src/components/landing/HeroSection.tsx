@@ -51,11 +51,11 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           className="max-w-4xl"
         >
           {/* Decorative line */}
-          <div className="w-16 h-px bg-[#C4756E] mb-8 md:mb-10" />
+          <div className="w-16 h-px bg-brand-terracota mb-8 md:mb-10" />
 
           {/* Title */}
           <h1
-            className="text-[#F0DCC8] mb-6 md:mb-8"
+            className="text-brand-areia mb-6 md:mb-8"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 300,
@@ -64,12 +64,12 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
               letterSpacing: "-0.02em",
             }}
           >
-            <RichText text={content.title} styles={{ em: { color: "#C4756E" } }} />
+            <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))" } }} />
           </h1>
 
           {/* Subtitle */}
           <p
-            className="text-[#F0DCC8]/85 max-w-2xl mb-10 md:mb-12"
+            className="text-brand-areia/85 max-w-2xl mb-10 md:mb-12"
             style={{
               fontFamily: "'Jost', sans-serif",
               fontSize: "clamp(1rem, 1.3vw, 1.25rem)",
@@ -84,7 +84,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => smoothTo("#contato")}
-              className="group bg-[#F0DCC8] text-[#1B2A4A] px-8 py-4 text-xs tracking-widest uppercase transition-all hover:bg-white"
+              className="group bg-brand-areia text-brand-navy px-8 py-4 text-xs tracking-widest uppercase transition-all hover:bg-white"
               style={{ letterSpacing: "3px", fontWeight: 500 }}
             >
               <span className="inline-block transition-transform group-hover:translate-x-1">
@@ -93,7 +93,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
             </button>
             <button
               onClick={() => smoothTo("#projetos")}
-              className="border border-[#F0DCC8]/40 text-[#F0DCC8] px-8 py-4 text-xs tracking-widest uppercase transition-all hover:bg-[#F0DCC8]/10"
+              className="border border-brand-areia/40 text-brand-areia px-8 py-4 text-xs tracking-widest uppercase transition-all hover:bg-brand-areia/10"
               style={{ letterSpacing: "3px", fontWeight: 400 }}
             >
               {content.ctaSecondary}
@@ -107,7 +107,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[#F0DCC8]/60 flex flex-col items-center gap-2 hover:text-[#F0DCC8] transition-colors"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-brand-areia/60 flex flex-col items-center gap-2 hover:text-brand-areia transition-colors"
           aria-label="Rolar para baixo"
         >
           <span
