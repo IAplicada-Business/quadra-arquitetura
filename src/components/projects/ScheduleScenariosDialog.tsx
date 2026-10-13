@@ -116,7 +116,7 @@ export function ScheduleScenariosDialog({
         <DialogContent className="max-w-5xl max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FlaskConical className="h-5 w-5 text-accent" />
+              <FlaskConical className="h-5 w-5 text-accent-ink" />
               Cenários de Cronograma
             </DialogTitle>
             <DialogDescription>

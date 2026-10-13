@@ -31,7 +31,7 @@ export function CascadePreviewDialog({ open, onOpenChange, changes, onConfirm, i
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-warning" />
+            <AlertTriangle className="h-5 w-5 text-warning-ink" />
             {title || `Esta alteração afeta ${changes.length} atividade${changes.length !== 1 ? "s" : ""}`}
           </DialogTitle>
           <DialogDescription>

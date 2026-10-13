@@ -13,7 +13,7 @@ export const DELIVERY_PRIORITY_LABELS: Record<string, string> = {
 export const DELIVERY_PRIORITY_CLASSES: Record<string, string> = {
   baixa: "bg-muted text-muted-foreground",
   media: "bg-primary/10 text-primary border-primary/30",
-  alta: "bg-warning/15 text-warning border-warning/30",
+  alta: "bg-warning/15 text-warning-ink border-warning/30",
   urgente: "bg-destructive/15 text-destructive border-destructive/30",
 };
 

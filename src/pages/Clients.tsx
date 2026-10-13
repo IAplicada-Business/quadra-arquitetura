@@ -456,7 +456,7 @@ export default function Clients() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-lg bg-muted/30">
           <div className="p-4 rounded-full bg-secondary mb-4">
-            <Users className="h-8 w-8 text-accent" />
+            <Users className="h-8 w-8 text-accent-ink" />
           </div>
           <h3 className="text-lg font-display font-semibold mb-1">
             Nenhum cliente encontrado

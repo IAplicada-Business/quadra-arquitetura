@@ -26,7 +26,7 @@ export const statusColors: Record<string, string> = {
   contrato: "bg-primary/10 text-primary",
   projeto: "bg-blue-100 text-blue-700",
   planejamento: "bg-indigo-100 text-indigo-700",
-  mobilizacao: "bg-warning/10 text-warning",
+  mobilizacao: "bg-warning/10 text-warning-ink",
   execucao: "bg-orange-100 text-orange-700",
   concluido: "bg-success/20 text-success",
 };

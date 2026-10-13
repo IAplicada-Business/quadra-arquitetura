@@ -333,7 +333,7 @@ export function GanttChart({ tasks, allTasks, onEdit, viewMode, showSummary = tr
                         <TooltipTrigger asChild>
                           <div className="flex flex-col justify-center cursor-pointer min-w-0 overflow-hidden" onClick={() => onEdit?.(task)}>
                             <div className="truncate text-xs font-medium flex items-center gap-1">
-                              {task.requires_presence && <User className="h-3 w-3 text-warning shrink-0" />}
+                              {task.requires_presence && <User className="h-3 w-3 text-warning-ink shrink-0" />}
                               {(isOverdue || isExpiringSoon) && (
                                 <AlertTriangle className="h-3 w-3 shrink-0" style={{ color: isOverdue ? "#DC2626" : "#D97706" }} />
                               )}

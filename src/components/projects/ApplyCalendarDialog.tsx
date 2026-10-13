@@ -111,7 +111,7 @@ export function ApplyCalendarDialog({
 
           {skippedCount > 0 && (
             <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-xs flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-warning" />
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-warning-ink" />
               <span>
                 {skippedCount} atividade(s) sem duração em dias serão ignoradas.
                 Edite a atividade e preencha <strong>duração (dias)</strong> antes de aplicar.

@@ -186,12 +186,12 @@ export default function SiteTracking() {
         </Card>
         <Card className="bg-warning/5 border-warning/20">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-warning/10 rounded-full text-warning">
+            <div className="p-3 bg-warning/10 rounded-full text-warning-ink">
               <AlertTriangle className="h-6 w-6" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-medium">Pendências</p>
-              <p className="text-2xl font-bold text-warning">{pendingCount}</p>
+              <p className="text-2xl font-bold text-warning-ink">{pendingCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -208,12 +208,12 @@ export default function SiteTracking() {
         </Card>
         <Card className="bg-accent/5 border-accent/20">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-accent/10 rounded-full text-accent">
+            <div className="p-3 bg-accent/10 rounded-full text-accent-ink">
               <CalendarIcon className="h-6 w-6" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-medium">Visitas Semana</p>
-              <p className="text-2xl font-bold text-accent">{visitsThisWeek}</p>
+              <p className="text-2xl font-bold text-accent-ink">{visitsThisWeek}</p>
             </div>
           </CardContent>
         </Card>

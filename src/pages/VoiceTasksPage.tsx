@@ -21,7 +21,7 @@ import { toast } from "@/hooks/use-toast";
 const priorityColors: Record<string, string> = {
   baixa: "bg-muted text-muted-foreground",
   media: "bg-primary/10 text-primary",
-  alta: "bg-warning/10 text-warning",
+  alta: "bg-warning/10 text-warning-ink",
   urgente: "bg-destructive/10 text-destructive",
 };
 

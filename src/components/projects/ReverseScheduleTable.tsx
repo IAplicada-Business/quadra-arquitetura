@@ -510,7 +510,7 @@ export function ReverseScheduleTable({
                       ) : m.isFinished ? (
                         <Check className="h-4 w-4 text-success inline" aria-label="Concluída" />
                       ) : (
-                        <span className={m.remainingDays <= 2 ? "text-warning font-semibold" : ""}>{m.remainingDays}</span>
+                        <span className={m.remainingDays <= 2 ? "text-warning-ink font-semibold" : ""}>{m.remainingDays}</span>
                       )}
                       {!m.hasStarted && !m.isFinished && m.daysToStart != null && (
                         <span className="block text-[10px] text-muted-foreground">começa em {m.daysToStart}d</span>
@@ -547,7 +547,7 @@ export function ReverseScheduleTable({
                         >
                           <ClipboardCheck
                             className={`h-3.5 w-3.5 ${
-                              progress.total === 0 ? "text-muted-foreground" : progress.pending === 0 ? "text-success" : "text-warning"
+                              progress.total === 0 ? "text-muted-foreground" : progress.pending === 0 ? "text-success" : "text-warning-ink"
                             }`}
                           />
                           {progress.total > 0 ? (

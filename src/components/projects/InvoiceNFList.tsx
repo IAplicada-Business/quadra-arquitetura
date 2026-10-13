@@ -32,7 +32,7 @@ function formatDate(d: string | null | undefined) {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-warning/30" },
+  pendente: { label: "Pendente", className: "bg-warning/15 text-warning-ink border-warning/30" },
   enviada_contador: { label: "Enviada", className: "bg-primary/15 text-primary border-primary/30" },
   arquivada: { label: "Arquivada", className: "bg-muted text-muted-foreground border-muted" },
 };
