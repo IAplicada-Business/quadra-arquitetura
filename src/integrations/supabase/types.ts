@@ -2051,6 +2051,7 @@ export type Database = {
           id: string
           image_urls: string[]
           is_active: boolean
+          layout: string | null
           team_id: string
           template_id: string
           title: string
@@ -2067,6 +2068,7 @@ export type Database = {
           id?: string
           image_urls?: string[]
           is_active?: boolean
+          layout?: string | null
           team_id?: string
           template_id: string
           title: string
@@ -2083,6 +2085,7 @@ export type Database = {
           id?: string
           image_urls?: string[]
           is_active?: boolean
+          layout?: string | null
           team_id?: string
           template_id?: string
           title?: string

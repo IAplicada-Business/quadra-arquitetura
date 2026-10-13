@@ -72,6 +72,7 @@ export function useOnboardingTemplates() {
           cta_url: r.cta_url,
           display_order: r.display_order,
           is_active: r.is_active,
+          layout: r.layout ?? null,
         }));
         if (copies.length > 0) {
           const { error: e3 } = await supabase.from("onboarding_sections").insert(copies);
@@ -203,6 +204,7 @@ export function useOnboardingTemplate(templateId?: string | null) {
         cta_url: s.cta_url,
         display_order: i,
         is_active: s.is_active,
+        layout: s.layout ?? null,
       }));
       if (upserts.length > 0) {
         const { error } = await supabase.from("onboarding_sections").upsert(upserts, { onConflict: "id" });

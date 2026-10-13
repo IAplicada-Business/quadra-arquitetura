@@ -3,8 +3,10 @@ import { RichText } from "@/components/leads/proposal-pages/RichText";
 import {
   applyOnboardingPlaceholders,
   parseVideoUrl,
+  sectionLayout,
   splitHeroTitle,
   visibleSections,
+  type OnboardingLayout,
   type OnboardingPlaceholders,
   type OnboardingSection,
 } from "@/lib/onboarding";
@@ -89,9 +91,140 @@ function Cta({ s, dark }: { s: OnboardingSection; dark?: boolean }) {
   );
 }
 
+type Block =
+  | { kind: "single"; layout: Exclude<OnboardingLayout, "card">; section: OnboardingSection; first: boolean }
+  | { kind: "cards"; items: { section: OnboardingSection; number: number }[] };
+
+/** Agrupa cards seguidos numa grade; as demais seções ocupam a largura toda. */
+function toBlocks(list: OnboardingSection[]): Block[] {
+  const blocks: Block[] = [];
+  let n = 0;
+  list.forEach((section, i) => {
+    const layout = sectionLayout(section, i);
+    if (layout === "card") {
+      const last = blocks[blocks.length - 1];
+      const item = { section, number: ++n };
+      if (last?.kind === "cards") last.items.push(item);
+      else blocks.push({ kind: "cards", items: [item] });
+    } else {
+      blocks.push({ kind: "single", layout, section, first: i === 0 });
+    }
+  });
+  return blocks;
+}
+
+const dim = (s: OnboardingSection) => (!s.is_active ? "opacity-50" : "");
+
+function Body({ s, className }: { s: OnboardingSection; className: string }) {
+  if (!s.body) return null;
+  return (
+    <p className={className}>
+      <RichText text={s.body} />
+    </p>
+  );
+}
+
+function CapaBlock({ s, first, compact }: { s: OnboardingSection; first: boolean; compact?: boolean }) {
+  const title = splitHeroTitle(s.title);
+  const hasVideo = !!s.video_url;
+  return (
+    <section data-testid={`onboarding-section-${s.id}`} data-layout="capa" className={`rounded-lg bg-[var(--trilha-navy)] p-6 text-[var(--trilha-areia)] shadow-md sm:p-8 ${dim(s)}`}>
+      <div className={`grid gap-6 ${hasVideo && !compact ? "md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-center" : ""}`}>
+        {hasVideo && <VideoBlock url={s.video_url!} title={s.title} dark />}
+        <div className="space-y-3">
+          {first && <p className="trilha-eyebrow">Bem-vindos ao seu espaço</p>}
+          {s.title && (
+            <h1 className="font-display text-2xl leading-snug sm:text-3xl">
+              <span className="font-medium">{title.lead}</span>
+              {title.rest && <span className="font-normal italic text-[var(--trilha-areia)]/90"> — {title.rest}</span>}
+            </h1>
+          )}
+          <Body s={s} className="text-sm leading-relaxed text-[var(--trilha-areia)]/85" />
+          <Images urls={s.image_urls} title={s.title} />
+          <Cta s={s} dark />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CardsBlock({ items, compact }: { items: { section: OnboardingSection; number: number }[]; compact?: boolean }) {
+  const cols = compact || items.length === 1 ? "grid-cols-1" : items.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
+  return (
+    <div className={`grid gap-4 ${cols}`}>
+      {items.map(({ section: s, number }) => (
+        <article key={s.id} data-testid={`onboarding-section-${s.id}`} data-layout="card" className={`space-y-2 rounded-lg border border-[var(--trilha-areia)] bg-white p-5 ${dim(s)}`}>
+          <p className="font-display text-sm text-[var(--trilha-terracota)]">{String(number).padStart(2, "0")}</p>
+          {s.title && <h2 className="font-display text-lg font-medium leading-snug text-[var(--trilha-navy)]">{s.title}</h2>}
+          <Body s={s} className="text-sm leading-relaxed text-[var(--trilha-navy)]/80" />
+          {s.video_url && <VideoBlock url={s.video_url} title={s.title} />}
+          <Images urls={s.image_urls} title={s.title} />
+          <Cta s={s} />
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function TextoBlock({ s }: { s: OnboardingSection }) {
+  return (
+    <section data-testid={`onboarding-section-${s.id}`} data-layout="texto" className={`space-y-3 px-1 ${dim(s)}`}>
+      {s.title && <h2 className="font-display text-2xl leading-snug text-[var(--trilha-navy)]">{s.title}</h2>}
+      <Body s={s} className="text-base leading-relaxed text-[var(--trilha-navy)]/85" />
+      {s.video_url && <VideoBlock url={s.video_url} title={s.title} />}
+      <Images urls={s.image_urls} title={s.title} />
+      <Cta s={s} />
+    </section>
+  );
+}
+
+function DestaqueBlock({ s }: { s: OnboardingSection }) {
+  return (
+    <section
+      data-testid={`onboarding-section-${s.id}`}
+      data-layout="destaque"
+      className={`space-y-3 rounded-lg border-l-4 border-[var(--trilha-terracota)] bg-[var(--trilha-terracota)]/10 p-6 ${dim(s)}`}
+    >
+      {s.title && <h2 className="font-display text-xl font-medium leading-snug text-[var(--trilha-navy)]">{s.title}</h2>}
+      <Body s={s} className="text-sm leading-relaxed text-[var(--trilha-navy)]/85" />
+      {s.video_url && <VideoBlock url={s.video_url} title={s.title} />}
+      <Images urls={s.image_urls} title={s.title} />
+      <Cta s={s} />
+    </section>
+  );
+}
+
+function MidiaBlock({ s, compact }: { s: OnboardingSection; compact?: boolean }) {
+  const hasMedia = !!s.video_url || s.image_urls.length > 0;
+  return (
+    <section data-testid={`onboarding-section-${s.id}`} data-layout="midia" className={`rounded-lg border border-[var(--trilha-areia)] bg-white p-5 sm:p-6 ${dim(s)}`}>
+      <div className={`grid gap-6 ${hasMedia && !compact ? "md:grid-cols-2 md:items-center" : ""}`}>
+        {hasMedia && (
+          <div className="space-y-2">
+            {s.video_url ? <VideoBlock url={s.video_url} title={s.title} /> : null}
+            {s.image_urls.length > 0 && (
+              <a href={s.image_urls[0]} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-md border border-[var(--trilha-areia)]">
+                <img src={s.image_urls[0]} alt={s.title || "Imagem"} className="aspect-[4/3] w-full object-cover" loading="lazy" />
+              </a>
+            )}
+          </div>
+        )}
+        <div className="space-y-3">
+          {s.title && <h2 className="font-display text-xl font-medium leading-snug text-[var(--trilha-navy)]">{s.title}</h2>}
+          <Body s={s} className="text-sm leading-relaxed text-[var(--trilha-navy)]/80" />
+          {s.image_urls.length > 1 && <Images urls={s.image_urls.slice(1)} title={s.title} />}
+          <Cta s={s} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /**
- * Tela 0 do mockup "Trilha do Cliente": marca centralizada, capa navy
- * com vídeo de boas-vindas, passos numerados e o botão de entrar.
+ * Tela 0 do mockup "Trilha do Cliente": marca centralizada e as seções no
+ * layout escolhido para cada uma (capa, card numerado, texto, destaque ou
+ * mídia ao lado), com o botão de entrar no fim. Sem layout escolhido, a
+ * primeira seção é a capa e as demais viram cards, como antes.
  * Usada no portal (/client/:token) e no preview do editor, pra ser fiel.
  */
 export function OnboardingView({ sections, placeholders, onEnter, enterLabel = "Entrar no meu projeto", showInactive, compact }: Props) {
@@ -99,9 +232,7 @@ export function OnboardingView({ sections, placeholders, onEnter, enterLabel = "
   const list = showInactive ? filled : visibleSections(filled);
   if (list.length === 0) return null;
 
-  const [hero, ...steps] = list;
-  const heroTitle = splitHeroTitle(hero.title);
-  const heroHasVideo = !!hero.video_url;
+  const blocks = toBlocks(list);
 
   return (
     <div className={`trilha rounded-xl ${compact ? "px-4 py-6" : "px-4 py-10 sm:px-8"}`} data-testid="onboarding-view">
@@ -110,55 +241,20 @@ export function OnboardingView({ sections, placeholders, onEnter, enterLabel = "
           quadra<span className="text-[var(--trilha-terracota)]">.</span>
         </p>
 
-        {/* Capa */}
-        <section
-          data-testid={`onboarding-section-${hero.id}`}
-          className={`rounded-lg bg-[var(--trilha-navy)] p-6 text-[var(--trilha-areia)] shadow-md sm:p-8 ${!hero.is_active ? "opacity-50" : ""}`}
-        >
-          <div className={`grid gap-6 ${heroHasVideo && !compact ? "md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-center" : ""}`}>
-            {heroHasVideo && <VideoBlock url={hero.video_url!} title={hero.title} dark />}
-            <div className="space-y-3">
-              <p className="trilha-eyebrow">Bem-vindos ao seu espaço</p>
-              {hero.title && (
-                <h1 className="font-display text-2xl leading-snug sm:text-3xl">
-                  <span className="font-medium">{heroTitle.lead}</span>
-                  {heroTitle.rest && <span className="font-normal italic text-[var(--trilha-areia)]/90"> — {heroTitle.rest}</span>}
-                </h1>
-              )}
-              {hero.body && (
-                <p className="text-sm leading-relaxed text-[var(--trilha-areia)]/85">
-                  <RichText text={hero.body} />
-                </p>
-              )}
-              <Images urls={hero.image_urls} title={hero.title} />
-              <Cta s={hero} dark />
-            </div>
-          </div>
-        </section>
-
-        {/* Passos numerados */}
-        {steps.length > 0 && (
-          <div className={`grid gap-4 ${compact ? "grid-cols-1" : steps.length === 1 ? "grid-cols-1" : steps.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
-            {steps.map((s, i) => (
-              <article
-                key={s.id}
-                data-testid={`onboarding-section-${s.id}`}
-                className={`space-y-2 rounded-lg border border-[var(--trilha-areia)] bg-white p-5 ${!s.is_active ? "opacity-50" : ""}`}
-              >
-                <p className="font-display text-sm text-[var(--trilha-terracota)]">{String(i + 1).padStart(2, "0")}</p>
-                {s.title && <h2 className="font-display text-lg font-medium leading-snug text-[var(--trilha-navy)]">{s.title}</h2>}
-                {s.body && (
-                  <p className="text-sm leading-relaxed text-[var(--trilha-navy)]/80">
-                    <RichText text={s.body} />
-                  </p>
-                )}
-                {s.video_url && <VideoBlock url={s.video_url} title={s.title} />}
-                <Images urls={s.image_urls} title={s.title} />
-                <Cta s={s} />
-              </article>
-            ))}
-          </div>
-        )}
+        {blocks.map((b) => {
+          if (b.kind === "cards") return <CardsBlock key={b.items[0].section.id} items={b.items} compact={compact} />;
+          const s = b.section;
+          switch (b.layout) {
+            case "capa":
+              return <CapaBlock key={s.id} s={s} first={b.first} compact={compact} />;
+            case "texto":
+              return <TextoBlock key={s.id} s={s} />;
+            case "destaque":
+              return <DestaqueBlock key={s.id} s={s} />;
+            case "midia":
+              return <MidiaBlock key={s.id} s={s} compact={compact} />;
+          }
+        })}
 
         {onEnter && (
           <div className="flex justify-center pt-2">

@@ -32,10 +32,13 @@ describe("editor de seções do onboarding", () => {
     expect(within(preview).getByRole("link", { name: /WhatsApp/ })).toHaveAttribute("href", "https://wa.me/1");
   });
 
-  it("adiciona, remove e reordena", () => {
+  it("adiciona (escolhendo o layout), remove e reordena", async () => {
     renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Adicionar seção" }));
+    // "Adicionar seção" abre o menu de layouts; a nova seção nasce no layout escolhido.
+    fireEvent.keyDown(screen.getByRole("button", { name: "Adicionar seção" }), { key: "Enter" });
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Destaque/ }));
     expect(onChange.mock.calls[0][0]).toHaveLength(3);
+    expect(onChange.mock.calls[0][0][2].layout).toBe("destaque");
 
     fireEvent.click(screen.getByRole("button", { name: "Remover Contato" }));
     expect(onChange.mock.calls[1][0].map((s) => s.id)).toEqual(["s1"]);
@@ -108,5 +111,38 @@ describe("editor de seções do onboarding", () => {
     fireEvent.change(input, { target: { value: "https://cdn/foto.jpg" } });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onChange.mock.calls.at(-1)![0][0].image_urls).toEqual(["https://cdn/foto.jpg"]);
+  });
+});
+
+describe("layout das seções no editor", () => {
+  it("cada seção mostra o layout e dá pra trocar; o preview acompanha", () => {
+    renderEditor();
+    // Sem layout escolhido: primeira = Capa, segunda = Card 01
+    expect(screen.getByTestId("section-s1")).toHaveTextContent("Capa");
+    expect(screen.getByTestId("section-s2")).toHaveTextContent("Card 01");
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar Contato" }));
+    const picker = screen.getByRole("radiogroup", { name: "Layout da seção" });
+    expect(within(picker).getByRole("radio", { name: /Card numerado/ })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(within(picker).getByRole("radio", { name: /Texto corrido/ }));
+    const next = onChange.mock.calls[0][0];
+    expect(next.find((s: { id: string }) => s.id === "s2").layout).toBe("texto");
+  });
+
+  it("o portal desenha cada seção no layout escolhido", () => {
+    const sections = [
+      { id: "a", title: "Capa", body: "", video_url: null, image_urls: [], cta_label: null, cta_url: null, is_active: true, layout: null },
+      { id: "b", title: "Recado", body: "", video_url: null, image_urls: [], cta_label: null, cta_url: null, is_active: true, layout: "destaque" as const },
+      { id: "c", title: "Passo", body: "", video_url: null, image_urls: [], cta_label: null, cta_url: null, is_active: true, layout: "card" as const },
+      { id: "d", title: "Galeria", body: "", video_url: null, image_urls: ["https://x/a.jpg"], cta_label: null, cta_url: null, is_active: true, layout: "midia" as const },
+      { id: "e", title: "Outro passo", body: "", video_url: null, image_urls: [], cta_label: null, cta_url: null, is_active: true, layout: "card" as const },
+    ];
+    render(<OnboardingView sections={sections} />);
+    expect(screen.getByTestId("onboarding-section-a")).toHaveAttribute("data-layout", "capa");
+    expect(screen.getByTestId("onboarding-section-b")).toHaveAttribute("data-layout", "destaque");
+    expect(screen.getByTestId("onboarding-section-d")).toHaveAttribute("data-layout", "midia");
+    // Cards numerados em sequência, mesmo separados por outras seções.
+    expect(screen.getByTestId("onboarding-section-c")).toHaveTextContent("01");
+    expect(screen.getByTestId("onboarding-section-e")).toHaveTextContent("02");
   });
 });
