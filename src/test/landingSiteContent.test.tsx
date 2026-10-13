@@ -60,7 +60,7 @@ describe("site público lendo site_content", () => {
     renderLanding();
 
     expect(await screen.findByText("Texto publicado pela Camilla.")).toBeInTheDocument();
-    expect(screen.queryByText(/A Quadra nasceu do encontro/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/A Quadra nasceu de uma dúvida/)).not.toBeInTheDocument();
     const srcs = screen.getAllByAltText("Quadra Arquitetura").map((img) => img.getAttribute("src"));
     expect(srcs).toContain("https://cdn.test/site-media/hero/nova.jpg");
     expect(mocks.rpc).toHaveBeenCalledWith("get_public_site_content", { p_team_id: "00000000-0000-0000-0000-000000000001" });
@@ -69,13 +69,13 @@ describe("site público lendo site_content", () => {
   it("sem conteúdo salvo, mostra o site de sempre", async () => {
     respondWith({ data: [], error: null });
     renderLanding();
-    expect(await screen.findByText(/A Quadra nasceu do encontro/)).toBeInTheDocument();
-    expect(screen.getByText("sob controle.")).toBeInTheDocument();
+    expect(await screen.findByText(/A Quadra nasceu de uma dúvida/)).toBeInTheDocument();
+    expect(screen.getByText(/do número ao tijolo/)).toBeInTheDocument();
   });
 
   it("se o banco falhar, o site continua no ar com o conteúdo padrão", async () => {
     respondWith({ data: null, error: { message: "offline" } });
     renderLanding();
-    expect(await screen.findByText(/A Quadra nasceu do encontro/)).toBeInTheDocument();
+    expect(await screen.findByText(/A Quadra nasceu de uma dúvida/)).toBeInTheDocument();
   });
 });
