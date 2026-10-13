@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format, subMonths, startOfMonth, startOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PageSkeleton } from "@/components/visual/PageSkeleton";
 
 const typeLabels: Record<string, string> = {
   residencial: "Residencial",
@@ -221,9 +222,7 @@ export default function Projects() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-        </div>
+        <PageSkeleton variant="table" rows={6} />
       ) : filteredProjects.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed rounded-lg text-muted-foreground">
           {projects?.length === 0
