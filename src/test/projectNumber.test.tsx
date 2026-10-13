@@ -103,6 +103,12 @@ describe("ProjectForm → código do projeto", () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ project_number: "Q201", allow_duplicate_code: true }));
   });
 
+  it("projeto que já tinha código duplicado edita sem pedir confirmação de novo", () => {
+    renderForm({ id: "p9", name: "Casa Madalena antiga", project_number: "Q201" });
+    expect(screen.queryByTestId("project-number-duplicate")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Salvar" })).not.toBeDisabled();
+  });
+
   it("editar o próprio projeto não acusa duplicado; botão volta à sugestão", () => {
     renderForm({ id: "p1", name: "Casa Madalena", project_number: "Q201" });
     expect((screen.getByLabelText("Código do projeto") as HTMLInputElement).value).toBe("Q201");

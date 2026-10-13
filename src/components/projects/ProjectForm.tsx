@@ -50,7 +50,9 @@ export function ProjectForm({ open, onOpenChange, onSubmit, initialData, isLoadi
   const { rows: codeRows, suggestion } = useProjectNumbers(open);
   const editingId = (initialData?.id as string | undefined) ?? null;
   const duplicateOwners = findProjectsWithCode(projectNumber, codeRows, editingId);
-  const isDuplicate = duplicateOwners.length > 0;
+  // Editando sem trocar o código: um duplicado antigo não trava o salvar.
+  const codeUnchanged = !!initialData && normalizeProjectNumber(projectNumber) === normalizeProjectNumber(initialData.project_number as string | null);
+  const isDuplicate = duplicateOwners.length > 0 && !codeUnchanged;
 
   const { data: clients } = useQuery({
     queryKey: ["clients"],

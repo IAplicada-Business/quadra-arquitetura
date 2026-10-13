@@ -156,7 +156,8 @@ export async function approveSupplierInDiscipline(args: {
 
   // Sem disciplina: os fornecedores não competem entre si, aprova só a cotação.
   const sameDiscipline = disc ? args.quotes.filter((q) => q._discipline === disc) : [target];
-  const toApprove = sameDiscipline.filter((q) => supplierKey(q) === key && q.status !== "rejeitado");
+  // A cotação clicada sempre entra (mesmo se estava rejeitada); as outras rejeitadas ficam como estão.
+  const toApprove = sameDiscipline.filter((q) => supplierKey(q) === key && (q.status !== "rejeitado" || q.id === target.id));
   const toUnapprove = disc ? sameDiscipline.filter((q) => supplierKey(q) !== key && q.status === "aprovado") : [];
 
   if (toUnapprove.length > 0) {

@@ -59,7 +59,10 @@ export async function prepareProjectNumber(
     return { ...rest, project_number: excludeId ? null : suggestNextProjectNumber(rows.map((r) => r.project_number)) };
   }
   const owners = findProjectsWithCode(code, rows, excludeId);
-  if (owners.length > 0 && allow_duplicate_code !== true) {
+  // Edição que manteve o código atual: não cobra de novo um duplicado que já existia.
+  const current = excludeId ? rows.find((r) => r.id === excludeId) : undefined;
+  const unchanged = !!current && normalizeProjectNumber(current.project_number) === code;
+  if (owners.length > 0 && !unchanged && allow_duplicate_code !== true) {
     throw new DuplicateProjectNumberError(
       `${duplicateCodeMessage(code, owners)} Marque "Reutilizar este código" no formulário para salvar mesmo assim.`,
     );
