@@ -15,6 +15,9 @@ import {
   applyOnboardingPlaceholders,
   splitHeroTitle,
   onboardingMode,
+  sectionLayout,
+  cardNumbers,
+  isOnboardingLayout,
   buildOnboardingPlaceholders,
   type OnboardingSectionRow,
 } from "@/lib/onboarding";
@@ -102,6 +105,7 @@ describe("sanitizeSection / sectionsFromJson", () => {
       cta_label: null,
       cta_url: null,
       is_active: true,
+      layout: null,
       source_section_id: null,
     });
     expect(sanitizeSection({ title: "sem id" })).toBeNull();
@@ -239,5 +243,30 @@ describe("variáveis do onboarding com dados da obra", () => {
       mudanca: null,
       endereco: "Rua das Acácias, 120 · Belo Horizonte",
     });
+  });
+});
+
+describe("layout das seções", () => {
+  it("sem layout escolhido, segue a posição: primeira = capa, demais = card", () => {
+    expect(sectionLayout({ layout: null }, 0)).toBe("capa");
+    expect(sectionLayout({ layout: null }, 3)).toBe("card");
+    expect(sectionLayout({ layout: "destaque" }, 0)).toBe("destaque");
+    expect(sectionLayout({ layout: "xyz" as never }, 2)).toBe("card");
+  });
+
+  it("numera só os cards, na ordem", () => {
+    const n = cardNumbers([
+      emptySection({ id: "a" }), // capa (posição)
+      emptySection({ id: "b" }), // card 1
+      emptySection({ id: "c", layout: "texto" }),
+      emptySection({ id: "d", layout: "card" }), // card 2
+    ]);
+    expect([...n.entries()]).toEqual([["b", 1], ["d", 2]]);
+  });
+
+  it("layout vindo do banco ou do JSON é validado", () => {
+    expect(sanitizeSection({ id: "x", layout: "midia" })?.layout).toBe("midia");
+    expect(sanitizeSection({ id: "x", layout: "outro" })?.layout).toBeNull();
+    expect(isOnboardingLayout("capa")).toBe(true);
   });
 });

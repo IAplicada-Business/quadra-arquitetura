@@ -10,8 +10,9 @@ import { toast } from "@/hooks/use-toast";
 import { RichTextField } from "@/components/settings/proposal-blocks/RichTextField";
 import { OnboardingView } from "./OnboardingView";
 import { uploadOnboardingMedia } from "@/hooks/useOnboardingTemplate";
-import { emptySection, moveSection, ONBOARDING_PLACEHOLDERS, parseVideoUrl, SAMPLE_PLACEHOLDERS, validateVideoUrl, type OnboardingPlaceholders, type OnboardingSection } from "@/lib/onboarding";
+import { cardNumbers, emptySection, layoutLabel, moveSection, ONBOARDING_LAYOUTS, ONBOARDING_PLACEHOLDERS, sectionLayout, type OnboardingLayout, parseVideoUrl, SAMPLE_PLACEHOLDERS, validateVideoUrl, type OnboardingPlaceholders, type OnboardingSection } from "@/lib/onboarding";
 import { InfoHint } from "@/components/visual/InfoHint";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Props {
   sections: OnboardingSection[];
@@ -69,6 +70,49 @@ function VideoHelp() {
   );
 }
 
+/** Miniatura de cada layout, pra escolher olhando. */
+function LayoutThumb({ layout }: { layout: OnboardingLayout }) {
+  const base = "h-7 w-10 rounded-sm border bg-background p-0.5 flex gap-0.5";
+  switch (layout) {
+    case "capa":
+      return <span className={base}><span className="flex-1 rounded-[2px] bg-primary" /></span>;
+    case "card":
+      return <span className={base}><span className="flex-1 rounded-[2px] border" /><span className="flex-1 rounded-[2px] border" /></span>;
+    case "texto":
+      return <span className={`${base} flex-col justify-center`}><span className="h-0.5 w-3/4 bg-muted-foreground/60" /><span className="h-0.5 w-full bg-muted-foreground/40" /><span className="h-0.5 w-2/3 bg-muted-foreground/40" /></span>;
+    case "destaque":
+      return <span className={base}><span className="flex-1 rounded-[2px] border-l-2 border-accent bg-accent/20" /></span>;
+    case "midia":
+      return <span className={base}><span className="flex-1 rounded-[2px] bg-muted-foreground/30" /><span className="flex-1 flex flex-col justify-center gap-0.5"><span className="h-0.5 w-full bg-muted-foreground/50" /><span className="h-0.5 w-2/3 bg-muted-foreground/40" /></span></span>;
+  }
+}
+
+function LayoutPicker({ value, onChange, disabled }: { value: OnboardingLayout; onChange: (l: OnboardingLayout) => void; disabled?: boolean }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs font-semibold">Layout</Label>
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5" role="radiogroup" aria-label="Layout da seção">
+        {ONBOARDING_LAYOUTS.map((l) => (
+          <button
+            key={l.key}
+            type="button"
+            role="radio"
+            aria-checked={value === l.key}
+            disabled={disabled}
+            title={l.description}
+            onClick={() => onChange(l.key)}
+            className={`flex flex-col items-center gap-1 rounded-md border p-1.5 text-[11px] transition ${value === l.key ? "border-primary bg-primary/5 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
+          >
+            <LayoutThumb layout={l.key} />
+            {l.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[11px] text-muted-foreground">{ONBOARDING_LAYOUTS.find((l) => l.key === value)?.description}</p>
+    </div>
+  );
+}
+
 function SectionFields({
   section,
   index,
@@ -116,6 +160,8 @@ function SectionFields({
 
   return (
     <div className="space-y-4">
+      <LayoutPicker value={sectionLayout(section, index)} onChange={(layout) => onPatch({ layout })} disabled={disabled} />
+
       <div className="space-y-1">
         <Label htmlFor={id("title")} className="text-xs font-semibold">Título</Label>
         <Input id={id("title")} value={section.title} disabled={disabled} className="h-8 text-sm" onChange={(e) => onPatch({ title: e.target.value })} placeholder={`Seção ${index + 1}`} />
@@ -220,11 +266,12 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
     onChange(sections.filter((s) => s.id !== id));
     if (expanded === id) setExpanded(null);
   };
-  const add = () => {
-    const s = emptySection();
+  const add = (layout: OnboardingLayout) => {
+    const s = emptySection({ layout });
     onChange([...sections, s]);
     setExpanded(s.id);
   };
+  const numbers = cardNumbers(sections);
   const onDragEnd = (r: DropResult) => {
     if (!r.destination || r.destination.index === r.source.index) return;
     onChange(moveSection(sections, r.source.index, r.destination.index));
@@ -236,7 +283,7 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
         <p className="text-sm font-medium flex items-center gap-1.5">
           Seções
           <InfoHint>
-            A <strong>primeira seção é a capa</strong> (vídeo de boas-vindas em destaque); as seguintes viram os <strong>passos numerados</strong> 01, 02, 03.
+            Cada seção tem um <strong>layout</strong>: capa, card numerado, texto corrido, destaque ou mídia ao lado. Escolha ao adicionar a seção ou depois, ao editá-la.
             Os textos aceitam as variáveis abaixo, que o portal preenche com os dados da obra (clique para copiar).
           </InfoHint>
         </p>
@@ -276,7 +323,12 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
                             <span {...drag.dragHandleProps} className="cursor-grab text-muted-foreground/50 active:cursor-grabbing" aria-label={`Arrastar ${label}`}>
                               <GripVertical className="h-4 w-4" />
                             </span>
-                            <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">{index === 0 ? "Capa" : `Passo ${String(index).padStart(2, "0")}`}</span>
+                            <span className="w-20 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {(() => {
+                                const l = sectionLayout(s, index);
+                                return l === "card" ? `Card ${String(numbers.get(s.id) ?? 0).padStart(2, "0")}` : layoutLabel(l);
+                              })()}
+                            </span>
                             <Switch checked={s.is_active} disabled={disabled} aria-label={`Mostrar ${label} ao cliente`} onCheckedChange={(v) => patch(s.id, { is_active: v })} />
                             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setExpanded(isOpen ? null : s.id)}>
                               <p className="truncate text-sm font-medium">{label}</p>
@@ -313,9 +365,25 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
           </Droppable>
         </DragDropContext>
 
-        <Button type="button" size="sm" variant="outline" onClick={add} disabled={disabled}>
-          <Plus className="h-4 w-4 mr-1" /> Adicionar seção
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" size="sm" variant="outline" disabled={disabled}>
+              <Plus className="h-4 w-4 mr-1" /> Adicionar seção
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-72">
+            <DropdownMenuLabel className="text-xs">Escolha o layout da nova seção</DropdownMenuLabel>
+            {ONBOARDING_LAYOUTS.map((l) => (
+              <DropdownMenuItem key={l.key} onSelect={() => add(l.key)} className="items-start gap-2.5 py-2">
+                <LayoutThumb layout={l.key} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{l.label}</span>
+                  <span className="block text-[11px] text-muted-foreground">{l.description}</span>
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Card className="lg:sticky lg:top-14">

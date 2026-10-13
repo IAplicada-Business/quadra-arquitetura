@@ -16,8 +16,58 @@ export interface OnboardingSection {
   cta_label: string | null;
   cta_url: string | null;
   is_active: boolean;
+  /**
+   * Como a seção aparece para o cliente. null = automático pela posição
+   * (primeira = capa, demais = card), o comportamento de antes, então
+   * seções antigas não mudam de cara.
+   */
+  layout?: OnboardingLayout | null;
   /** Id da seção do template de onde esta cópia veio (só no override). */
   source_section_id?: string | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout das seções                                                   */
+/* ------------------------------------------------------------------ */
+
+export type OnboardingLayout = "capa" | "card" | "texto" | "destaque" | "midia";
+
+export interface OnboardingLayoutDef {
+  key: OnboardingLayout;
+  label: string;
+  description: string;
+}
+
+export const ONBOARDING_LAYOUTS: OnboardingLayoutDef[] = [
+  { key: "capa", label: "Capa", description: "Faixa escura de boas-vindas, com vídeo ao lado do título." },
+  { key: "card", label: "Card numerado", description: "Cartão com número (01, 02...). Cards seguidos ficam lado a lado." },
+  { key: "texto", label: "Texto corrido", description: "Título e texto em largura total, sem caixa." },
+  { key: "destaque", label: "Destaque", description: "Faixa colorida para recado importante ou chamada para ação." },
+  { key: "midia", label: "Mídia ao lado", description: "Vídeo ou imagem grande ao lado do texto." },
+];
+
+export function isOnboardingLayout(v: unknown): v is OnboardingLayout {
+  return typeof v === "string" && ONBOARDING_LAYOUTS.some((l) => l.key === v);
+}
+
+export function layoutLabel(layout: OnboardingLayout): string {
+  return ONBOARDING_LAYOUTS.find((l) => l.key === layout)?.label ?? layout;
+}
+
+/** Layout efetivo: o escolhido, ou o automático pela posição (primeira = capa). */
+export function sectionLayout(section: Pick<OnboardingSection, "layout">, index: number): OnboardingLayout {
+  if (isOnboardingLayout(section.layout)) return section.layout;
+  return index === 0 ? "capa" : "card";
+}
+
+/** Número de cada card (01, 02...), contando só as seções em card, na ordem. */
+export function cardNumbers(sections: Pick<OnboardingSection, "id" | "layout">[]): Map<string, number> {
+  const out = new Map<string, number>();
+  let n = 0;
+  sections.forEach((s, i) => {
+    if (sectionLayout(s, i) === "card") out.set(s.id, ++n);
+  });
+  return out;
 }
 
 /** Linha de onboarding_sections. */
@@ -34,6 +84,7 @@ export interface OnboardingSectionRow {
   cta_url: string | null;
   display_order: number;
   is_active: boolean;
+  layout?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +149,7 @@ export function emptySection(partial: Partial<OnboardingSection> = {}): Onboardi
     cta_label: null,
     cta_url: null,
     is_active: true,
+    layout: null,
     source_section_id: null,
     ...partial,
   };
@@ -274,6 +326,7 @@ export function sanitizeSection(raw: unknown): OnboardingSection | null {
     cta_label: nullableStr(r.cta_label),
     cta_url: nullableStr(r.cta_url),
     is_active: r.is_active !== false,
+    layout: isOnboardingLayout(r.layout) ? r.layout : null,
     source_section_id: nullableStr(r.source_section_id),
   };
 }
@@ -297,6 +350,7 @@ export function sectionsFromRows(rows: OnboardingSectionRow[] | null | undefined
       cta_label: r.cta_label ?? null,
       cta_url: r.cta_url ?? null,
       is_active: r.is_active !== false,
+      layout: isOnboardingLayout(r.layout) ? r.layout : null,
       source_section_id: null,
     }));
 }

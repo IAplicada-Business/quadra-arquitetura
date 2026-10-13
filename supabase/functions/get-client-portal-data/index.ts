@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
         if (templateId) {
           const { data: sections } = await supabase
             .from("onboarding_sections")
-            .select("id, title, body, video_url, image_urls, cta_label, cta_url, is_active, display_order")
+            .select("id, title, body, video_url, image_urls, cta_label, cta_url, is_active, display_order, layout")
             .eq("template_id", templateId)
             .eq("is_active", true)
             .order("display_order", { ascending: true });
