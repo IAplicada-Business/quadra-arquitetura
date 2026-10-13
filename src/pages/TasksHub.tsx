@@ -133,7 +133,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
   }, [filtered]);
 
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className={`flex flex-col gap-6 ${view === "kanban" ? "flex-1 md:min-h-0" : ""}`}>
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-display font-light">

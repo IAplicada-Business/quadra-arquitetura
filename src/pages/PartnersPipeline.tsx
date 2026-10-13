@@ -95,7 +95,7 @@ export default function PartnersPipeline() {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in flex flex-col h-full">
+    <div className="space-y-4 animate-fade-in flex flex-col flex-1 min-h-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
