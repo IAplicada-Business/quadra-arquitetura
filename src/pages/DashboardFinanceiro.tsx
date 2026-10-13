@@ -38,6 +38,8 @@ import { useFinanceiroMetrics, type GrupoValor, type LucroMes, type ProjecaoMes 
 import { C } from "@/lib/chartColors";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PageTitle } from "@/components/layout/PageTitle";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
@@ -90,10 +92,7 @@ export default function DashboardFinanceiro() {
     <div className="space-y-5">
       {/* Header + filtros */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-display">Dashboard Financeiro</h1>
-          <p className="text-sm text-muted-foreground mt-1">Receitas, despesas e resultado do escritório</p>
-        </div>
+        <PageTitle title="Dashboard Financeiro" description="Receitas, despesas e resultado do escritório" />
         <div className="flex items-center gap-2 flex-wrap">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
           <Select value={finYear} onValueChange={(v) => { setFinYear(v); if (v === "all") setFinMonth("all"); }}>
@@ -344,8 +343,7 @@ function GraficosFinanceiros({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-display">Receita por Projeto — {periodLabel}</CardTitle>
-            <p className="text-[11px] text-muted-foreground">Realizado vs. previsto (pendentes)</p>
+            <CardTitle className="text-sm font-display flex items-center gap-1.5">Receita por Projeto — {periodLabel}<InfoHint>Realizado vs. previsto (pendentes)</InfoHint></CardTitle>
           </CardHeader>
           <CardContent>
             {receitaPorProjeto.length === 0 ? emptyMsg : (
@@ -366,8 +364,7 @@ function GraficosFinanceiros({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-display">Despesa por Categoria — {periodLabel}</CardTitle>
-            <p className="text-[11px] text-muted-foreground">Realizado vs. previsto (pendentes)</p>
+            <CardTitle className="text-sm font-display flex items-center gap-1.5">Despesa por Categoria — {periodLabel}<InfoHint>Realizado vs. previsto (pendentes)</InfoHint></CardTitle>
           </CardHeader>
           <CardContent>
             {despesaPorCategoria.length === 0 ? emptyMsg : (
@@ -391,8 +388,7 @@ function GraficosFinanceiros({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-display">Histórico de Lucro — 12 meses</CardTitle>
-            <p className="text-[11px] text-muted-foreground">Lucro líquido mensal (receita − despesas − impostos)</p>
+            <CardTitle className="text-sm font-display flex items-center gap-1.5">Histórico de Lucro — 12 meses<InfoHint>Lucro líquido mensal (receita − despesas − impostos)</InfoHint></CardTitle>
           </CardHeader>
           <CardContent>
             {historicoLucro.every((m) => m.lucro === 0) ? emptyMsg : (
@@ -415,8 +411,7 @@ function GraficosFinanceiros({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-display">Projeção — próximos 6 meses</CardTitle>
-            <p className="text-[11px] text-muted-foreground">Baseado em pagamentos pendentes cadastrados</p>
+            <CardTitle className="text-sm font-display flex items-center gap-1.5">Projeção — próximos 6 meses<InfoHint>Baseado em pagamentos pendentes cadastrados</InfoHint></CardTitle>
           </CardHeader>
           <CardContent>
             {projecaoLucro.every((m) => m.receita === 0 && m.despesa === 0) ? (

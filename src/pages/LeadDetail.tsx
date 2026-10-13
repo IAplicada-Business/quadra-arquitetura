@@ -252,7 +252,7 @@ export default function LeadDetail() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 space-y-1">
-          <h1 className="text-2xl font-bold font-display">{lead.name}</h1>
+          <h1 className="text-2xl font-display font-semibold leading-tight">{lead.name}</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {lead.phone && <span>{lead.phone}</span>}
             {lead.email && <span>• {lead.email}</span>}

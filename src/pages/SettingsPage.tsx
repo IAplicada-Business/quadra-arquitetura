@@ -29,6 +29,8 @@ import {
   type ConstructionType,
   type FinishLevel,
 } from "@/hooks/useCostReferenceTable";
+import { PageTitle } from "@/components/layout/PageTitle";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -180,8 +182,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold font-display mb-1">Configurações</h1>
-      <p className="text-muted-foreground mb-4">Personalize o sistema</p>
+      <PageTitle title="Configurações" description="Personalize o sistema" className="mb-4" />
 
       <Tabs defaultValue="geral" className="w-full">
         <TabsList className="mb-6">
@@ -222,12 +223,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Tema Escuro</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Alternar entre tema claro e escuro
-                    </p>
-                  </div>
+                  <Label>Tema escuro</Label>
                   <Switch checked={darkMode} onCheckedChange={toggleTheme} />
                 </div>
               </CardContent>
@@ -239,6 +235,7 @@ export default function SettingsPage() {
                 <CardTitle className="text-lg font-display flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
                   Parâmetros de Cálculo — Custo por m²
+                  <InfoHint>Valores de referência usados na Estimativa Rápida de Orçamento. Edite conforme sua região e padrão.</InfoHint>
                 </CardTitle>
                 <Button size="sm" onClick={handleSaveTable} disabled={saveCostTable.isPending}>
                   <Save className="h-4 w-4 mr-1.5" />
@@ -246,9 +243,6 @@ export default function SettingsPage() {
                 </Button>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Valores de referência usados na Estimativa Rápida de Orçamento. Edite conforme sua região e padrão.
-                </p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -290,12 +284,10 @@ export default function SettingsPage() {
                 <CardTitle className="text-lg font-display flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
                   Alíquota de Impostos
+                  <InfoHint>Percentual usado no Demonstrativo de Resultado do Projeto (Prestação de Contas) e no DRE do escritório.</InfoHint>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Percentual usado no Demonstrativo de Resultado do Projeto (Prestação de Contas) e no DRE do escritório.
-                </p>
                 <div className="flex items-center gap-3">
                   <Input
                     type="number"
@@ -320,12 +312,10 @@ export default function SettingsPage() {
                 <CardTitle className="text-lg font-display flex items-center gap-2">
                   <FileText className="h-5 w-5" />
                   Notas Fiscais
+                  <InfoHint>Código de serviço padrão (LC 116/2003) pré-preenchido em novas NFs.</InfoHint>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Código de serviço padrão (LC 116/2003) pré-preenchido em novas NFs.
-                </p>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 max-w-xs">
                     <Label className="text-sm">Código de Serviço</Label>

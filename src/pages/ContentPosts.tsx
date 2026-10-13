@@ -12,6 +12,7 @@ import { useContentPosts, TYPE_COLORS, STATUS_LABELS } from "@/hooks/useContentP
 import { useContentSeries } from "@/hooks/useContentSeries";
 import ContentPostSheet from "@/components/content/ContentPostSheet";
 import type { ContentPost } from "@/hooks/useContentPosts";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export default function ContentPosts() {
   const { posts, create, update, remove } = useContentPosts();
@@ -89,10 +90,7 @@ export default function ContentPosts() {
   return (
     <div className="space-y-6 p-0">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-playfair">Publicações</h1>
-          <p className="text-sm text-muted-foreground mt-1">Visão geral de todos os conteúdos</p>
-        </div>
+        <PageTitle title="Publicações" description="Visão geral de todos os conteúdos" />
         <Button size="sm" onClick={handleNew}>
           <Plus className="h-4 w-4 mr-1" /> Novo Post
         </Button>

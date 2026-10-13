@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DeliveryChecklistItem } from "@/hooks/useDeliveryChecklist";
 import { DELIVERY_PRIORITY_CLASSES, DELIVERY_PRIORITY_LABELS, checklistProgress } from "@/lib/deliveryChecklist";
 import { ChecklistItemPhotos, type ChecklistPhotoHandlers } from "./ChecklistItemPhotos";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 export interface ChecklistHandlers {
   onToggle: (item: DeliveryChecklistItem) => void;
@@ -105,7 +106,10 @@ export function GeneralDeliveryChecklist({ allItems, onCopyPending, ...handlers 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4 text-primary" />
-            <CardTitle className="text-sm font-semibold">Checklist de entrega</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+              Checklist de entrega
+              <InfoHint>As pendências de cada atividade ficam na coluna Entrega do cronograma. Aqui entram as gerais, sem atividade.</InfoHint>
+            </CardTitle>
             <Badge variant="outline" className="text-[10px]">
               {progress.resolved}/{progress.total} resolvidas
             </Badge>
@@ -114,9 +118,6 @@ export function GeneralDeliveryChecklist({ allItems, onCopyPending, ...handlers 
             <Copy className="h-3.5 w-3.5 mr-1" /> Copiar pendências
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          As pendências de cada atividade ficam na coluna Entrega do cronograma. Aqui entram as gerais, sem atividade.
-        </p>
       </CardHeader>
       <CardContent className="p-4">
         <ActivityDeliveryChecklist

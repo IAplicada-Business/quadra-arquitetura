@@ -18,6 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export default function SiteTracking() {
   const { user } = useAuth();
@@ -171,10 +172,7 @@ export default function SiteTracking() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-display">Acompanhamento de Obras</h1>
-          <p className="text-muted-foreground">Projetos em Mobilização ou Execução aparecem automaticamente aqui. Você também pode criar obras diretamente.</p>
-        </div>
+        <PageTitle title="Acompanhamento de Obras" description="Projetos em Mobilização ou Execução aparecem automaticamente aqui. Você também pode criar obras diretamente." />
         <Button onClick={handleNewObra}><Plus className="h-4 w-4 mr-2" />Nova Obra</Button>
       </div>
 

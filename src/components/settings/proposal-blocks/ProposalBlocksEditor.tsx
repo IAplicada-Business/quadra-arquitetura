@@ -58,6 +58,7 @@ import {
 } from "@/lib/proposalBlocks";
 import { RichTextField } from "./RichTextField";
 import { ImageField } from "./ImageField";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -462,9 +463,12 @@ export default function ProposalBlocksEditor() {
       {/* Barra de ações */}
       <div className="flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 bg-background/95 backdrop-blur py-2 border-b">
         <div>
-          <h3 className="font-semibold">Blocos do PDF da proposta</h3>
+          <h3 className="font-semibold flex items-center gap-1.5">
+            Blocos do PDF da proposta
+            <InfoHint>Arraste para reordenar, use o interruptor para ligar/desligar e clique no nome para editar os textos.</InfoHint>
+          </h3>
           <p className="text-xs text-muted-foreground">
-            {activeCount} de {draft.length} blocos ativos · arraste para reordenar, use o interruptor para ligar/desligar e clique no nome para editar os textos.
+            {activeCount} de {draft.length} blocos ativos
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -587,7 +591,10 @@ export default function ProposalBlocksEditor() {
         <Card className="lg:sticky lg:top-14">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm">Preview</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                Preview
+                <InfoHint>Dados de exemplo. O PDF gerado usa as mesmas páginas, com os dados da proposta.</InfoHint>
+              </CardTitle>
               <div className="flex items-center gap-1">
                 <span className="text-xs text-muted-foreground mr-1">
                   {previewIndex >= 0 ? `Página ${previewIndex + 1} de ${pages.length}` : `${pages.length} página(s)`}
@@ -600,9 +607,6 @@ export default function ProposalBlocksEditor() {
                 </Button>
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              Dados de exemplo. O PDF gerado usa as mesmas páginas, com os dados da proposta.
-            </p>
           </CardHeader>
           <CardContent>
             {previewIndex >= 0 ? (

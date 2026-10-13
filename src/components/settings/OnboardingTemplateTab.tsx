@@ -11,6 +11,7 @@ import { useOnboardingTemplate, useOnboardingTemplates } from "@/hooks/useOnboar
 import { OnboardingSectionsEditor } from "@/components/onboarding/OnboardingSectionsEditor";
 import { invalidVideoSections, sectionsEqual, starterSections, type OnboardingSection } from "@/lib/onboarding";
 import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 type TemplateDialog = { kind: "create"; copyFromId: string | null } | { kind: "rename"; id: string } | null;
 
@@ -100,10 +101,12 @@ export default function OnboardingTemplateTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 bg-background/95 backdrop-blur py-2 border-b">
         <div>
-          <h3 className="font-semibold">Onboarding do cliente: modelos</h3>
-          <p className="text-xs text-muted-foreground">
-            Monte um modelo para cada tipo de obra. Na aba Onboarding de cada obra você escolhe qual modelo ela segue; obras sem escolha usam o padrão.
-          </p>
+          <h3 className="font-semibold flex items-center gap-1.5">
+            Onboarding do cliente: modelos
+            <InfoHint>
+              Monte um modelo para cada tipo de obra. Na aba Onboarding de cada obra você escolhe qual modelo ela segue; obras sem escolha usam o padrão.
+            </InfoHint>
+          </h3>
         </div>
         <div className="flex items-center gap-2">
           {dirty && <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">Alterações não salvas</Badge>}

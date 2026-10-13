@@ -14,6 +14,7 @@ import ContentPostSheet from "@/components/content/ContentPostSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -126,10 +127,7 @@ export default function ContentCalendar() {
     <div className="space-y-6 p-0">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-playfair">Calendário</h1>
-          <p className="text-sm text-muted-foreground mt-1">Planeje seu conteúdo mês a mês</p>
-        </div>
+        <PageTitle title="Calendário" description="Planeje seu conteúdo mês a mês" />
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleSuggestIdeas}>
             <Sparkles className="h-4 w-4 mr-1" /> Ideias

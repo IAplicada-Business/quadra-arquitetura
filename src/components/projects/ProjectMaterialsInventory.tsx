@@ -3,6 +3,7 @@ import { Package, Truck, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMaterialTracking } from "@/hooks/useMaterialTracking";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 /**
  * Vista de Inventário da obra — 3 colunas solicitadas na call de 16/04:
@@ -52,10 +53,15 @@ export function ProjectMaterialsInventory({ projectId }: { projectId: string }) 
   return (
     <div className="space-y-4 animate-fade-in">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">Inventário</h3>
-        <p className="text-sm text-muted-foreground">
-          Visão rápida do que ainda precisa ser comprado, o que está a caminho e o que já está disponível no canteiro.
-        </p>
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-1.5">
+          Inventário
+          <InfoHint>
+            <span className="block">Visão rápida do que ainda precisa ser comprado, o que está a caminho e o que já está disponível no canteiro.</span>
+            <span className="block mt-1.5">
+              Calculado a partir de <em>necessário / comprado / entregue / usado</em> em cada material. Atualize esses campos em "Rastreamento" para refletir aqui.
+            </span>
+          </InfoHint>
+        </h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -125,10 +131,6 @@ export function ProjectMaterialsInventory({ projectId }: { projectId: string }) 
           </CardContent>
         </Card>
       </div>
-
-      <p className="text-[11px] text-muted-foreground">
-        Este inventário é calculado a partir de <em>necessário / comprado / entregue / usado</em> em cada material. Atualize esses campos em "Rastreamento" para refletir aqui.
-      </p>
     </div>
   );
 }

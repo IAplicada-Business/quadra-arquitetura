@@ -6,6 +6,7 @@ import type { ProjectActivity } from "@/hooks/useProjectActivities";
 import type { ClosingScheduleItem } from "@/hooks/useClientClosingSchedule";
 import { CLOSING_STATUS_CLASS, CLOSING_STATUS_LABEL } from "@/lib/closingStatus";
 import { MoveInBanner } from "./MoveInBanner";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
   activities: ProjectActivity[];
@@ -110,10 +111,12 @@ export function ClientCountdownList({ activities, closingItems, moveInDate, toda
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-base font-semibold">Contagem Regressiva</h3>
-        <p className="text-xs text-muted-foreground">
-          Quanto falta até a mudança: serviços da obra e entregas do cliente do fim para o começo. Gerada do Cronograma Reverso e do Fechamento Cliente.
-        </p>
+        <h3 className="text-base font-semibold flex items-center gap-1.5">
+          Contagem Regressiva
+          <InfoHint>
+            Quanto falta até a mudança: serviços da obra e entregas do cliente do fim para o começo. Gerada do Cronograma Reverso e do Fechamento Cliente.
+          </InfoHint>
+        </h3>
       </div>
 
       <MoveInBanner moveInDate={moveInDate} today={today} />

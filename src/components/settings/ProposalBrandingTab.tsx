@@ -10,6 +10,7 @@ import { useProposalAssets, ProposalAsset } from "@/hooks/useProposalAssets";
 import { Upload, Trash2, Plus, Image, FileText, Phone, Save, LayoutList } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ProposalBlocksEditor from "@/components/settings/proposal-blocks/ProposalBlocksEditor";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 const CATEGORIES = [
   { value: "blocks", label: "Blocos do PDF", icon: LayoutList },
@@ -135,10 +136,12 @@ export default function ProposalBrandingTab() {
       {activeCategory === "logo" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Logo da Quadra</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              O PDF da proposta usa o logo claro nas páginas de fundo escuro (capa, valores) e o logo escuro nas de fundo bege. Sem logo enviado, sai o wordmark em texto.
-            </p>
+            <CardTitle className="text-lg flex items-center gap-1.5">
+              Logo da Quadra
+              <InfoHint>
+                O PDF da proposta usa o logo claro nas páginas de fundo escuro (capa, valores) e o logo escuro nas de fundo bege. Sem logo enviado, sai o wordmark em texto.
+              </InfoHint>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {logos.map(l => {
@@ -190,10 +193,12 @@ export default function ProposalBrandingTab() {
       {activeCategory === "founder_photo" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Fotos das Sócias</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              As fotos enviadas aqui ficam disponíveis para escolher na capa e na página Quem Somos, em Blocos do PDF. Trocar a foto do PDF é lá.
-            </p>
+            <CardTitle className="text-lg flex items-center gap-1.5">
+              Fotos das Sócias
+              <InfoHint>
+                As fotos enviadas aqui ficam disponíveis para escolher na capa e na página Quem Somos, em Blocos do PDF. Trocar a foto do PDF é lá.
+              </InfoHint>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {founderPhotos.map(p => (
@@ -288,8 +293,10 @@ export default function ProposalBrandingTab() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Textos Institucionais</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">O texto "Quem Somos" editado em Blocos do PDF tem prioridade sobre o daqui.</p>
+              <CardTitle className="text-lg flex items-center gap-1.5">
+                Textos Institucionais
+                <InfoHint>O texto "Quem Somos" editado em Blocos do PDF tem prioridade sobre o daqui.</InfoHint>
+              </CardTitle>
             </div>
             <Button size="sm" variant="outline" onClick={initializeTexts}><Plus className="h-4 w-4 mr-1" /> Inicializar Padrão</Button>
           </CardHeader>

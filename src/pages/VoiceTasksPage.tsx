@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { VoiceTaskForm } from "@/components/construction/VoiceTaskForm";
 import { toast } from "@/hooks/use-toast";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const priorityColors: Record<string, string> = {
   baixa: "bg-muted text-muted-foreground",
@@ -128,13 +129,10 @@ export default function VoiceTasksPage() {
   return (
     <div className={`flex flex-col gap-6 ${view === "kanban" ? "flex-1 md:min-h-0" : ""}`}>
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-display">Audio Tasks</h1>
-          <p className="text-sm text-muted-foreground">
-            Tarefas criadas por voz, digitação ou geradas automaticamente. Use{" "}
-            <Send className="h-3 w-3 inline-block" /> para enviar ao Kanban Quadra.
-          </p>
-        </div>
+        <PageTitle
+          title="Audio Tasks"
+          description={<>Tarefas criadas por voz, digitação ou geradas automaticamente. Use <Send className="h-3 w-3 inline-block" /> para enviar ao Kanban Quadra.</>}
+        />
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="gap-1">
             <ListChecks className="h-3 w-3" />
