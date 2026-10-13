@@ -2,10 +2,11 @@ import { useEffect } from "react";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { WhySection } from "@/components/landing/WhySection";
+import { JourneySection } from "@/components/landing/JourneySection";
+import { TrailSection } from "@/components/landing/TrailSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { PortfolioSection } from "@/components/landing/PortfolioSection";
-import { ProcessSection } from "@/components/landing/ProcessSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { usePublicSiteContent } from "@/hooks/useSiteContent";
@@ -34,9 +35,10 @@ export default function Landing() {
         <HeroSection content={content.hero} />
         <WhySection content={content.why} />
         <ServicesSection content={content.services} />
+        <JourneySection content={content.journey} />
+        <TrailSection content={content.trail} />
         <PortfolioSection content={content.portfolio} />
         <AboutSection content={content.about} />
-        <ProcessSection />
         <ContactSection content={content.contact} />
       </main>
       <LandingFooter content={content.footer} />
