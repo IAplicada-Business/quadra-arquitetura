@@ -16,8 +16,23 @@ import { targetSize } from "@/lib/imageResize";
 const row = (key: string, value_json: unknown, type = "text"): SiteContentRow => ({ key, type, value_json });
 
 describe("definição das seções", () => {
-  it("cobre hero, sobre, serviços, portfólio, contato e rodapé", () => {
-    expect(SITE_SECTION_KEYS).toEqual(["hero", "about", "services", "portfolio", "contact", "footer"]);
+  it("cobre as catorze dobras, na ordem em que aparecem na página", () => {
+    expect(SITE_SECTION_KEYS).toEqual([
+      "hero",
+      "why",
+      "services",
+      "journey",
+      "trail",
+      "portfolio",
+      "architects",
+      "about",
+      "testimonials",
+      "leadMagnet",
+      "faq",
+      "blog",
+      "contact",
+      "footer",
+    ]);
     expect(SITE_SECTION_DEFINITIONS.map((d) => d.key)).toEqual(SITE_SECTION_KEYS);
   });
 
@@ -72,13 +87,15 @@ describe("resolveSiteContent", () => {
       row("services.items", [{ title: "Consultoria", desc: 3, image: "x", extra: true }, null], "list"),
       row("portfolio.items", [{ title: "Casa", desc: "Residencial" }], "list"),
     ]);
-    expect(c.services.items).toEqual([{ title: "Consultoria", desc: "" }]);
-    expect(c.portfolio.items).toEqual([{ title: "Casa", desc: "Residencial", image: "" }]);
+    // services declara etiqueta e sub-itens; portfolio, etiqueta e imagem.
+    // O que a definição não declara (o "extra") cai fora.
+    expect(c.services.items).toEqual([{ title: "Consultoria", desc: "", tag: "", bullets: "" }]);
+    expect(c.portfolio.items).toEqual([{ title: "Casa", desc: "Residencial", image: "", tag: "" }]);
   });
 
   it("não altera o objeto de padrão", () => {
     resolveSiteContent([row("hero.title", "Outro")]);
-    expect(SITE_DEFAULTS.hero.title).toBe("A sua obra\n*sob controle.*");
+    expect(SITE_DEFAULTS.hero.title).toBe("Alguém que trabalha *só para você* — do número ao tijolo.");
   });
 });
 
@@ -117,7 +134,7 @@ describe("diffSiteContent", () => {
 
   it("listas gravam o array inteiro", () => {
     const draft = clone(SITE_DEFAULTS);
-    draft.portfolio.items = [{ title: "Loja", desc: "Comercial", image: "https://cdn/loja.jpg" }];
+    draft.portfolio.items = [{ title: "Loja", desc: "Comercial", image: "https://cdn/loja.jpg", tag: "COMERCIAL" }];
     const { upserts } = diffSiteContent(draft, SITE_DEFAULTS, []);
     expect(upserts).toEqual([{ key: "portfolio.items", type: "list", value_json: draft.portfolio.items }]);
     expect(siteContentEqual(resolveSiteContent(upserts), draft)).toBe(true);
