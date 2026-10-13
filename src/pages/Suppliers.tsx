@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Calendar, MapPin, Users, Phone, Truck, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Phone, Truck, FileText, Mail, Search, List, LayoutGrid } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { PageSkeleton } from "@/components/visual/PageSkeleton";
+import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { SupplierDetailSheet } from "@/components/construction/SupplierDetailSheet";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +23,43 @@ const CATEGORIES = [
   "Pedreiro", "Eletricista", "Encanador", "Marcenaria", "Pintura", "Vidraceiro", "Serralheria", "Marmoraria", "Gesso", "Outros"
 ];
 
+const SUPPLIERS_LIMIT = 6;
+
+type SupplierView = "tabela" | "cards";
+const VIEW_KEY = "suppliers_view";
+
+function readSavedView(): SupplierView {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "cards" ? "cards" : "tabela";
+  } catch {
+    return "tabela";
+  }
+}
+
+function Stars({ rating }: { rating?: number | null }) {
+  if (!rating) return <span className="text-muted-foreground">—</span>;
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${rating} de 5`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span key={i} className={`text-sm leading-none ${i < rating ? "text-yellow-400" : "text-muted-foreground/25"}`}>★</span>
+      ))}
+    </span>
+  );
+}
+
+function SupplierActions({ onEdit, onRemove }: { onEdit: () => void; onRemove: () => void }) {
+  return (
+    <div className="flex justify-end gap-1">
+      <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar" onClick={onEdit}>
+        <Pencil className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Excluir" onClick={onRemove}>
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export default function Suppliers() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -27,6 +68,11 @@ export default function Suppliers() {
   const [searchTerm, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [view, setView] = useState<SupplierView>(readSavedView);
+  const changeView = (v: SupplierView) => {
+    setView(v);
+    try { localStorage.setItem(VIEW_KEY, v); } catch { /* sem storage: só não lembra */ }
+  };
 
   const { data: suppliers = [], isLoading } = useQuery({
     queryKey: ["suppliers"],
@@ -96,6 +142,9 @@ export default function Suppliers() {
     return matchesSearch && matchesCategory;
   });
 
+  // No máximo SUPPLIERS_LIMIT na tela; "Ver todos" abre o resto.
+  const more = useShowMore(filtered, SUPPLIERS_LIMIT, `${searchTerm}|${categoryFilter}`);
+
   return (
     <div className="space-y-6 p-0 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -108,75 +157,118 @@ export default function Suppliers() {
         </Button>
       </div>
 
-      <div className="flex gap-4">
-        <Input 
-          placeholder="Buscar fornecedor..." 
-          className="max-w-sm" 
-          value={searchTerm}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as categorias</SelectItem>
-            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Filtros no padrão das outras abas + alternância de visualização. */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar fornecedor ou contato..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <ToggleGroup
+              type="single"
+              value={view}
+              onValueChange={(v) => v && changeView(v as SupplierView)}
+              variant="outline"
+              className="justify-start"
+              aria-label="Visualização"
+            >
+              <ToggleGroupItem value="tabela" aria-label="Tabela" title="Tabela"><List className="h-4 w-4" /></ToggleGroupItem>
+              <ToggleGroupItem value="cards" aria-label="Cards" title="Cards"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(s => (
-          <Card key={s.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedSupplier(s)}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">{s.name}</CardTitle>
-                  <Badge variant="secondary">{s.category}</Badge>
-                </div>
-                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(s); setFormOpen(true); }}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove.mutate(s.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="text-sm space-y-2">
-              {s.contact && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-4 w-4" /> {s.contact}
-                </div>
-              )}
-              {s.phone && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-4 w-4" /> {s.phone}
-                </div>
-              )}
-              {s.email && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="text-xs">✉</span> {s.email}
-                </div>
-              )}
-              {s.payment_conditions && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <FileText className="h-4 w-4" /> Pgto: {s.payment_conditions}
-                </div>
-              )}
-              {s.rating && (
-                <div className="flex items-center gap-1 mt-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={`text-lg ${i < s.rating ? "text-yellow-400" : "text-gray-200"}`}>★</span>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {isLoading ? (
+        <PageSkeleton variant={view === "tabela" ? "table" : "cards"} rows={SUPPLIERS_LIMIT} />
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+          {suppliers.length === 0 ? "Nenhum fornecedor cadastrado." : "Nenhum fornecedor para os filtros aplicados."}
+        </div>
+      ) : view === "tabela" ? (
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fornecedor</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead className="hidden md:table-cell">Contato</TableHead>
+                  <TableHead className="hidden sm:table-cell">Telefone</TableHead>
+                  <TableHead className="hidden lg:table-cell">Pagamento</TableHead>
+                  <TableHead className="hidden md:table-cell">Avaliação</TableHead>
+                  <TableHead className="w-24 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {more.visible.map(s => (
+                  <TableRow key={s.id} className="cursor-pointer" onClick={() => setSelectedSupplier(s)}>
+                    <TableCell className="font-medium">{s.name}</TableCell>
+                    <TableCell><Badge variant="secondary">{s.category || "—"}</Badge></TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">{s.contact || "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-muted-foreground whitespace-nowrap">{s.phone || "—"}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">{s.payment_conditions || "—"}</TableCell>
+                    <TableCell className="hidden md:table-cell"><Stars rating={s.rating} /></TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <SupplierActions onEdit={() => { setEditing(s); setFormOpen(true); }} onRemove={() => remove.mutate(s.id)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <ShowMoreButton expanded={more.expanded} hasMore={more.hasMore} total={filtered.length} onToggle={more.toggle} noun="fornecedores" />
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+            {more.visible.map(s => (
+              <Card
+                key={s.id}
+                className="card-interactive cursor-pointer"
+                onClick={() => setSelectedSupplier(s)}
+              >
+                {/* Card horizontal: identidade à esquerda, contato no meio, ações à direita. */}
+                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+                  <div className="flex items-center gap-3 min-w-0 sm:w-[34%]">
+                    <div className="icon-chip h-10 w-10 shrink-0"><Truck className="h-4 w-4" /></div>
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{s.name}</p>
+                      <Badge variant="secondary" className="mt-0.5">{s.category || "—"}</Badge>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    {s.contact && <span className="flex items-center gap-1.5 truncate"><Users className="h-3.5 w-3.5 shrink-0" /> {s.contact}</span>}
+                    {s.phone && <span className="flex items-center gap-1.5 truncate"><Phone className="h-3.5 w-3.5 shrink-0" /> {s.phone}</span>}
+                    {s.email && <span className="flex items-center gap-1.5 truncate"><Mail className="h-3.5 w-3.5 shrink-0" /> {s.email}</span>}
+                    {s.payment_conditions && <span className="flex items-center gap-1.5 truncate"><FileText className="h-3.5 w-3.5 shrink-0" /> Pgto: {s.payment_conditions}</span>}
+                    {s.rating ? <Stars rating={s.rating} /> : null}
+                  </div>
+                  <div className="shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
+                    <SupplierActions onEdit={() => { setEditing(s); setFormOpen(true); }} onRemove={() => remove.mutate(s.id)} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <ShowMoreButton expanded={more.expanded} hasMore={more.hasMore} total={filtered.length} onToggle={more.toggle} noun="fornecedores" />
+        </div>
+      )}
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
