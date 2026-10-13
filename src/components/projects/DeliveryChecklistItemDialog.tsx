@@ -16,6 +16,8 @@ export interface DeliveryChecklistDraft {
   responsible: string | null;
   due_date: string | null;
   priority: DeliveryChecklistItem["priority"];
+  /** Fotos escolhidas no cadastro (enviadas depois que o item é criado). */
+  photos: File[];
 }
 
 interface Props {
@@ -39,6 +41,7 @@ export function DeliveryChecklistItemDialog({ open, onOpenChange, activities, de
   const [responsible, setResponsible] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<string>("media");
+  const [photos, setPhotos] = useState<File[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,6 +50,7 @@ export function DeliveryChecklistItemDialog({ open, onOpenChange, activities, de
     setResponsible("");
     setDueDate("");
     setPriority("media");
+    setPhotos([]);
   }, [open, defaultActivityId]);
 
   const selected = activities.find((a) => a.id === activityId);
@@ -61,6 +65,7 @@ export function DeliveryChecklistItemDialog({ open, onOpenChange, activities, de
       responsible: responsible.trim() || null,
       due_date: dueDate || null,
       priority: priority as DeliveryChecklistItem["priority"],
+      photos,
     });
   };
 
@@ -130,6 +135,21 @@ export function DeliveryChecklistItemDialog({ open, onOpenChange, activities, de
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label htmlFor="delivery-photos">Fotos (opcional)</Label>
+            <Input
+              id="delivery-photos"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
+              className="cursor-pointer"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              No celular abre a câmera ou a galeria. A foto é reduzida antes de enviar.
+              {photos.length > 0 && ` ${photos.length} selecionada${photos.length === 1 ? "" : "s"}.`}
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

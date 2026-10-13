@@ -1086,6 +1086,7 @@ export type Database = {
           discipline: string | null
           due_date: string | null
           id: string
+          photo_paths: string[]
           priority: string | null
           project_id: string
           resolved: boolean
@@ -1101,6 +1102,7 @@ export type Database = {
           discipline?: string | null
           due_date?: string | null
           id?: string
+          photo_paths?: string[]
           priority?: string | null
           project_id: string
           resolved?: boolean
@@ -1116,6 +1118,7 @@ export type Database = {
           discipline?: string | null
           due_date?: string | null
           id?: string
+          photo_paths?: string[]
           priority?: string | null
           project_id?: string
           resolved?: boolean

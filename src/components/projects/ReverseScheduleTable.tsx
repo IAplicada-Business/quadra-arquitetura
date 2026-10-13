@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CascadePreviewDialog } from "./CascadePreviewDialog";
 import { ActivityDeliveryChecklist } from "./ActivityDeliveryChecklist";
+import type { ChecklistPhotoHandlers } from "./ChecklistItemPhotos";
 import { computeCascade, type CascadeChange, type ProjectActivity } from "@/hooks/useProjectActivities";
 import type { DeliveryChecklistItem } from "@/hooks/useDeliveryChecklist";
 import { computeCriticalPath } from "@/lib/criticalPath";
@@ -48,6 +49,8 @@ interface Props {
   onChecklistToggle?: (item: DeliveryChecklistItem) => void;
   onChecklistRemove?: (id: string) => void;
   onChecklistAdd?: (activityId: string) => void;
+  /** Fotos dos itens do checklist (miniatura, upload pelo celular). */
+  checklistPhotos?: ChecklistPhotoHandlers;
   /**
    * "Quando entregar já dá o check ali": marca a atividade como concluída
    * (ou reabre) direto na linha, sem abrir o formulário.
@@ -199,6 +202,7 @@ export function ReverseScheduleTable({
   onChecklistRemove,
   onChecklistAdd,
   onToggleDone,
+  checklistPhotos,
 }: Props) {
   const today = todayProp ?? todayIso();
   const [filter, setFilter] = useState<ReverseFilter>("all");
@@ -572,6 +576,7 @@ export function ReverseScheduleTable({
                           onToggle={(item) => onChecklistToggle?.(item)}
                           onRemove={(id) => onChecklistRemove?.(id)}
                           onAdd={() => onChecklistAdd?.(a.id)}
+                          photos={checklistPhotos}
                         />
                       </TableCell>
                     </TableRow>
