@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 import { format, addMonths, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PageSkeleton } from "@/components/visual/PageSkeleton";
 
 const FIN_MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: String(i + 1).padStart(2, "0"),
@@ -336,9 +337,7 @@ export default function Lancamentos() {
       {/* Lista */}
       <div className="overflow-auto rounded-lg border min-h-[calc(100vh-26rem)]">
         {isLoading ? (
-          <div className="flex justify-center items-center h-full py-16">
-            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-          </div>
+          <PageSkeleton variant="table" rows={8} className="p-0 [&>div]:shadow-none [&>div]:rounded-none" />
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
             <p>Nenhum lançamento encontrado.</p>
@@ -386,7 +385,7 @@ export default function Lancamentos() {
                       item.status === "pago" ? "bg-success/10 text-success border-success/30" :
                       item.status === "atrasado" ? "bg-destructive/10 text-destructive border-destructive/30" :
                       item.status === "cancelado" ? "bg-muted text-muted-foreground" :
-                      "bg-warning/10 text-warning border-warning/30"
+                      "bg-warning/10 text-warning-ink border-warning/30"
                     }>
                       {item.status === "pago" ? "Pago/Recebido" :
                        item.status === "atrasado" ? "Atrasado" :

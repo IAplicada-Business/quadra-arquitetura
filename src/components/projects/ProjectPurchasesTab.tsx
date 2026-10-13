@@ -18,7 +18,7 @@ function formatDate(d: string | null) {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  pendente: { label: "A Comprar", className: "bg-warning/15 text-warning border-warning/30" },
+  pendente: { label: "A Comprar", className: "bg-warning/15 text-warning-ink border-warning/30" },
   comprado: { label: "Comprado", className: "bg-primary/15 text-primary border-primary/30" },
   entregue: { label: "Entregue", className: "bg-success/15 text-success border-success/30" },
   instalado: { label: "Instalado", className: "bg-muted text-muted-foreground border-border" },

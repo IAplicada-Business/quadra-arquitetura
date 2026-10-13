@@ -47,7 +47,7 @@ export function ProcessSection() {
           <p
             className="text-xs mb-5"
             style={{
-              color: "#C4756E",
+              color: "hsl(var(--brand-terracota))",
               letterSpacing: "6px",
               fontFamily: "'Jost', sans-serif",
               fontWeight: 500,
@@ -59,18 +59,18 @@ export function ProcessSection() {
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "clamp(2.25rem, 5vw, 3.75rem)",
-              color: "#1B2A4A",
+              color: "hsl(var(--brand-navy))",
               fontWeight: 300,
               lineHeight: 1.1,
             }}
           >
-            Como <em style={{ color: "#C4756E", fontStyle: "italic" }}>trabalhamos</em>
+            Como <em style={{ color: "hsl(var(--brand-terracota))", fontStyle: "italic" }}>trabalhamos</em>
           </h2>
           <p
             className="mt-6 max-w-2xl mx-auto"
             style={{
               fontFamily: "'Jost', sans-serif",
-              color: "#1B2A4A",
+              color: "hsl(var(--brand-navy))",
               opacity: 0.7,
               fontSize: "1rem",
               lineHeight: 1.8,
@@ -86,7 +86,7 @@ export function ProcessSection() {
           {/* Horizontal line on desktop */}
           <div
             className="hidden lg:block absolute top-10 left-[8%] right-[8%] h-px"
-            style={{ backgroundColor: "#C4756E", opacity: 0.3 }}
+            style={{ backgroundColor: "hsl(var(--brand-terracota))", opacity: 0.3 }}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-6">
@@ -102,7 +102,7 @@ export function ProcessSection() {
                 {/* Dot on timeline */}
                 <div
                   className="hidden lg:block absolute top-10 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full -translate-y-1/2 z-10"
-                  style={{ backgroundColor: "#C4756E" }}
+                  style={{ backgroundColor: "hsl(var(--brand-terracota))" }}
                 />
 
                 <div
@@ -110,7 +110,7 @@ export function ProcessSection() {
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "3.5rem",
-                    color: "#1B2A4A",
+                    color: "hsl(var(--brand-navy))",
                     fontWeight: 300,
                     lineHeight: 1,
                     opacity: 0.15,
@@ -124,7 +124,7 @@ export function ProcessSection() {
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "1.5rem",
-                    color: "#8B4557",
+                    color: "hsl(var(--brand-vinho))",
                     fontWeight: 500,
                   }}
                 >
@@ -136,7 +136,7 @@ export function ProcessSection() {
                   style={{
                     fontFamily: "'Jost', sans-serif",
                     fontSize: "0.875rem",
-                    color: "#1B2A4A",
+                    color: "hsl(var(--brand-navy))",
                     opacity: 0.7,
                     lineHeight: 1.7,
                     fontWeight: 300,

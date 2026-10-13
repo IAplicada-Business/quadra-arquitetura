@@ -50,7 +50,7 @@ export function AppLayout() {
         </Sheet>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-marca">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-gradient-marca">
         <AppHeader
           showMenuButton={isMobile}
           onMenuClick={() => setMobileOpen(true)}
@@ -65,7 +65,7 @@ export function AppLayout() {
               linha. Páginas que não usam essa altura (a maioria) continuam
               exatamente iguais: sem flex-1 no filho, a altura dele
               continua vindo do conteúdo. */}
-          <div className="w-full h-full px-6 py-6 lg:px-8 lg:py-8 animate-fade-in flex flex-col">
+          <div className="w-full min-w-0 h-full px-6 py-6 lg:px-8 lg:py-8 animate-fade-in flex flex-col">
             <PermissionGate>
               <Outlet />
             </PermissionGate>

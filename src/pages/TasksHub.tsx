@@ -21,7 +21,7 @@ import { VoiceTaskForm } from "@/components/construction/VoiceTaskForm";
 const priorityColors: Record<string, string> = {
   baixa: "bg-muted text-muted-foreground",
   media: "bg-primary/10 text-primary",
-  alta: "bg-warning/10 text-warning",
+  alta: "bg-warning/10 text-warning-ink",
   urgente: "bg-destructive/10 text-destructive",
 };
 
@@ -168,7 +168,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Vence hoje</p>
-            <p className="text-2xl font-display text-accent">{todayCount}</p>
+            <p className="text-2xl font-display text-accent-ink">{todayCount}</p>
           </CardContent>
         </Card>
         <Card>
@@ -286,7 +286,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                                   </Badge>
                                   {task.is_recurring && (
                                     <span title={task.recurrence_rule ?? "Recorrente"}>
-                                      <Repeat className="h-3 w-3 text-accent" />
+                                      <Repeat className="h-3 w-3 text-accent-ink" />
                                     </span>
                                   )}
                                   {task.tags?.map((tg) => (
@@ -350,7 +350,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                         <Badge variant="outline" className="text-[10px] h-4 px-1.5">Pessoal</Badge>
                       )}
                       <Badge className={`text-[10px] h-4 px-1.5 ${priorityColors[task.priority]}`}>{task.priority}</Badge>
-                      {task.is_recurring && <Repeat className="h-3 w-3 text-accent" />}
+                      {task.is_recurring && <Repeat className="h-3 w-3 text-accent-ink" />}
                       {task.tags?.map((tg) => (
                         <span key={tg} className="text-[10px] text-muted-foreground">#{tg}</span>
                       ))}
@@ -380,7 +380,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
             ) : (
               byDate.map(([date, items]) => (
                 <div key={date} className="px-4 py-3">
-                  <p className={`text-xs font-semibold mb-2 ${date < todayIso ? "text-destructive" : date === todayIso ? "text-accent" : "text-foreground"}`}>
+                  <p className={`text-xs font-semibold mb-2 ${date < todayIso ? "text-destructive" : date === todayIso ? "text-accent-ink" : "text-foreground"}`}>
                     {new Date(date + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
                   </p>
                   <ul className="space-y-1.5">
@@ -393,7 +393,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                         {task.project_id && (
                           <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{projectsMap[task.project_id]}</Badge>
                         )}
-                        {task.is_recurring && <Repeat className="h-3 w-3 text-accent" />}
+                        {task.is_recurring && <Repeat className="h-3 w-3 text-accent-ink" />}
                       </li>
                     ))}
                   </ul>

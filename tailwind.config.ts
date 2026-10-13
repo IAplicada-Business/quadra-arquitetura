@@ -22,9 +22,11 @@ export default {
       },
       boxShadow: {
         xs: 'var(--shadow-xs)',
-        soft: 'var(--shadow-sm)',
-        elev: 'var(--shadow-md)',
-        float: 'var(--shadow-lg)',
+        soft: 'var(--shadow-soft)',
+        elev: 'var(--shadow-card)',
+        float: 'var(--shadow-elevated)',
+        card: 'var(--shadow-card)',
+        elevated: 'var(--shadow-elevated)',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,6 +53,7 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          ink: "hsl(var(--accent-ink))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -67,6 +70,42 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+          ink: "hsl(var(--warning-ink))",
+        },
+        /* Nomes do padrão IAplicada sobre a paleta Quadra. "brand-*" são os
+           hex exatos da landing; "deep"/"accent-brand" já existiam sem nome. */
+        brand: {
+          navy: "hsl(var(--brand-navy))",
+          terracota: "hsl(var(--brand-terracota))",
+          areia: "hsl(var(--brand-areia))",
+          vinho: "hsl(var(--brand-vinho))",
+          creme: "hsl(var(--brand-creme))",
+          rosa: "hsl(var(--brand-rosa))",
+          pedra: "hsl(var(--brand-pedra))",
+        },
+        deep: {
+          DEFAULT: "hsl(var(--deep))",
+          foreground: "hsl(var(--deep-foreground))",
+        },
+        "accent-brand": "hsl(var(--accent-brand))",
+        "soft-foreground": "hsl(var(--soft-foreground))",
+        "primary-hover": "hsl(var(--primary-hover))",
+        status: {
+          now: "hsl(var(--status-now))",
+          "now-foreground": "hsl(var(--status-now-foreground))",
+          doing: "hsl(var(--status-doing))",
+          "doing-foreground": "hsl(var(--status-doing-foreground))",
+          next: "hsl(var(--status-next))",
+          "next-foreground": "hsl(var(--status-next-foreground))",
+          back: "hsl(var(--status-back))",
+          "back-foreground": "hsl(var(--status-back-foreground))",
+        },
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

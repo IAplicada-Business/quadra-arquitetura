@@ -16,7 +16,7 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
   }));
 
   return (
-    <section id="projetos" className="relative py-24 md:py-32 bg-[#F5E0D0]">
+    <section id="projetos" className="relative py-24 md:py-32 bg-brand-rosa">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 md:mb-20 gap-6">
@@ -29,7 +29,7 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
             <p
               className="text-xs mb-5"
               style={{
-                color: "#C4756E",
+                color: "hsl(var(--brand-terracota))",
                 letterSpacing: "6px",
                 fontFamily: "'Jost', sans-serif",
                 fontWeight: 500,
@@ -41,13 +41,13 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: "clamp(2.25rem, 5vw, 3.75rem)",
-                color: "#1B2A4A",
+                color: "hsl(var(--brand-navy))",
                 fontWeight: 300,
                 lineHeight: 1.1,
                 letterSpacing: "-0.01em",
               }}
             >
-              <RichText text={content.title} styles={{ em: { color: "#C4756E" } }} />
+              <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))" } }} />
             </h2>
           </motion.div>
           <motion.a
@@ -58,7 +58,7 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="group inline-flex items-center gap-2 text-[#1B2A4A] text-sm transition-colors hover:text-[#8B4557]"
+            className="group inline-flex items-center gap-2 text-brand-navy text-sm transition-colors hover:text-brand-vinho"
             style={{
               fontFamily: "'Jost', sans-serif",
               letterSpacing: "2px",
@@ -83,7 +83,7 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
               transition={{ duration: 0.8, delay: (i % 3) * 0.1 }}
               className="group cursor-pointer"
             >
-              <div className="relative overflow-hidden aspect-[4/5] bg-[#1B2A4A]/10">
+              <div className="relative overflow-hidden aspect-[4/5] bg-brand-navy/10">
                 <img
                   src={p.image}
                   alt={p.title || "Projeto"}
@@ -98,7 +98,7 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
                       "linear-gradient(180deg, transparent 40%, rgba(27,42,74,0.85) 100%)",
                   }}
                 >
-                  <div className="flex items-center gap-2 text-[#F0DCC8]">
+                  <div className="flex items-center gap-2 text-brand-areia">
                     <span
                       className="text-xs uppercase"
                       style={{ letterSpacing: "3px", fontFamily: "'Jost', sans-serif" }}
@@ -115,7 +115,7 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
                   <p
                     className="text-xs mb-2"
                     style={{
-                      color: "#8B4557",
+                      color: "hsl(var(--brand-vinho))",
                       letterSpacing: "3px",
                       fontFamily: "'Jost', sans-serif",
                       textTransform: "uppercase",
@@ -126,11 +126,11 @@ export function PortfolioSection({ content = SITE_DEFAULTS.portfolio }: { conten
                   </p>
                 )}
                 <h3
-                  className="transition-colors group-hover:text-[#8B4557]"
+                  className="transition-colors group-hover:text-brand-vinho"
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "1.375rem",
-                    color: "#1B2A4A",
+                    color: "hsl(var(--brand-navy))",
                     fontWeight: 400,
                     lineHeight: 1.3,
                   }}

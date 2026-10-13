@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { BudgetQuoteCard } from "./BudgetQuoteCard";
+import { BudgetQuoteTable } from "./BudgetQuoteTable";
 import { BudgetQuoteForm } from "./BudgetQuoteForm";
 import { ProjectPurchasesTab } from "./ProjectPurchasesTab";
 import { ShoppingListDialog } from "./ShoppingListDialog";
@@ -470,17 +470,16 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                                 )}
                               </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                              {group.quotes.map((q) => (
-                                <BudgetQuoteCard
-                                  key={q.id}
-                                  quote={q as Record<string, unknown>}
-                                  onEdit={() => handleEditQuote(q as Record<string, unknown>)}
-                                  onDelete={() => remove.mutate(q.id)}
-                                  onApprove={() => handleApprove(q.id)}
-                                />
-                              ))}
-                            </div>
+                            {/* Agrupado por fornecedor (deste PR) e em linhas que
+                                abrem no clique (do main). O BudgetQuoteCard foi
+                                removido no main: era ele que empilhava prazo,
+                                pagamento e três botões em cada cotação. */}
+                            <BudgetQuoteTable
+                              quotes={group.quotes as unknown as Record<string, unknown>[]}
+                              onEdit={handleEditQuote}
+                              onDelete={(id) => remove.mutate(id)}
+                              onApprove={(q) => handleApprove(q.id as string)}
+                            />
                           </div>
                         ))
                       )}

@@ -180,8 +180,8 @@ export function VoiceChat({
   };
 
   const getStatusColor = () => {
-    if (isListening) return "text-accent";
-    if (isProcessing) return "text-warning";
+    if (isListening) return "text-accent-ink";
+    if (isProcessing) return "text-warning-ink";
     if (isSpeaking) return "text-success";
     return "text-muted-foreground";
   };
@@ -315,7 +315,7 @@ export function VoiceChat({
 
         {/* AI indicator */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Sparkles className="h-3 w-3 text-accent" />
+          <Sparkles className="h-3 w-3 text-accent-ink" />
           Assistente de Voz IA
         </div>
       </div>

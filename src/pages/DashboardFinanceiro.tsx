@@ -75,7 +75,7 @@ export default function DashboardFinanceiro() {
   if (isLoading || !fm) {
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-5 gap-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="pt-6"><div className="h-16 bg-muted rounded" /></CardContent>
@@ -130,7 +130,7 @@ export default function DashboardFinanceiro() {
         {/* ── Visão Geral ─────────────────────────────────────────────────── */}
         <TabsContent value="visao_geral" className="space-y-5 mt-4">
           {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 min-[520px]:grid-cols-2 min-[900px]:grid-cols-5 gap-3">
             <KpiCard
               icon={<Wallet className="h-4 w-4" />}
               label="Receita recebida"
@@ -467,15 +467,21 @@ function KpiCard({
   hint?: React.ReactNode;
 }) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden min-w-0">
       {accent && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px]" style={{ background: accent }} />}
-      <CardContent className="pt-5 pb-4">
-        <div className="flex items-center gap-2 text-muted-foreground mb-2">
-          {icon}
-          <span className="text-[11px] font-medium uppercase tracking-wide">{label}</span>
+      <CardContent className="pt-5 pb-4 min-w-0">
+        {/* R5: card encolhe, rótulo trunca, número espreme com clamp(). */}
+        <div className="flex items-center gap-2 text-muted-foreground mb-2 min-w-0">
+          <span className="shrink-0">{icon}</span>
+          <span className="label-cat truncate">{label}</span>
         </div>
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-2xl font-bold tabular-nums">{value}</span>
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span
+            className="font-bold tabular-nums truncate"
+            style={{ fontSize: "clamp(20px, 2.2vw, 30px)" }}
+          >
+            {value}
+          </span>
           {variation !== undefined && <VariationBadge value={variation} suffix={variationSuffix} invert={variationInvert} />}
         </div>
         {hint && <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>}
