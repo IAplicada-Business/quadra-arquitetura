@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ProgressRing } from "@/components/visual/ProgressRing";
 import { C } from "@/lib/chartColors";
 import type { MultiObrasData, Ritmo } from "@/lib/multiObras";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 /** Estado de cada obra: cor reservada de status, sempre com ícone e texto. */
 const RITMO: Record<Ritmo, { label: string; color: string; icon: typeof CheckCircle2 }> = {
@@ -67,8 +68,8 @@ function SectionCard({ icon, title, subtitle, right, children, className }: {
             <CardTitle className="text-base font-display flex items-center gap-2">
               <span style={{ color: C.navy }}>{icon}</span>
               {title}
+              {subtitle && <InfoHint>{subtitle}</InfoHint>}
             </CardTitle>
-            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
           </div>
           {right}
         </div>

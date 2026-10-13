@@ -10,6 +10,7 @@ import { useClientPortalToken } from "@/hooks/useClientPortalToken";
 import { OnboardingSectionsEditor } from "@/components/onboarding/OnboardingSectionsEditor";
 import { cloneSectionsForProject, invalidVideoSections, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
 import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
   projectId: string;
@@ -98,17 +99,17 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
         <div>
           <h3 className="font-semibold flex items-center gap-2">
             Onboarding do cliente
+            <InfoHint>
+              {usesTemplate
+                ? `Esta obra segue o modelo "${templateName}" ao vivo. Ao salvar qualquer alteração aqui, ela ganha a própria versão e o modelo não muda.`
+                : "Alterações aqui valem só para esta obra. Os modelos continuam iguais."}
+            </InfoHint>
             {usesTemplate ? (
               <Badge variant="secondary" className="text-[10px]"><Layers className="h-3 w-3 mr-1" /> Modelo: {templateName}</Badge>
             ) : (
               <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Personalizado para esta obra</Badge>
             )}
           </h3>
-          <p className="text-xs text-muted-foreground">
-            {usesTemplate
-              ? `Esta obra segue o modelo "${templateName}" ao vivo. Ao salvar qualquer alteração aqui, ela ganha a própria versão e o modelo não muda.`
-              : "Alterações aqui valem só para esta obra. Os modelos continuam iguais."}
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
@@ -130,7 +131,12 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
 
       {/* Escolha do modelo */}
       <div className="rounded-md border bg-muted/30 p-3 space-y-2">
-        <p className="text-xs font-semibold">Modelo de onboarding desta obra</p>
+        <p className="text-xs font-semibold flex items-center gap-1.5">
+          Modelo de onboarding desta obra
+          {!usesTemplate && templates.length > 0 && (
+            <InfoHint>Esta obra tem uma cópia personalizada. Escolher um modelo descarta a cópia e volta a seguir o modelo ao vivo.</InfoHint>
+          )}
+        </p>
         {templates.length === 0 ? (
           <p className="text-xs text-muted-foreground">
             Nenhum modelo cadastrado ainda. Crie os modelos em Configurações → Onboarding, ou monte as seções só para esta obra abaixo.
@@ -156,9 +162,6 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
               );
             })}
           </div>
-        )}
-        {!usesTemplate && templates.length > 0 && (
-          <p className="text-[11px] text-muted-foreground">Esta obra tem uma cópia personalizada. Escolher um modelo descarta a cópia e volta a seguir o modelo ao vivo.</p>
         )}
       </div>
 

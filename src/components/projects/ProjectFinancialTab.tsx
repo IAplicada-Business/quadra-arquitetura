@@ -20,6 +20,7 @@ import { SendMessageModal } from "@/components/messages/SendMessageModal";
 import { useProjectAI } from "@/hooks/useProjectAI";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 function formatCurrency(v: number | null | undefined) {
   if (v == null) return "—";
@@ -412,8 +413,10 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
         <TabsContent value="dre" className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-display">Demonstrativo de Resultado do Projeto</h3>
-              <p className="text-sm text-muted-foreground">Receitas e despesas desta obra. O DRE do escritório fica no Dashboard Financeiro.</p>
+              <h3 className="text-lg font-semibold text-display flex items-center gap-1.5">
+                Demonstrativo de Resultado do Projeto
+                <InfoHint>Receitas e despesas desta obra. O DRE do escritório fica no Dashboard Financeiro.</InfoHint>
+              </h3>
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" disabled={aiLoading} onClick={async () => {

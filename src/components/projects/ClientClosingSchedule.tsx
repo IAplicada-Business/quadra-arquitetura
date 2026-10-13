@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useClientClosingSchedule, type ClosingScheduleItem } from "@/hooks/useClientClosingSchedule";
 import { CLOSING_STATUS_CLASS, CLOSING_STATUS_LABEL } from "@/lib/closingStatus";
 import { MoveInBanner } from "./MoveInBanner";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
   projectId: string;
@@ -83,8 +84,10 @@ export function ClientClosingSchedule({ projectId, moveInDate }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold">Fechamento do Cliente</h3>
-          <p className="text-xs text-muted-foreground">O que o cliente precisa fechar, e até quando, para a obra seguir no prazo.</p>
+          <h3 className="text-base font-semibold flex items-center gap-1.5">
+            Fechamento do Cliente
+            <InfoHint>O que o cliente precisa fechar, e até quando, para a obra seguir no prazo.</InfoHint>
+          </h3>
         </div>
         <Button size="sm" onClick={() => openForm()}>
           <Plus className="h-4 w-4 mr-1" /> Adicionar item

@@ -40,6 +40,7 @@ import {
   runBudgetImport,
   type FreshImportData,
 } from "@/hooks/useBudgetImport";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -360,8 +361,10 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
         <TabsContent value="cotacoes" className="space-y-6 mt-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-display">Orçamentos (Escopo Contratado)</h3>
-              <p className="text-sm text-muted-foreground">Compare cotações e aprove fornecedores para cada disciplina</p>
+              <h3 className="text-lg font-semibold text-display flex items-center gap-1.5">
+                Orçamentos (Escopo Contratado)
+                <InfoHint>Compare cotações e aprove fornecedores para cada disciplina.</InfoHint>
+              </h3>
             </div>
             <div className="flex items-center gap-2">
               <Select value={String(currentRev)} onValueChange={(v) => setSelectedRevision(Number(v))}>
@@ -492,10 +495,10 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                      <span className="text-lg font-semibold text-display">Total Geral Aprovado</span>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Soma dos fornecedores aprovados (serviço + material) em todas as disciplinas
-                      </p>
+                      <span className="text-lg font-semibold text-display flex items-center gap-1.5">
+                        Total Geral Aprovado
+                        <InfoHint>Soma dos fornecedores aprovados (serviço + material) em todas as disciplinas.</InfoHint>
+                      </span>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="text-right">
@@ -541,8 +544,10 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
           {activities.filter((a) => a.area_m2 && a.area_m2 > 0).length > 0 && (
             <Card className="mt-6">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base text-display">Pesquisa de Preços por Atividade</CardTitle>
-                <p className="text-xs text-muted-foreground">Pesquise preços de materiais em BH com base nas atividades cadastradas</p>
+                <CardTitle className="text-base text-display flex items-center gap-1.5">
+                  Pesquisa de Preços por Atividade
+                  <InfoHint>Pesquise preços de materiais em BH com base nas atividades cadastradas.</InfoHint>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

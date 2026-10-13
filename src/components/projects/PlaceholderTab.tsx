@@ -1,4 +1,5 @@
 import { Construction } from "lucide-react";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 interface PlaceholderTabProps {
   title: string;
@@ -11,8 +12,10 @@ export function PlaceholderTab({ title, description }: PlaceholderTabProps) {
       <div className="p-4 rounded-full bg-secondary mb-4">
         <Construction className="h-8 w-8 text-accent-ink" />
       </div>
-      <h3 className="text-lg font-display font-semibold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-md">{description}</p>
+      <h3 className="text-lg font-display font-semibold mb-1 flex items-center gap-1.5">
+        {title}
+        <InfoHint>{description}</InfoHint>
+      </h3>
     </div>
   );
 }

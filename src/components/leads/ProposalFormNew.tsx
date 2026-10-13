@@ -19,6 +19,7 @@ import { useLeads } from "@/hooks/useLeads";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, FileText, Save } from "lucide-react";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 export interface ProposalFormData {
   lead_id: string;
@@ -322,11 +323,15 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
 
       {/* Section 4: Etapas */}
       <Card>
-        <CardHeader><CardTitle className="text-base">4. Etapas do Projeto</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-1.5">
+            4. Etapas do Projeto
+            <InfoHint>
+              Selecione as etapas que compõem esta proposta. A lista e os textos das etapas são editados em Configurações → Proposta → Blocos do PDF.
+            </InfoHint>
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Selecione as etapas que compõem esta proposta. A lista e os textos das etapas são editados em Configurações → Proposta → Blocos do PDF.
-          </p>
           <Button variant="outline" size="sm" onClick={() => { setEtapasTouched(true); set("etapas_ativas", [...allStepKeys]); }}>
             Selecionar todas
           </Button>
@@ -359,11 +364,15 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
       {/* Blocos personalizados do PDF */}
       {customBlocks.length > 0 && (
         <Card data-testid="proposal-custom-blocks">
-          <CardHeader><CardTitle className="text-base">Blocos personalizados do PDF</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-1.5">
+              Blocos personalizados do PDF
+              <InfoHint>
+                Escolha quais blocos criados pela equipe entram nesta proposta (estudos de viabilidade, linhas do tempo, cartões). Eles são editados em Configurações → Proposta → Blocos do PDF.
+              </InfoHint>
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Escolha quais blocos criados pela equipe entram nesta proposta (estudos de viabilidade, linhas do tempo, cartões). Eles são editados em Configurações → Proposta → Blocos do PDF.
-            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {customBlocks.map(block => (
                 <label key={block.key} className="flex items-start gap-2 p-2 border rounded cursor-pointer">
@@ -385,9 +394,13 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
 
       {/* Section 5: Timeline */}
       <Card>
-        <CardHeader><CardTitle className="text-base">5. Prazos</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-1.5">
+            5. Prazos
+            <InfoHint>Os campos exibidos seguem as etapas selecionadas acima.</InfoHint>
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">Os campos exibidos seguem as etapas selecionadas acima.</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {flowSteps
               .filter(step => step.key && FLOW_STEP_TIMELINE[step.key] && data.etapas_ativas.includes(step.key))
@@ -457,9 +470,13 @@ export default function ProposalFormNew({ initialData, onSave, onPreview, onGene
 
       {/* Section 7: Portfolio Cards (for PDF page) */}
       <Card>
-        <CardHeader><CardTitle className="text-base">7. Portfólio no PDF</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-1.5">
+            7. Portfólio no PDF
+            <InfoHint>Selecione até 4 projetos para exibir na página "Nossos Projetos" do PDF. Adicione uma legenda opcional.</InfoHint>
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-xs text-muted-foreground">Selecione até 4 projetos para exibir na página "Nossos Projetos" do PDF. Adicione uma legenda opcional.</p>
           {userProjects.length > 0 ? (
             <div className="space-y-3">
               {userProjects.map(proj => {

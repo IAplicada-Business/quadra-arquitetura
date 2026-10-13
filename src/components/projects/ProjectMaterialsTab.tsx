@@ -28,6 +28,7 @@ import { useProjectAI } from "@/hooks/useProjectAI";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 function formatDate(d: string | null) {
   if (!d) return "—";
@@ -197,9 +198,6 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
 
         {/* ===== MATERIAIS DE OBRA ===== */}
         <TabsContent value="rastreamento" className="space-y-4 mt-4">
-          <p className="text-xs text-muted-foreground">
-            Insumos de construção: cimento, tinta, piso, revestimento, tubulações, fios e demais materiais de obra.
-          </p>
           {/* Action buttons - prominent at top */}
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -235,6 +233,9 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
               {aiLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
               Calcular materiais com IA
             </Button>
+            <InfoHint label="Sobre Materiais de Obra">
+              Insumos de construção: cimento, tinta, piso, revestimento, tubulações, fios e demais materiais de obra.
+            </InfoHint>
           </div>
 
           {/* AI Materials Modal */}
@@ -317,8 +318,10 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-foreground">Por Atividade</h3>
-                <p className="text-xs text-muted-foreground">Materiais calculados automaticamente a partir das atividades do escopo</p>
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-1.5">
+                  Por Atividade
+                  <InfoHint>Materiais calculados automaticamente a partir das atividades do escopo.</InfoHint>
+                </h3>
               </div>
             </div>
 
@@ -450,8 +453,10 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
           <div className="space-y-3 pt-4 border-t">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-foreground">Adicionados Manualmente</h3>
-                <p className="text-xs text-muted-foreground">Materiais adicionados fora do cálculo automático</p>
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-1.5">
+                  Adicionados Manualmente
+                  <InfoHint>Materiais adicionados fora do cálculo automático.</InfoHint>
+                </h3>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => tracking.importFromBudget.mutate()} disabled={tracking.importFromBudget.isPending}>
@@ -586,8 +591,10 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
         {/* ===== POR ATIVIDADE (cronograma) ===== */}
         <TabsContent value="atividades" className="space-y-4 mt-4">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Materiais por Atividade</h3>
-            <p className="text-sm text-muted-foreground">Materiais associados diretamente às atividades do cronograma. Edite na atividade de origem.</p>
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-1.5">
+              Materiais por Atividade
+              <InfoHint>Materiais associados diretamente às atividades do cronograma. Edite na atividade de origem.</InfoHint>
+            </h3>
           </div>
           {taskMaterials.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
@@ -646,15 +653,15 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
         </TabsContent>
 
         <TabsContent value="compras" className="space-y-4 mt-4">
-          <p className="text-xs text-muted-foreground">
-            Itens da casa: eletrodomésticos, móveis e equipamentos (coifa, forno, cooktop, geladeira, chuveiro, etc.) — não são insumos de obra.
-          </p>
           <div className="flex justify-end mb-2">
             <Button size="sm" variant="outline" onClick={() => setSupplierListOpen(true)} disabled={purchases.items.length === 0}>
               <Package className="h-4 w-4 mr-1" /> Lista por Fornecedor
             </Button>
           </div>
-          <ProjectPurchasesTab projectId={projectId} />
+          <ProjectPurchasesTab
+            projectId={projectId}
+            titleHint="Itens da casa: eletrodomésticos, móveis e equipamentos (coifa, forno, cooktop, geladeira, chuveiro, etc.) — não são insumos de obra."
+          />
         </TabsContent>
       </Tabs>
 

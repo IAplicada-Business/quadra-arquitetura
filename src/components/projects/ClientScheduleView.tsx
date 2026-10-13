@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { startOfWeek, endOfWeek, format, differenceInCalendarWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getDisciplineColor } from "@/lib/disciplineColors";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 interface ClientTask {
   id: string;
@@ -196,8 +197,10 @@ export function ClientScheduleView({ tasks, projectName }: ClientScheduleViewPro
     <div className="space-y-4" ref={printRef}>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-display">Visão do Cliente</h3>
-          <p className="text-sm text-muted-foreground">Resumo semanal por disciplina</p>
+          <h3 className="text-lg font-semibold text-display flex items-center gap-1.5">
+            Visão do Cliente
+            <InfoHint>Resumo semanal por disciplina.</InfoHint>
+          </h3>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handlePrint}>

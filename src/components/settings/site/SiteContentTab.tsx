@@ -22,6 +22,7 @@ import foundersPhoto from "@/assets/founders-photo.png";
 import logoBege from "@/assets/logo-bege.png";
 import { SiteField } from "./SiteFields";
 import { SitePreview } from "./SitePreview";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 /** Imagem que o site usa quando o campo está vazio (mesma lógica das seções). */
 function defaultImage(section: SiteSectionKey, field: string, index: number): string {
@@ -80,11 +81,15 @@ export default function SiteContentTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 bg-background/95 backdrop-blur py-2 border-b">
         <div>
-          <h3 className="font-semibold">Site institucional</h3>
-          <p className="text-xs text-muted-foreground">
-            Edite textos e imagens do site. Ao publicar, a mudança vale no próximo acesso ao site, sem novo deploy.
-            {lastUpdatedAt && <> Última publicação: {format(new Date(lastUpdatedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}.</>}
-          </p>
+          <h3 className="font-semibold flex items-center gap-1.5">
+            Site institucional
+            <InfoHint>Edite textos e imagens do site. Ao publicar, a mudança vale no próximo acesso ao site, sem novo deploy.</InfoHint>
+          </h3>
+          {lastUpdatedAt && (
+            <p className="text-xs text-muted-foreground">
+              Última publicação: {format(new Date(lastUpdatedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {dirty && <Badge variant="secondary">Alterações não publicadas</Badge>}
@@ -126,8 +131,10 @@ export default function SiteContentTab() {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <CardTitle className="text-base">{def.label}</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">{def.description}</p>
+                <CardTitle className="text-base flex items-center gap-1.5">
+                  {def.label}
+                  <InfoHint>{def.description}</InfoHint>
+                </CardTitle>
               </div>
               <div className="flex gap-1">
                 {sectionDirty && (
@@ -171,8 +178,10 @@ export default function SiteContentTab() {
 
         <Card className="xl:col-span-3 xl:sticky xl:top-16">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Preview</CardTitle>
-            <p className="text-xs text-muted-foreground">Como a seção vai ficar no site depois de publicar.</p>
+            <CardTitle className="text-base flex items-center gap-1.5">
+              Preview
+              <InfoHint>Como a seção vai ficar no site depois de publicar.</InfoHint>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <SitePreview section={active} content={draft} />

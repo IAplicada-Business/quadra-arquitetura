@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, FileSpreadsheet, FlaskConical, Loader2, MoreHorizontal, Plus, RefreshCw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InfoHint } from "@/components/visual/InfoHint";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -337,11 +338,17 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
         <TabsContent value="reverso" className="space-y-4 mt-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold">Cronograma Reverso</h3>
-              <p className="text-xs text-muted-foreground max-w-2xl">
-                Base única do cronograma: as atividades vêm do Escopo; o Gantt e a Contagem Regressiva são gerados daqui.
-                Marque a atividade como entregue no círculo antes do nome e as pendências de entrega na coluna Entrega.
-              </p>
+              <h3 className="text-base font-semibold flex items-center gap-1.5">
+                Cronograma Reverso
+                <InfoHint>
+                  <span className="block">Base única do cronograma: as atividades vêm do Escopo; o Gantt e a Contagem Regressiva são gerados daqui.</span>
+                  <span className="block mt-1.5">
+                    Clique em uma data ou no prazo para editar direto na tabela. Dias úteis excluem fins de semana, feriados nacionais e o recesso de fim de ano.
+                    Marcos críticos são as atividades sem folga no caminho crítico (mesmo cálculo do Gantt) e as atrasadas.
+                  </span>
+                  <span className="block mt-1.5">Marque a atividade como entregue no círculo antes do nome e as pendências de entrega na coluna Entrega.</span>
+                </InfoHint>
+              </h3>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -427,10 +434,10 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
         <TabsContent value="gantt" className="space-y-4 mt-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold">Gantt</h3>
-              <p className="text-xs text-muted-foreground">
-                Visão gráfica do Cronograma Reverso. Clique em uma barra para editar a atividade.
-              </p>
+              <h3 className="text-base font-semibold flex items-center gap-1.5">
+                Gantt
+                <InfoHint>Visão gráfica do Cronograma Reverso. Clique em uma barra para editar a atividade.</InfoHint>
+              </h3>
               {activities.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs" data-testid="gantt-stats">
                   <span><strong className="text-display">{stats.total}</strong> atividades</span>

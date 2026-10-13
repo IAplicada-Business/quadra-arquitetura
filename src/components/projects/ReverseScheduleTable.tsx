@@ -401,13 +401,6 @@ export function ReverseScheduleTable({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Clique em uma data ou no prazo para editar direto na tabela. Dias úteis excluem fins de semana, feriados nacionais e o recesso de fim de ano.
-        Marcos críticos são as atividades sem folga no caminho crítico (mesmo cálculo do Gantt) e as atrasadas.
-        {onToggleDone && " O círculo antes do nome marca a atividade como entregue."}
-        {hasChecklist && " Na coluna Entrega, marque as pendências de entrega de cada atividade."}
-      </p>
-
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
