@@ -6,6 +6,7 @@ import {
   contactIconKind,
   diffSiteContent,
   resolveSiteContent,
+  semTravessao,
   siteContentEqual,
   splitParagraphs,
   type SiteContent,
@@ -204,5 +205,47 @@ describe("modelo da dobra", () => {
   it("modelo válido salvo é aplicado", () => {
     const c = resolveSiteContent([row("journey.layout", "linha", "select")]);
     expect(c.journey.layout).toBe("linha");
+  });
+});
+
+describe("travessão no conteúdo publicado", () => {
+  /* O código está limpo, mas o texto vive em site_content e já tinha
+     travessão salvo quando a regra foi decidida. A limpeza precisa valer
+     na leitura, senão o site fica no ar com o traço. */
+  it("limpa travessão vindo do banco, não só do padrão", () => {
+    const c = resolveSiteContent([
+      row("hero.title", "Alguém que trabalha *só para você* — do número ao tijolo."),
+      row("hero.subtitle", "Coordena prazo e execução — e te mantém no controle."),
+    ]);
+    expect(c.hero.title).toBe("Alguém que trabalha *só para você*, do número ao tijolo.");
+    expect(c.hero.subtitle).toBe("Coordena prazo e execução, e te mantém no controle.");
+  });
+
+  it("limpa também dentro das listas, em título, descrição e etiqueta", () => {
+    const c = resolveSiteContent([
+      row(
+        "portfolio.items",
+        [{ title: "Obra — parada", desc: "História — com traço", tag: "RESIDENCIAL — BH", image: "" }],
+        "list",
+      ),
+    ]);
+    expect(c.portfolio.items[0].title).toBe("Obra, parada");
+    expect(c.portfolio.items[0].desc).toBe("História, com traço");
+    expect(c.portfolio.items[0].tag).toBe("RESIDENCIAL, BH");
+  });
+
+  /* Colado entre palavras a pessoa quis um hífen, não uma pausa. */
+  it("travessão colado vira hífen", () => {
+    expect(semTravessao("relação arquiteto—cliente")).toBe("relação arquiteto-cliente");
+  });
+
+  it("meia-risca segue a mesma regra", () => {
+    expect(semTravessao("de 10 – 15 dias")).toBe("de 10, 15 dias");
+    expect(semTravessao("pós–obra")).toBe("pós-obra");
+  });
+
+  it("texto sem travessão passa intacto", () => {
+    const original = "Você não precisa entender de obra. Precisa saber quem entende.";
+    expect(semTravessao(original)).toBe(original);
   });
 });

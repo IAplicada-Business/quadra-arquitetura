@@ -45,7 +45,7 @@ export function LandingNavbar() {
       }`}
       style={{ fontFamily: "'Jost', sans-serif" }}
     >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 flex items-center justify-between">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="flex items-center"

@@ -239,6 +239,23 @@
 }
 
 @layer utilities {
+  /* Hero e Sobre sangram de propósito (foto ocupando metade da tela),
+     mas o texto delas precisa começar na mesma vertical do texto das
+     dobras com container. Sem isto a primeira dobra começa em 64px e a
+     seguinte em 184px, e a página inteira parece desalinhada.
+
+     A conta é a mesma do container: metade da sobra até 72rem, mais o
+     padding de 2.5rem. O max() segura o valor quando a tela é menor que
+     o container e a conta ficaria negativa. */
+  @media (min-width: 1024px) {
+    .pl-container {
+      padding-left: max(2.5rem, calc((100vw - 72rem) / 2 + 2.5rem));
+    }
+    .pr-container {
+      padding-right: max(2.5rem, calc((100vw - 72rem) / 2 + 2.5rem));
+    }
+  }
+
   /* Títulos da landing: o navegador distribui as linhas em vez de
      encher a primeira e jogar uma palavra sozinha para a última. O texto
      é editável, então não dá para resolver com quebra na mão. Navegador

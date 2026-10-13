@@ -40,7 +40,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center max-w-2xl mx-auto mb-12 md:mb-16"
+          className="max-w-2xl mb-12 md:mb-16"
         >
           <p
             className="text-brand-terracota mb-5"

@@ -17,22 +17,26 @@ import { SITE_DEFAULTS, type WhyContent } from "@/lib/siteContent";
 export function WhySection({ content = SITE_DEFAULTS.why }: { content?: WhyContent }) {
   return (
     <section id="por-que" className="bg-brand-creme py-20 md:py-28">
-      <div className="max-w-3xl mx-auto px-6 md:px-10 min-w-0">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          /* A dobra tem a mesma largura das outras; é a coluna de leitura
+             que fica estreita, centralizada dentro dela. Antes a seção
+             inteira era mais estreita e a página parecia desalinhada. */
+          className="max-w-3xl"
         >
           <p
-            className="text-brand-terracota text-center mb-6"
+            className="text-brand-terracota mb-6"
             style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
           >
             {content.eyebrow}
           </p>
 
           <h2
-            className="title-balance text-brand-navy text-center mb-12 md:mb-16"
+            className="title-balance text-brand-navy mb-12 md:mb-16"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,
@@ -44,7 +48,7 @@ export function WhySection({ content = SITE_DEFAULTS.why }: { content?: WhyConte
             <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }} />
           </h2>
 
-          <dl className="max-w-2xl mx-auto">
+          <dl className="max-w-2xl">
             {content.items.map((item, i) => (
               <div key={i} className="border-t border-brand-navy/10 py-5 min-w-0">
                 {/* O nome e o complemento formam uma frase só ("Construtoras
