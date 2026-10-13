@@ -6,7 +6,11 @@ import { SITE_DEFAULTS, splitParagraphs, type AboutContent } from "@/lib/siteCon
 
 export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: AboutContent }) {
   return (
-    <section id="sobre" className="relative py-24 md:py-32 bg-brand-rosa">
+    /* overflow-hidden não é enfeite: a moldura decorativa sai 16px para
+       fora à direita (-right-4) e a entrada anima a partir de x:40, então
+       antes de o bloco aparecer na tela ele fica deslocado. Os dois
+       empurravam a página e davam rolagem horizontal em 375px. */
+    <section id="sobre" className="relative overflow-hidden py-24 md:py-32 bg-brand-rosa">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Photo */}

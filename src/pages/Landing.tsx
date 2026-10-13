@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { WhySection } from "@/components/landing/WhySection";
 import { AboutSection } from "@/components/landing/AboutSection";
-import { ResultsSection } from "@/components/landing/ResultsSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { PortfolioSection } from "@/components/landing/PortfolioSection";
 import { ProcessSection } from "@/components/landing/ProcessSection";
@@ -32,10 +32,10 @@ export default function Landing() {
       <LandingNavbar />
       <main>
         <HeroSection content={content.hero} />
-        <AboutSection content={content.about} />
-        <ResultsSection />
+        <WhySection content={content.why} />
         <ServicesSection content={content.services} />
         <PortfolioSection content={content.portfolio} />
+        <AboutSection content={content.about} />
         <ProcessSection />
         <ContactSection content={content.contact} />
       </main>

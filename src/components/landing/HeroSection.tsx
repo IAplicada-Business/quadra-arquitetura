@@ -1,129 +1,138 @@
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import coverImg from "@/assets/carousel-1.jpg";
+import coverImg from "@/assets/socias-cover.jpg";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type HeroContent } from "@/lib/siteContent";
 
+/**
+ * Primeira dobra no formato da referência: painel navy à esquerda com a
+ * promessa e os números, foto à direita, faixa terracota no pé da foto.
+ *
+ * Não é mais foto de tela cheia com texto por cima. O motivo é prático:
+ * a promessa da Quadra é longa ("do número ao tijolo") e vinha brigando
+ * com a imagem por legibilidade. Painel sólido resolve isso sem precisar
+ * de camada de escurecimento sobre a foto.
+ *
+ * No celular a foto vai para cima e o painel desce, porque a frase é o
+ * que precisa ser lido primeiro — a foto ilustra, não informa.
+ */
 export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroContent }) {
   const smoothTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <section className="relative w-full h-screen min-h-[640px] overflow-hidden">
-      {/* Background image with parallax */}
-      <motion.div
-        className="absolute inset-0"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <img
-          src={content.image || coverImg}
-          alt="Quadra Arquitetura"
-          className="w-full h-full object-cover"
-          style={{ objectPosition: "center center" }}
-        />
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(27,42,74,0.75) 0%, rgba(27,42,74,0.65) 50%, rgba(27,42,74,0.85) 100%)",
-          }}
-        />
-        {/* Left-side darkening for text legibility */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(27,42,74,0.55) 0%, rgba(27,42,74,0.25) 45%, rgba(27,42,74,0) 70%)",
-          }}
-        />
-      </motion.div>
-
-      {/* Content */}
-      <div className="relative h-full max-w-7xl mx-auto px-6 md:px-10 flex flex-col justify-center">
+    /* pt-[68px]: a navbar é fixa e opaca, então a primeira dobra precisa
+       começar abaixo dela em vez de passar por baixo. */
+    <section id="inicio" className="relative w-full bg-brand-navy pt-[68px] lg:pt-[72px]">
+      <div className="grid lg:grid-cols-2 min-h-[640px]">
+        {/* ── Painel ─────────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-4xl"
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-12 lg:px-16 lg:py-20"
         >
-          {/* Decorative line */}
-          <div className="w-16 h-px bg-brand-terracota mb-8 md:mb-10" />
+          <p
+            className="text-brand-terracota mb-6"
+            style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
+          >
+            {content.eyebrow}
+          </p>
 
-          {/* Title */}
           <h1
-            className="text-brand-areia mb-6 md:mb-8"
+            className="text-brand-areia mb-6"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontWeight: 300,
-              fontSize: "clamp(2.5rem, 7vw, 6rem)",
-              lineHeight: 1.05,
+              fontWeight: 400,
+              fontSize: "clamp(2.25rem, 4vw, 3.75rem)",
+              lineHeight: 1.08,
               letterSpacing: "-0.02em",
             }}
           >
-            <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))" } }} />
+            <RichText
+              text={content.title}
+              styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }}
+            />
           </h1>
 
-          {/* Subtitle */}
           <p
-            className="text-brand-areia/85 max-w-2xl mb-10 md:mb-12"
-            style={{
-              fontFamily: "'Jost', sans-serif",
-              fontSize: "clamp(1rem, 1.3vw, 1.25rem)",
-              lineHeight: 1.7,
-              fontWeight: 300,
-            }}
+            className="text-brand-areia/85 max-w-xl mb-9"
+            style={{ fontFamily: "'Jost', sans-serif", fontSize: "clamp(0.95rem, 1.1vw, 1.0625rem)", lineHeight: 1.75, fontWeight: 300 }}
           >
             <RichText text={content.subtitle} />
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <button
               onClick={() => smoothTo("#contato")}
-              className="group bg-brand-areia text-brand-navy px-8 py-4 text-xs tracking-widest uppercase transition-all hover:bg-white"
-              style={{ letterSpacing: "3px", fontWeight: 500 }}
+              className="bg-brand-terracota text-brand-navy px-8 py-4 text-sm transition-colors hover:bg-brand-rosa"
+              style={{ fontFamily: "'Jost', sans-serif", fontWeight: 500 }}
             >
-              <span className="inline-block transition-transform group-hover:translate-x-1">
-                {content.ctaPrimary} &nbsp;&rarr;
-              </span>
+              {content.ctaPrimary}
             </button>
             <button
-              onClick={() => smoothTo("#projetos")}
-              className="border border-brand-areia/40 text-brand-areia px-8 py-4 text-xs tracking-widest uppercase transition-all hover:bg-brand-areia/10"
-              style={{ letterSpacing: "3px", fontWeight: 400 }}
+              onClick={() => smoothTo("#jornada")}
+              className="text-brand-areia text-sm pb-1 border-b border-brand-areia/40 transition-colors hover:border-brand-areia self-start sm:self-auto"
+              style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400 }}
             >
               {content.ctaSecondary}
             </button>
           </div>
+
+          {/* ── Números ──────────────────────────────────────────── */}
+          {content.stats.length > 0 && (
+            <>
+              <div className="h-px bg-brand-areia/20 my-10 max-w-xl" />
+              <dl className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-x-10 gap-y-7 max-w-xl">
+                {content.stats.map((stat, i) => (
+                  <div key={i} className="min-w-0">
+                    <dt
+                      className="text-brand-terracota"
+                      style={{
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "clamp(1.75rem, 2.4vw, 2.25rem)",
+                        lineHeight: 1.1,
+                        fontWeight: 400,
+                      }}
+                    >
+                      {stat.title}
+                    </dt>
+                    <dd
+                      className="text-brand-areia/70 mt-1"
+                      style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.14em", textTransform: "uppercase" }}
+                    >
+                      {stat.desc}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
         </motion.div>
 
-        {/* Scroll indicator */}
-        <motion.button
-          onClick={() => smoothTo("#sobre")}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-brand-areia/60 flex flex-col items-center gap-2 hover:text-brand-areia transition-colors"
-          aria-label="Rolar para baixo"
-        >
-          <span
-            className="text-[10px] uppercase"
-            style={{ letterSpacing: "3px", fontFamily: "'Jost', sans-serif" }}
-          >
-            Scroll
-          </span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="h-4 w-4" />
-          </motion.div>
-        </motion.button>
+        {/* ── Foto ───────────────────────────────────────────────── */}
+        <div className="order-1 lg:order-2 relative min-h-[280px] lg:min-h-0">
+          <img
+            src={content.image || coverImg}
+            alt="Camilla e Mariana, sócias da Quadra Arquitetura"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
       </div>
+
+      {/* Faixa de promessa: ocupa a coluna da foto no desktop e a largura
+          toda no celular, onde a grade de duas colunas não existe. */}
+      {content.note && (
+        <div className="lg:grid lg:grid-cols-2">
+          <div className="hidden lg:block" />
+          <p
+            className="bg-brand-terracota text-brand-navy px-6 py-5 md:px-10 text-center min-w-0"
+            style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", fontWeight: 500 }}
+          >
+            {content.note}
+          </p>
+        </div>
+      )}
     </section>
   );
 }

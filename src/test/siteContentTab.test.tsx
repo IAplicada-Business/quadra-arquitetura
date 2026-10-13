@@ -122,7 +122,7 @@ describe("aba Site", () => {
       expect(screen.getByTestId("site-hero-image-thumb")).toHaveAttribute("src", "https://cdn.test/site-media/hero/nova.jpg"),
     );
     expect(uploadSiteImage).toHaveBeenCalledWith(file, "hero", 2400);
-    expect(within(preview()).getByAltText("Quadra Arquitetura")).toHaveAttribute("src", "https://cdn.test/site-media/hero/nova.jpg");
+    expect(within(preview()).getByAltText(/sócias da Quadra Arquitetura/)).toHaveAttribute("src", "https://cdn.test/site-media/hero/nova.jpg");
     expect(publishMutate).not.toHaveBeenCalled();
 
     fireEvent.click(publicar());

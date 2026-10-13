@@ -250,9 +250,9 @@ export const SITE_DEFAULTS: SiteContent = {
     eyebrow: "POR QUE A QUADRA",
     title: "Porque, na maioria das obras, cada especialista defende *um lado diferente*.",
     items: [
-      { title: "Construtoras", desc: "Entregam a obra — e respondem por ela, não por você." },
-      { title: "Arquitetos autônomos", desc: "Entregam o projeto — e seguem em frente quando a obra começa." },
-      { title: "Consultores", desc: "Dão conselho pontual — sem acompanhar a execução no dia a dia." },
+      { title: "Construtoras", desc: "entregam a obra — e respondem por ela, não por você." },
+      { title: "Arquitetos autônomos", desc: "entregam o projeto — e seguem em frente quando a obra começa." },
+      { title: "Consultores", desc: "dão conselho pontual — sem acompanhar a execução no dia a dia." },
     ],
     closing: "A Quadra trabalha *só para você* — do número ao tijolo.",
   },
