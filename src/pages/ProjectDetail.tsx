@@ -150,7 +150,12 @@ export default function ProjectDetail() {
             <ProjectDocumentsTab projectId={project.id} />
           </TabsContent>
           <TabsContent value="acompanhamento">
-            <ProjectTrackingTab projectId={project.id} />
+            <ProjectTrackingTab
+              projectId={project.id}
+              projectName={project.name}
+              clientName={(project.clients as { name?: string } | null)?.name}
+              clientPhone={(project.clients as { phone?: string | null } | null)?.phone ?? undefined}
+            />
           </TabsContent>
           <TabsContent value="onboarding">
             <ProjectOnboardingTab
