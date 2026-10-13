@@ -1,0 +1,130 @@
+import { describe, it, expect } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { ServicesSection } from "@/components/landing/ServicesSection";
+import { JourneySection } from "@/components/landing/JourneySection";
+import { TrailSection } from "@/components/landing/TrailSection";
+import { SITE_DEFAULTS, type JourneyContent, type ServicesContent, type TrailContent } from "@/lib/siteContent";
+
+const clone = <T,>(v: T): T => structuredClone(v);
+
+describe("Serviços — as duas fases", () => {
+  it("mostra o resumo de cada fase, mas não o escopo, antes do clique", () => {
+    render(<ServicesSection />);
+    expect(screen.getByText("Viabilidade")).toBeInTheDocument();
+    expect(screen.getByText("Gerenciamento")).toBeInTheDocument();
+    expect(screen.queryByText("EVF · Estudo de Viabilidade Financeira")).toBeNull();
+  });
+
+  /* O escopo é longo; aberto de saída, empurraria a jornada para fora da
+     primeira rolagem. */
+  it("abre o escopo no clique e fecha no segundo", () => {
+    render(<ServicesSection />);
+    const botao = screen.getAllByRole("button", { name: /Ver o que está incluso/ })[0];
+    expect(botao).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(botao);
+    expect(botao).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("EVF · Estudo de Viabilidade Financeira")).toBeInTheDocument();
+
+    fireEvent.click(botao);
+    expect(screen.queryByText("EVF · Estudo de Viabilidade Financeira")).toBeNull();
+  });
+
+  /* As fases são compráveis separadamente: abrir uma não fecha a outra. */
+  it("cada fase abre sozinha", () => {
+    render(<ServicesSection />);
+    const botoes = screen.getAllByRole("button", { name: /Ver o que está incluso/ });
+    fireEvent.click(botoes[0]);
+    fireEvent.click(botoes[1]);
+    expect(botoes[0]).toHaveAttribute("aria-expanded", "true");
+    expect(botoes[1]).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("fase sem escopo não mostra o botão de abrir", () => {
+    const content: ServicesContent = clone(SITE_DEFAULTS.services);
+    content.items = [{ tag: "FASE 01", title: "Só resumo", desc: "Sem itens.", bullets: "" }];
+    render(<ServicesSection content={content} />);
+    expect(screen.queryByRole("button", { name: /Ver o que está incluso/ })).toBeNull();
+  });
+});
+
+describe("Jornada — agrupamento e numeração", () => {
+  it("numera pela posição na lista, não pelo conteúdo", () => {
+    render(<JourneySection />);
+    expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByText("09")).toBeInTheDocument();
+    // a 4ª etapa é a primeira do momento "DECISÃO"
+    const quarta = screen.getByText("Desenhos de cenários").closest("li")!;
+    expect(within(quarta).getByText("04")).toBeInTheDocument();
+  });
+
+  /* Remover uma etapa do meio não pode deixar a numeração com buraco. */
+  it("renumera sozinha quando uma etapa sai do meio", () => {
+    const content: JourneyContent = clone(SITE_DEFAULTS.journey);
+    content.steps = content.steps.filter((s) => s.title !== "Análise do projeto");
+    render(<JourneySection content={content} />);
+    const orcamentos = screen.getByText("Orçamentos").closest("li")!;
+    expect(within(orcamentos).getByText("02")).toBeInTheDocument();
+    expect(screen.queryByText("09")).toBeNull();
+  });
+
+  /* O site é editado por quem não escreve código: um erro de digitação na
+     etiqueta não pode apagar a etapa da página. */
+  it("etapa com momento que não existe ainda aparece", () => {
+    const content: JourneyContent = clone(SITE_DEFAULTS.journey);
+    content.steps = [
+      { tag: "ENTENDIMENTO", title: "Com momento", desc: "ok" },
+      { tag: "MOMENTO QUE NÃO EXISTE", title: "Órfã", desc: "também aparece" },
+    ];
+    render(<JourneySection content={content} />);
+    expect(screen.getByText("Órfã")).toBeInTheDocument();
+    expect(screen.getByText("também aparece")).toBeInTheDocument();
+  });
+
+  it("momento sem nenhuma etapa não deixa cabeçalho solto", () => {
+    const content: JourneyContent = clone(SITE_DEFAULTS.journey);
+    content.steps = content.steps.filter((s) => s.tag === "OBRA");
+    render(<JourneySection content={content} />);
+    // o rótulo do momento vazio não vira cabeçalho da coluna de etapas
+    const cabecalhos = screen.getAllByText("ENTENDIMENTO");
+    expect(cabecalhos).toHaveLength(1); // só o da lista de momentos à esquerda
+  });
+});
+
+describe("Trilha do Cliente — a amostra do painel", () => {
+  it("desenha a barra com o percentual publicado", () => {
+    const { container } = render(<TrailSection />);
+    const barra = container.querySelector<HTMLElement>('[style*="width: 62%"]');
+    expect(barra).toBeInTheDocument();
+    expect(screen.getByText("62% concluído")).toBeInTheDocument();
+  });
+
+  /* O percentual é texto editável: "120" ou "abc" não podem estourar nem
+     sumir com a barra. */
+  it("apara percentual fora da faixa e aceita texto inválido", () => {
+    const alto: TrailContent = { ...clone(SITE_DEFAULTS.trail), demoProgress: "120" };
+    const { unmount } = render(<TrailSection content={alto} />);
+    expect(screen.getByText("100% concluído")).toBeInTheDocument();
+    unmount();
+
+    const invalido: TrailContent = { ...clone(SITE_DEFAULTS.trail), demoProgress: "abc" };
+    render(<TrailSection content={invalido} />);
+    expect(screen.getByText("0% concluído")).toBeInTheDocument();
+  });
+
+  /* O painel é ilustração: repetir os seis passos para quem usa leitor de
+     tela só atrapalharia, já que o texto ao lado diz o mesmo. */
+  it("a amostra fica fora do leitor de tela", () => {
+    render(<TrailSection />);
+    // o conteúdo existe no DOM...
+    const obra = screen.getByText("Reforma · Apartamento Sion");
+    // ...mas dentro de um bloco marcado como decorativo
+    expect(obra.closest('[aria-hidden="true"]')).toBeInTheDocument();
+  });
+
+  it("o texto ao lado continua legível pelo leitor de tela", () => {
+    render(<TrailSection />);
+    expect(screen.getByRole("heading", { name: /A Trilha do Cliente/ })).toBeInTheDocument();
+    expect(screen.getByText(/Prazo sempre honesto/)).toBeInTheDocument();
+  });
+});
