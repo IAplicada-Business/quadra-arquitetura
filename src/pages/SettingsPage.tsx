@@ -187,9 +187,9 @@ export default function SettingsPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="geral">Geral</TabsTrigger>
           <TabsTrigger value="regras">Regras de Cálculo</TabsTrigger>
-          <TabsTrigger value="proposta">Proposta</TabsTrigger>
-          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
           <TabsTrigger value="canais">Canais de Aquisição</TabsTrigger>
+          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
+          <TabsTrigger value="proposta">Proposta</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="site">Site</TabsTrigger>
         </TabsList>
