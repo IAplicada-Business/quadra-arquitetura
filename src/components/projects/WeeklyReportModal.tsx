@@ -1,38 +1,28 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useMemo, useCallback } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { startOfWeek, endOfWeek, format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Camera, Mic, MicOff } from "lucide-react";
+import { startOfWeek, format } from "date-fns";
+import { Camera, Mic, MicOff, Sparkles, X } from "lucide-react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { reportPhotoUrls, weekRangeLabel, type WeeklyReportRecord } from "@/lib/weeklyReport";
+import type { WeeklyReportInput } from "@/hooks/useWeeklyReports";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   avgProgress: number;
-  onSubmit: (data: {
-    week_start: string;
-    summary: string;
-    next_steps: string;
-    completion_percent: number;
-    client_pending?: string;
-    photos?: File[];
-  }) => void;
+  onSubmit: (data: WeeklyReportInput) => void;
   isPending: boolean;
+  /** Texto vindo do "Gerar Resumo com IA". */
   prefill?: { summary: string; next_steps: string; client_pending?: string };
+  /** Relatório existente (modo edição). */
+  editing?: WeeklyReportRecord | null;
 }
 
-// Mic button wired to a single field setter
-function MicButton({
-  onTranscript,
-  fieldLabel,
-}: {
-  onTranscript: (t: string) => void;
-  fieldLabel: string;
-}) {
+function MicButton({ onTranscript, fieldLabel }: { onTranscript: (t: string) => void; fieldLabel: string }) {
   const { isRecording, isSupported, toggle } = useVoiceInput({ onTranscript });
   if (!isSupported) return null;
   return (
@@ -41,10 +31,7 @@ function MicButton({
       onClick={toggle}
       title={isRecording ? "Parar gravação" : `Ditar ${fieldLabel}`}
       className={`flex items-center gap-1 text-xs rounded px-1.5 py-0.5 transition-colors
-        ${isRecording
-          ? "text-destructive bg-destructive/10 animate-pulse"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-        }`}
+        ${isRecording ? "text-destructive bg-destructive/10 animate-pulse" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
     >
       {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
       {isRecording ? "Parar" : "Áudio"}
@@ -52,107 +39,81 @@ function MicButton({
   );
 }
 
-export function WeeklyReportModal({ open, onOpenChange, avgProgress, onSubmit, isPending, prefill }: Props) {
-  const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
-
-  const [summary, setSummary] = useState(prefill?.summary || "");
-  const [nextSteps, setNextSteps] = useState(prefill?.next_steps || "");
-  const [completionPercent, setCompletionPercent] = useState(avgProgress);
-  const [clientPending, setClientPending] = useState(prefill?.client_pending || "");
-  const [photos, setPhotos] = useState<File[]>([]);
-
-  useEffect(() => {
-    if (prefill) {
-      setSummary(prefill.summary || "");
-      setNextSteps(prefill.next_steps || "");
-      setClientPending(prefill.client_pending || "");
-    }
-  }, [prefill]);
-
-  const weekLabel = useMemo(
-    () =>
-      `Semana de ${format(weekStart, "dd", { locale: ptBR })} a ${format(weekEnd, "dd 'de' MMMM", { locale: ptBR })}`,
-    [weekStart, weekEnd],
+/**
+ * Formulário do relatório semanal. O estado nasce do relatório em edição
+ * ou do resumo da IA; o pai remonta o modal (key) a cada abertura, então
+ * não sobra texto de uma abertura para outra e nada é apagado se salvar
+ * falhar.
+ */
+export function WeeklyReportModal({ open, onOpenChange, avgProgress, onSubmit, isPending, prefill, editing }: Props) {
+  const weekStart = useMemo(
+    () => editing?.week_start?.slice(0, 10) ?? format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    [editing],
   );
 
-  // Append transcribed text to the existing value
-  const appendSummary = useCallback((t: string) => setSummary((v) => v ? `${v} ${t}` : t), []);
-  const appendNextSteps = useCallback((t: string) => setNextSteps((v) => v ? `${v} ${t}` : t), []);
-  const appendClientPending = useCallback((t: string) => setClientPending((v) => v ? `${v} ${t}` : t), []);
+  const [summary, setSummary] = useState(editing?.summary ?? prefill?.summary ?? "");
+  const [nextSteps, setNextSteps] = useState(editing?.next_steps ?? prefill?.next_steps ?? "");
+  const [completionPercent, setCompletionPercent] = useState(editing?.completion_percent ?? avgProgress);
+  const [clientPending, setClientPending] = useState(editing?.client_pending ?? prefill?.client_pending ?? "");
+  const [keepPhotos, setKeepPhotos] = useState<string[]>(editing ? reportPhotoUrls(editing) : []);
+  const [photos, setPhotos] = useState<File[]>([]);
 
+  const appendSummary = useCallback((t: string) => setSummary((v) => (v ? `${v} ${t}` : t)), []);
+  const appendNextSteps = useCallback((t: string) => setNextSteps((v) => (v ? `${v} ${t}` : t)), []);
+  const appendClientPending = useCallback((t: string) => setClientPending((v) => (v ? `${v} ${t}` : t)), []);
+
+  const maxNew = Math.max(0, 6 - keepPhotos.length);
   const handlePhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).slice(0, 6);
-    setPhotos(files);
+    setPhotos(Array.from(e.target.files || []).slice(0, maxNew));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      week_start: format(weekStart, "yyyy-MM-dd"),
+      week_start: weekStart,
       summary,
       next_steps: nextSteps,
       completion_percent: completionPercent,
       client_pending: clientPending || undefined,
       photos: photos.length > 0 ? photos : undefined,
+      keep_photo_urls: keepPhotos,
     });
-    setSummary("");
-    setNextSteps("");
-    setCompletionPercent(avgProgress);
-    setClientPending("");
-    setPhotos([]);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Relatório Semanal</DialogTitle>
+          <DialogTitle>{editing ? "Editar relatório semanal" : "Relatório semanal"}</DialogTitle>
+          <DialogDescription>{weekRangeLabel(weekStart)}</DialogDescription>
         </DialogHeader>
+
+        {prefill && !editing && (
+          <p className="flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary" data-testid="ai-prefill-note">
+            <Sparkles className="h-3.5 w-3.5" /> Texto preenchido pela IA. Revise antes de salvar.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Período</Label>
-            <p className="text-sm text-muted-foreground mt-1">{weekLabel}</p>
-          </div>
-
-          <div>
             <div className="flex items-center justify-between mb-1">
-              <Label>Resumo do período *</Label>
+              <Label htmlFor="wr-summary">Resumo do período *</Label>
               <MicButton onTranscript={appendSummary} fieldLabel="resumo" />
             </div>
-            <Textarea
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              placeholder="Descreva as atividades realizadas nesta semana..."
-              rows={3}
-              required
-            />
+            <Textarea id="wr-summary" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="Descreva as atividades realizadas nesta semana..." rows={4} required />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <Label>Próximas etapas *</Label>
+              <Label htmlFor="wr-next">Próximas etapas *</Label>
               <MicButton onTranscript={appendNextSteps} fieldLabel="próximas etapas" />
             </div>
-            <Textarea
-              value={nextSteps}
-              onChange={(e) => setNextSteps(e.target.value)}
-              placeholder="O que está planejado para a próxima semana..."
-              rows={3}
-              required
-            />
+            <Textarea id="wr-next" value={nextSteps} onChange={(e) => setNextSteps(e.target.value)} placeholder="O que está planejado para a próxima semana..." rows={4} required />
           </div>
 
           <div>
-            <Label>% de Conclusão Geral</Label>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={completionPercent}
-              onChange={(e) => setCompletionPercent(Number(e.target.value))}
-            />
+            <Label htmlFor="wr-pct">% de Conclusão Geral</Label>
+            <Input id="wr-pct" type="number" min={0} max={100} value={completionPercent} onChange={(e) => setCompletionPercent(Number(e.target.value))} />
           </div>
 
           <div>
@@ -160,31 +121,33 @@ export function WeeklyReportModal({ open, onOpenChange, avgProgress, onSubmit, i
               <Camera className="h-4 w-4" />
               Fotos da semana (máx. 6)
             </Label>
-            <Input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handlePhotos}
-              className="mt-1"
-            />
-            {photos.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {photos.length} foto(s) selecionada(s)
-              </p>
+            {keepPhotos.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {keepPhotos.map((url, i) => (
+                  <div key={url} className="relative h-16 w-20 overflow-hidden rounded border">
+                    <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      aria-label={`Remover foto ${i + 1}`}
+                      className="absolute right-0.5 top-0.5 rounded bg-background/90 p-0.5 text-destructive"
+                      onClick={() => setKeepPhotos((p) => p.filter((u) => u !== url))}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
+            {maxNew > 0 && <Input type="file" accept="image/*" multiple onChange={handlePhotos} className="mt-2" aria-label="Adicionar fotos" />}
+            {photos.length > 0 && <p className="text-xs text-muted-foreground mt-1">{photos.length} foto(s) nova(s) selecionada(s)</p>}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <Label>Pendências do cliente (opcional)</Label>
+              <Label htmlFor="wr-pending">Pendências do cliente (opcional)</Label>
               <MicButton onTranscript={appendClientPending} fieldLabel="pendências" />
             </div>
-            <Textarea
-              value={clientPending}
-              onChange={(e) => setClientPending(e.target.value)}
-              placeholder="Itens que precisam de ação ou aprovação do cliente..."
-              rows={2}
-            />
+            <Textarea id="wr-pending" value={clientPending} onChange={(e) => setClientPending(e.target.value)} placeholder="Itens que precisam de ação ou aprovação do cliente..." rows={2} />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -192,7 +155,7 @@ export function WeeklyReportModal({ open, onOpenChange, avgProgress, onSubmit, i
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Salvando..." : "Gerar Relatório"}
+              {isPending ? "Salvando..." : editing ? "Salvar alterações" : "Salvar relatório"}
             </Button>
           </div>
         </form>

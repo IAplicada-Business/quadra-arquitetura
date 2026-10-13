@@ -16,6 +16,9 @@ import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import { useSupplierAllocations } from "@/hooks/useSupplierAllocations";
 import { SupplierRatingDialog } from "@/components/construction/SupplierRatingDialog";
 import { WeeklyReportModal } from "./WeeklyReportModal";
+import { WeeklyReportsSection } from "./WeeklyReportsSection";
+import { normalizeAISummary, type WeeklyReportRecord } from "@/lib/weeklyReport";
+import { useClientPortalToken } from "@/hooks/useClientPortalToken";
 import { format } from "date-fns";
 import { buildWeeklyAIContext, type ScheduleTaskLike, type WeeklyReportLike } from "@/lib/weeklyAIContext";
 import { ptBR } from "date-fns/locale";
@@ -37,7 +40,13 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
   const { entries, isLoading, create, remove } = useSiteDiary(projectId);
   const { items: scopeItems } = useScopeItems(projectId);
   const { items: scheduleTasks } = useScheduleTasks(projectId);
-  const { reports, create: createReport } = useWeeklyReports(projectId);
+  const { reports, isLoading: reportsLoading, create: createReport, update: updateReport, remove: removeReport } = useWeeklyReports(projectId);
+  const { activeToken } = useClientPortalToken(projectId);
+  const portalUrl = activeToken?.token ? `${window.location.origin}/client/${activeToken.token}` : null;
+  const [editingReport, setEditingReport] = useState<WeeklyReportRecord | null>(null);
+  const [reportModalKey, setReportModalKey] = useState(0);
+  const [highlightReportId, setHighlightReportId] = useState<string | null>(null);
+  const reportsSectionRef = useRef<HTMLElement>(null);
   const { allocations } = useSupplierAllocations(projectId);
   const [formOpen, setFormOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -188,8 +197,9 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
       });
       const result = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(result?.error || `Erro ao gerar resumo (${resp.status})`);
-      setPrefillData(result);
-      setReportOpen(true);
+      const fields = normalizeAISummary(result);
+      if (!fields) throw new Error("A IA respondeu sem resumo. Tente de novo em instantes.");
+      openReportModal({ prefill: fields });
       toast.success(
         context.diary_scope === "semana" ? "Resumo gerado! Revise e confirme." : "Resumo gerado com o cronograma e os registros mais recentes. Revise e confirme.",
       );
@@ -199,6 +209,15 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
       setAiSummaryLoading(false);
     }
   };
+
+  // Abre o formulário do relatório sempre "limpo" (remonta pela key), já
+  // com o texto da IA ou com o relatório a editar.
+  function openReportModal(opts: { prefill?: { summary: string; next_steps: string; client_pending?: string } | null; editing?: WeeklyReportRecord | null } = {}) {
+    setPrefillData(opts.prefill ?? null);
+    setEditingReport(opts.editing ?? null);
+    setReportModalKey((k) => k + 1);
+    setReportOpen(true);
+  }
 
   const handleInsights = async () => {
     const context = buildAIContext();
@@ -255,7 +274,7 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
             {aiInsightsLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
             Insights da semana
           </Button>
-          <Button size="sm" variant="outline" onClick={() => { setPrefillData(null); setReportOpen(true); }}>
+          <Button size="sm" variant="outline" onClick={() => openReportModal()}>
             <BarChart3 className="h-4 w-4 mr-1" /> Gerar Relatório Semanal
           </Button>
           <Button size="sm" onClick={() => { resetForm(); setFormOpen(true); }}>
@@ -263,6 +282,27 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
           </Button>
         </div>
       </div>
+
+      {/* Relatórios semanais: consultar, editar, baixar PDF, enviar */}
+      <WeeklyReportsSection
+        key={highlightReportId ?? "reports"}
+        ref={reportsSectionRef}
+        reports={reports}
+        isLoading={reportsLoading}
+        projectName={projectName}
+        clientName={clientName}
+        clientPhone={clientPhone}
+        portalUrl={portalUrl}
+        responses={clientResponses}
+        highlightId={highlightReportId}
+        onEdit={(r) => openReportModal({ editing: r })}
+        onDelete={(id) => removeReport.mutate(id)}
+        onNew={() => openReportModal()}
+      />
+
+      <h3 className="text-base font-semibold flex items-center gap-2 pt-2">
+        <FileText className="h-5 w-5 text-primary" /> Diário de obra
+      </h3>
 
       {/* Entries List */}
       {isLoading ? (
@@ -446,13 +486,26 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
 
 
       <WeeklyReportModal
+        key={reportModalKey}
         open={reportOpen}
         onOpenChange={setReportOpen}
         avgProgress={avgProgress}
-        isPending={createReport.isPending}
+        isPending={createReport.isPending || updateReport.isPending}
         prefill={prefillData || undefined}
+        editing={editingReport}
         onSubmit={(data) => {
-          createReport.mutate(data, { onSuccess: () => { setReportOpen(false); setPrefillData(null); } });
+          const done = (id: string) => {
+            setReportOpen(false);
+            setPrefillData(null);
+            setEditingReport(null);
+            setHighlightReportId(id);
+            setTimeout(() => reportsSectionRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 100);
+          };
+          if (editingReport) {
+            updateReport.mutate({ id: editingReport.id, ...data }, { onSuccess: () => done(editingReport.id) });
+          } else {
+            createReport.mutate(data, { onSuccess: (saved) => done(saved.id) });
+          }
         }}
       />
 

@@ -13,7 +13,7 @@ export function useProjectDetail(projectId: string | undefined) {
       if (!projectId) throw new Error("No project ID");
       const { data, error } = await supabase
         .from("projects")
-        .select("*, clients(name)")
+        .select("*, clients(name, phone)")
         .eq("id", projectId)
         .single();
       if (error) throw error;
