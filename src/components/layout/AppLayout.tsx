@@ -64,8 +64,14 @@ export function AppLayout() {
               header, do padding ou de quanto os filtros ocupam ao quebrar
               linha. Páginas que não usam essa altura (a maioria) continuam
               exatamente iguais: sem flex-1 no filho, a altura dele
-              continua vindo do conteúdo. */}
-          <div className="w-full min-w-0 h-full px-6 py-6 lg:px-8 lg:py-8 animate-fade-in flex flex-col">
+              continua vindo do conteúdo.
+              Respiro inferior num ::after em vez de padding-bottom: com
+              altura fixa, página mais alta que a tela transborda o box e
+              o padding fica para trás — o fim do conteúdo (gráfico,
+              borda do kanban) encostava na base da janela. O ::after é
+              um item flex depois da página, então entra na rolagem.
+              Páginas que preenchem a altura usam flex-1 min-h-0. */}
+          <div className="w-full min-w-0 h-full px-6 pt-6 lg:px-8 lg:pt-8 animate-fade-in flex flex-col after:block after:shrink-0 after:h-6 lg:after:h-8">
             <PermissionGate>
               <Outlet />
             </PermissionGate>

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVoiceTasks, type VoiceTask } from "@/hooks/useVoiceTasks";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { KanbanBoard, KanbanColumn, kanbanListClass, kanbanCardClass } from "@/components/visual/KanbanLayout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -132,7 +133,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
   }, [filtered]);
 
   return (
-    <div className="space-y-6">
+    <div className={`flex flex-col gap-6 ${view === "kanban" ? "flex-1 md:min-h-0" : ""}`}>
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-display font-light">
@@ -246,19 +247,15 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
           </CardContent></Card>
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KanbanBoard>
               {KANBAN_COLUMNS.map((col) => (
-                <div key={col.status} className={`rounded-xl border p-3 ${col.tone}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">{col.label}</h3>
-                    <Badge variant="outline" className="text-xs">{byStatus[col.status].length}</Badge>
-                  </div>
+                <KanbanColumn key={col.status} label={col.label} count={byStatus[col.status].length} tone={col.tone}>
                   <Droppable droppableId={col.status}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`space-y-2 min-h-[60vh] rounded transition-colors ${snapshot.isDraggingOver ? "bg-primary/10" : ""}`}
+                        className={kanbanListClass(snapshot.isDraggingOver)}
                       >
                         {byStatus[col.status].map((task, idx) => (
                           <Draggable key={task.id} draggableId={task.id} index={idx}>
@@ -267,7 +264,7 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                                 ref={p.innerRef}
                                 {...p.draggableProps}
                                 {...p.dragHandleProps}
-                                className={`bg-card border rounded-lg p-3 shadow-soft ${s.isDragging ? "shadow-elev ring-2 ring-primary/30" : ""}`}
+                                className={kanbanCardClass(s.isDragging)}
                               >
                                 <p className="text-sm font-medium leading-snug">{task.title}</p>
                                 {task.description && (
@@ -316,9 +313,9 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                       </div>
                     )}
                   </Droppable>
-                </div>
+                </KanbanColumn>
               ))}
-            </div>
+            </KanbanBoard>
           </DragDropContext>
         )
       ) : view === "lista" ? (

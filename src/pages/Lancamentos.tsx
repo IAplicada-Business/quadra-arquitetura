@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { monthRange } from "@/lib/monthRange";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,9 +123,13 @@ export default function Lancamentos() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const datePrefix = filterYear === "all" ? null : filterMonth === "all" ? filterYear : `${filterYear}-${filterMonth}`;
-
-  const { data: items = [], isLoading } = useQuery({
+  const {
+    data: items = [],
+    isPending,
+    isError,
+    error: itemsError,
+    refetch,
+  } = useQuery({
     queryKey: ["lancamentos-escritorio", filterType, filterStatus, filterYear, filterMonth],
     queryFn: async () => {
       let q = supabase
@@ -138,14 +143,31 @@ export default function Lancamentos() {
       // Considera o mês do vencimento OU do pagamento: lançamento pago sem
       // vencimento preenchido sumia da lista mas aparecia no gráfico do
       // dashboard (que agrega por paid_date).
-      if (datePrefix) q = q.or(`due_date.like.${datePrefix}%,paid_date.like.${datePrefix}%`);
+      // Faixa de datas (gte/lt) em vez de LIKE: due_date/paid_date são
+      // DATE, e LIKE em coluna DATE depende de cast implícito.
+      const range = monthRange(filterYear, filterMonth);
+      if (range) {
+        q = q.or(
+          `and(due_date.gte.${range.from},due_date.lt.${range.to}),and(paid_date.gte.${range.from},paid_date.lt.${range.to})`,
+        );
+      }
 
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as Lancamento[];
     },
     enabled: !!user,
+    // Troca de filtro mantém a planilha anterior na tela até a nova
+    // chegar, em vez de piscar vazia.
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
   });
+
+  // Planilha em branco no primeiro acesso: com a query ainda desabilitada
+  // (sem usuário) ou sem resposta, `isLoading` do react-query v5 é false e
+  // `items` cai no default [] — a tela mostrava "vazio" até um refresh.
+  // `isPending` cobre os dois casos.
+  const showSkeleton = !user || isPending;
 
   const totalReceitas = items.filter(i => i.payment_type === "receita" && i.status === "pago").reduce((s, i) => s + i.value, 0);
   const totalDespesas = items.filter(i => i.payment_type === "despesa" && i.status === "pago").reduce((s, i) => s + i.value, 0);
@@ -336,8 +358,14 @@ export default function Lancamentos() {
 
       {/* Lista */}
       <div className="overflow-auto rounded-lg border min-h-[calc(100vh-26rem)]">
-        {isLoading ? (
+        {showSkeleton ? (
           <PageSkeleton variant="table" rows={8} className="p-0 [&>div]:shadow-none [&>div]:rounded-none" />
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-2">
+            <p>Não foi possível carregar os lançamentos.</p>
+            <p className="text-xs">{(itemsError as Error | null)?.message}</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>Tentar novamente</Button>
+          </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
             <p>Nenhum lançamento encontrado.</p>

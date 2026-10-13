@@ -22,13 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, parseISO, differenceInDays, getISOWeek, addDays, min as dateMin, max as dateMax } from "date-fns";
@@ -49,16 +43,82 @@ function fmt(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 }
 
-const yAxisFormatter = (v: number) => {
-  if (v >= 1000000) return `R$${(v / 1000000).toFixed(1)}M`;
-  if (v >= 1000) return `R$${(v / 1000).toFixed(0)}k`;
-  return `R$${v.toFixed(0)}`;
-};
+const ACTIVE_PROJECTS_LIMIT = 4;
 
-const finChartConfig: ChartConfig = {
-  orcado: { label: "Orçado", color: AZUL.fill4 },
-  gasto: { label: "Gasto", color: AZUL.fill1 },
-};
+interface BudgetRow {
+  id: string;
+  number: string;
+  name: string;
+  orcado: number;
+  gasto: number;
+}
+
+/**
+ * Orçado x gasto como barras horizontais sobrepostas: a trilha clara é o
+ * comprometido, o preenchimento escuro é o que já foi pago. Antes eram
+ * barras verticais agrupadas com o nome do projeto no eixo X — os nomes
+ * eram cortados em 12 letras e a base do gráfico ficava cortada. Aqui o
+ * nome inteiro fica à esquerda, o valor à direita e a altura cresce com o
+ * número de obras.
+ */
+function BudgetBars({ data }: { data: BudgetRow[] }) {
+  const max = Math.max(...data.map((d) => Math.max(d.orcado, d.gasto)), 1);
+  return (
+    <TooltipProvider delayDuration={100}>
+      <div className="space-y-4">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground" aria-hidden>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: AZUL.fill4 }} /> Orçado (comprometido)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: AZUL.fill1 }} /> Gasto (pago)
+          </span>
+        </div>
+        <ul className="space-y-3">
+          {data.map((d) => {
+            const pct = d.orcado > 0 ? Math.round((d.gasto / d.orcado) * 100) : 0;
+            return (
+              <li key={d.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={`/projects/${d.id}`}
+                      className="grid grid-cols-1 sm:grid-cols-[minmax(0,200px)_1fr_auto] items-center gap-x-4 gap-y-1 rounded-md px-2 py-1.5 -mx-2 hover:bg-muted/50 transition-colors"
+                    >
+                      <span className="flex items-center gap-2 min-w-0 text-sm">
+                        {d.number && <span className="font-mono text-xs text-muted-foreground shrink-0">{d.number}</span>}
+                        <span className="truncate font-medium">{d.name}</span>
+                      </span>
+                      <span className="relative h-3 w-full">
+                        <span
+                          className="absolute inset-y-0 left-0 rounded-[4px]"
+                          style={{ width: `${(d.orcado / max) * 100}%`, backgroundColor: AZUL.fill4 }}
+                        />
+                        <span
+                          className="absolute inset-y-0 left-0 rounded-[4px]"
+                          style={{ width: `${(d.gasto / max) * 100}%`, backgroundColor: AZUL.fill1, minWidth: d.gasto > 0 ? 3 : 0 }}
+                        />
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground sm:text-right whitespace-nowrap">
+                        <span className="font-semibold text-foreground">{fmt(d.gasto)}</span> de {fmt(d.orcado)} · {pct}%
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="font-medium">{d.number ? `${d.number} · ` : ""}{d.name}</p>
+                    <p className="text-xs">Orçado: {fmt(d.orcado)}</p>
+                    <p className="text-xs">Gasto: {fmt(d.gasto)} ({pct}%)</p>
+                    <p className="text-xs">Saldo: {fmt(Math.max(d.orcado - d.gasto, 0))}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </TooltipProvider>
+  );
+}
 
 /* ── componente ────────────────────────────────── */
 export default function DashboardObras() {
@@ -140,6 +200,9 @@ export default function DashboardObras() {
     });
   }, [projects, scheduleTasks, todayStr, filterStatus, filterSearch]);
 
+  // No máximo 4 projetos na tela; "Ver todos" abre o resto.
+  const moreProjects = useShowMore(projectCards, ACTIVE_PROJECTS_LIMIT, `${filterStatus}|${filterSearch}`);
+
   // ── BLOCO 2 — Alertas ──
   const alerts = useMemo(() => {
     const overdueTasks = scheduleTasks
@@ -189,11 +252,15 @@ export default function DashboardObras() {
       const pago = projPayments.filter((p) => p.status === "pago").reduce((s, p) => s + p.value, 0);
       const comprometido = projPayments.reduce((s, p) => s + p.value, 0);
       return {
-        name: (proj.project_number ? proj.project_number + " " : "") + (proj.name?.length > 12 ? proj.name.slice(0, 12) + "…" : proj.name),
+        id: proj.id,
+        number: proj.project_number ?? "",
+        name: proj.name ?? "",
         orcado: comprometido > 0 ? comprometido : (proj.estimated_budget ?? 0),
         gasto: pago,
       };
-    });
+    })
+      .filter((d) => d.orcado > 0 || d.gasto > 0)
+      .sort((a, b) => b.orcado - a.orcado);
   }, [projects, payments]);
 
   // ── Multi-Obras (mantido) ──
@@ -282,25 +349,17 @@ export default function DashboardObras() {
 
   return (
     <div className="space-y-5">
-      {/* Segmented tabs — sem h1 redundante (a sidebar já rotula a página) */}
-      <div className="inline-flex p-1 bg-muted/50 rounded-lg">
-        {(["geral", "multiobras"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setActiveTab(t)}
-            className={`px-5 py-1.5 text-sm font-medium rounded-md transition-all ${
-              activeTab === t
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "geral" ? "Visão Geral" : "Multi-Obras"}
-          </button>
-        ))}
-      </div>
-
+      {/* Uma tela só: "Visão" é um filtro, ao lado de busca e status
+          (antes eram duas abas separadas com a mesma barra de filtros). */}
       <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative">
+        <Select value={activeTab} onValueChange={(v) => setActiveTab(v as "geral" | "multiobras")}>
+          <SelectTrigger className="w-full sm:w-[170px] h-9" aria-label="Visão"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="geral">Visão geral</SelectItem>
+            <SelectItem value="multiobras">Multi-obras</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input placeholder="Buscar obra..." value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} className="pl-8 w-full sm:w-48 h-9" />
         </div>
@@ -320,19 +379,23 @@ export default function DashboardObras() {
       {/* ═══ BLOCO 1 — VISÃO GERAL DOS PROJETOS ═══ */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display">Projetos Ativos</CardTitle>
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            Projetos Ativos
+            {projectCards.length > 0 && <Badge variant="secondary" className="text-xs">{projectCards.length}</Badge>}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {projectCards.length > 0 ? (
-            <div className="space-y-4">
-              {projectCards.map((p) => (
+            <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {moreProjects.visible.map((p) => (
                 <Link key={p.id} to={`/projects/${p.id}`} className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {p.number && <Badge variant="outline" className="text-xs font-mono">{p.number}</Badge>}
-                      <span className="text-sm font-medium">{p.name}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {p.number && <Badge variant="outline" className="text-xs font-mono shrink-0">{p.number}</Badge>}
+                      <span className="text-sm font-medium truncate">{p.name}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <Badge variant="outline" className="text-xs" style={{ borderColor: p.statusColor, color: p.statusColor }}>{p.status}</Badge>
                       <span className="text-sm font-semibold" style={{ color: AZUL.destaque }}>{p.progress}%</span>
                     </div>
@@ -340,10 +403,18 @@ export default function DashboardObras() {
                   <div className="relative h-2 w-full overflow-hidden rounded-full" style={{ backgroundColor: AZUL.fundoSuave }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${p.progress}%`, backgroundColor: AZUL.destaque }} />
                   </div>
-                  {p.nextTask && <p className="text-xs text-muted-foreground mt-1.5">Próx: {p.nextTask}</p>}
+                  {p.nextTask && <p className="text-xs text-muted-foreground mt-1.5 truncate">Próx: {p.nextTask}</p>}
                 </Link>
               ))}
             </div>
+            <ShowMoreButton
+              expanded={moreProjects.expanded}
+              hasMore={moreProjects.hasMore}
+              total={projectCards.length}
+              onToggle={moreProjects.toggle}
+              noun="projetos"
+            />
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <HardHat className="h-12 w-12 text-primary/30 mb-3" />
@@ -450,19 +521,11 @@ export default function DashboardObras() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display">Orçado (comprometido) vs Gasto por Projeto</CardTitle>
+          <p className="text-xs text-muted-foreground">Quanto do comprometido em compras e pagamentos de cada obra já foi pago.</p>
         </CardHeader>
         <CardContent>
           {finChartData.length > 0 ? (
-            <ChartContainer config={finChartConfig} className="h-[280px] w-full">
-              <BarChart data={finChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="name" className="text-xs" />
-                <YAxis tickFormatter={yAxisFormatter} className="text-xs" />
-                <ChartTooltip content={<ChartTooltipContent formatter={(v) => fmt(Number(v))} />} />
-                <Bar dataKey="orcado" fill={AZUL.fill4} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="gasto" fill={AZUL.fill1} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
+            <BudgetBars data={finChartData} />
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <BarChart3 className="h-12 w-12 text-primary/30 mb-3" />
