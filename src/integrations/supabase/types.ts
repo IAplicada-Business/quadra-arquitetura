@@ -179,8 +179,10 @@ export type Database = {
       }
       budget_quotes: {
         Row: {
+          activity_id: string | null
           created_at: string
           delivery_time: string | null
+          discipline: string | null
           id: string
           is_current_revision: boolean | null
           material_estimate: number | null
@@ -198,8 +200,10 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          activity_id?: string | null
           created_at?: string
           delivery_time?: string | null
+          discipline?: string | null
           id?: string
           is_current_revision?: boolean | null
           material_estimate?: number | null
@@ -217,8 +221,10 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          activity_id?: string | null
           created_at?: string
           delivery_time?: string | null
+          discipline?: string | null
           id?: string
           is_current_revision?: boolean | null
           material_estimate?: number | null
