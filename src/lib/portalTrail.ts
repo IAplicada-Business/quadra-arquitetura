@@ -281,6 +281,35 @@ export function upcomingDeliveries(
 }
 
 /* ------------------------------------------------------------------ */
+/* Linha do tempo da jornada                                           */
+/* ------------------------------------------------------------------ */
+
+export interface JourneyPosition {
+  /** Índice (0..) da etapa atual em `blocks`; -1 sem etapas. */
+  currentIndex: number;
+  total: number;
+  /** Etapas concluídas sobre o total, 0–100. */
+  percent: number;
+  /** Todas as etapas concluídas. */
+  finished: boolean;
+}
+
+/**
+ * Onde a obra está na linha do tempo: a primeira etapa em andamento; sem
+ * nenhuma em andamento, a próxima a iniciar; tudo concluído, a última.
+ */
+export function journeyPosition(blocks: ConstructionBlock[]): JourneyPosition {
+  const total = blocks.length;
+  if (total === 0) return { currentIndex: -1, total: 0, percent: 0, finished: false };
+  const done = blocks.filter((b) => b.state === "concluido").length;
+  let currentIndex = blocks.findIndex((b) => b.state === "em_andamento");
+  if (currentIndex < 0) currentIndex = blocks.findIndex((b) => b.state === "a_iniciar");
+  const finished = currentIndex < 0;
+  if (finished) currentIndex = total - 1;
+  return { currentIndex, total, percent: Math.round((done / total) * 100), finished };
+}
+
+/* ------------------------------------------------------------------ */
 
 export interface PortalTrail {
   blocks: ConstructionBlock[];
@@ -288,6 +317,7 @@ export interface PortalTrail {
   health: ProjectHealth;
   adoption: Adoption;
   upcoming: UpcomingItem[];
+  journey: JourneyPosition;
 }
 
 export function buildPortalTrail(data: PortalData, today: Date = new Date()): PortalTrail {
@@ -299,5 +329,6 @@ export function buildPortalTrail(data: PortalData, today: Date = new Date()): Po
     health: projectHealth(data, blocks, t),
     adoption: clientAdoption(data),
     upcoming: upcomingDeliveries(data, blocks, t),
+    journey: journeyPosition(blocks),
   };
 }

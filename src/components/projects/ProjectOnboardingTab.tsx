@@ -3,15 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Copy, ExternalLink, Eye, Layers, Link2, RotateCcw, Save, Undo2 } from "lucide-react";
+import { Copy, ExternalLink, Layers, Link2, RotateCcw, Save, Undo2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useProjectOnboarding } from "@/hooks/useProjectOnboarding";
 import { useClientPortalToken } from "@/hooks/useClientPortalToken";
 import { OnboardingSectionsEditor } from "@/components/onboarding/OnboardingSectionsEditor";
 import { useScheduleTasks } from "@/hooks/useScheduleTasks";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
-import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { buildOnboardingPlaceholders, cloneSectionsForProject, invalidVideoSections, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
 import type { PortalTask, PortalWeeklyReport } from "@/lib/portal";
 import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
@@ -47,7 +45,6 @@ export function ProjectOnboardingTab({ projectId, projectName, clientName, addre
   const { activeToken, createToken, isCreating } = useClientPortalToken(projectId);
   const { items: scheduleTasks } = useScheduleTasks(projectId);
   const { reports } = useWeeklyReports(projectId);
-  const [fullPreview, setFullPreview] = useState(false);
 
   // Mesmas variáveis que o portal preenche, com os dados reais desta obra.
   const placeholders = useMemo(
@@ -149,9 +146,6 @@ export function ProjectOnboardingTab({ projectId, projectName, clientName, addre
             <Switch checked={isEnabled} aria-label="Mostrar onboarding no portal desta obra" onCheckedChange={(v) => setEnabled.mutate(v)} disabled={setEnabled.isPending} />
             Visível no portal
           </label>
-          <Button size="sm" variant="outline" onClick={() => setFullPreview(true)} disabled={draft.length === 0}>
-            <Eye className="h-4 w-4 mr-1" /> Ver como o cliente
-          </Button>
           {portalUrl ? (
             <>
               <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(portalUrl); toast({ title: "Link do portal copiado" }); }}>
@@ -244,18 +238,6 @@ export function ProjectOnboardingTab({ projectId, projectName, clientName, addre
       <InvalidVideosNotice errors={videoErrors} />
 
       <OnboardingSectionsEditor sections={draft} onChange={setDraft} uploadFolder={projectId} disabled={saveOverride.isPending} previewHeading={projectName} placeholders={placeholders} />
-
-      {/* Tela de boas-vindas em tamanho real, com os dados da obra, sem precisar do link do portal. */}
-      <Dialog open={fullPreview} onOpenChange={setFullPreview}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
-          <DialogHeader className="px-6 pt-5">
-            <DialogTitle>Como o cliente vê{dirty ? " (rascunho, ainda não salvo)" : ""}</DialogTitle>
-          </DialogHeader>
-          <div className="trilha p-2 sm:p-4">
-            <OnboardingView sections={draft} placeholders={placeholders} onEnter={() => setFullPreview(false)} enterLabel="Fechar visualização" />
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
         <AlertDialogContent>

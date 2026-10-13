@@ -3,6 +3,27 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import ClientPortal from "@/pages/ClientPortal";
 
+/** Canal Realtime simulado: guarda os avisos que o portal escuta. */
+const live = vi.hoisted(() => ({ handlers: [] as (() => void)[], topics: [] as string[], removed: 0 }));
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    channel: (topic: string) => {
+      live.topics.push(topic);
+      const ch = {
+        on: (_type: string, _filter: unknown, cb: () => void) => {
+          live.handlers.push(cb);
+          return ch;
+        },
+        subscribe: () => ch,
+      };
+      return ch;
+    },
+    removeChannel: async () => {
+      live.removed++;
+    },
+  },
+}));
+
 const fixture = {
   project: { name: "Apartamento Sion", address: "Rua X", city: "BH", estimated_budget: 100000, ideal_budget: null, client_move_in_date: "2026-12-15", client_name: "Madalena & João" },
   tasks: [
@@ -41,6 +62,9 @@ function renderPortal(hash = "") {
 }
 
 beforeEach(() => {
+  live.handlers = [];
+  live.topics = [];
+  live.removed = 0;
   localStorage.clear();
   vi.stubEnv("VITE_SUPABASE_URL", "https://x.supabase.co");
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "key");
@@ -176,5 +200,80 @@ describe("Trilha do Cliente (/client/:token)", () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, json: async () => ({ error: "Link inválido ou expirado" }) })));
     renderPortal();
     await waitFor(() => expect(screen.getByText("Link inválido ou expirado")).toBeInTheDocument());
+  });
+
+  it("linha do tempo da jornada mostra as etapas, a atual e a mudança", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    mockFetch();
+    renderPortal();
+    const inicio = await screen.findByTestId("screen-inicio");
+    const journey = within(inicio).getByTestId("trail-journey");
+    expect(within(journey).getByText("Fundação")).toBeInTheDocument();
+    expect(within(journey).getByText("Mudança")).toBeInTheDocument();
+    expect(journey.querySelector('[aria-current="step"]')).toHaveTextContent("Estrutura");
+    expect(within(inicio).getByRole("heading", { level: 1 })).toHaveTextContent("Estrutura — etapa 2 de 2");
+    expect(within(inicio).getByTestId("trail-block-Estrutura")).toHaveTextContent("Em execução agora");
+    expect(within(inicio).getByTestId("trail-updates")).toHaveTextContent("Forro de gesso concluído");
+    expect(screen.getAllByTestId("quadra-watermark").length).toBeGreaterThan(0);
+  });
+});
+
+describe("Portal ao vivo", () => {
+  const withReport = (pct: number, summary: string) => ({
+    ...fixture,
+    weekly_reports: [{ ...fixture.weekly_reports[0], id: `r-${pct}`, week_start: "2026-10-12", completion_percent: pct, summary, client_pending: null }, ...fixture.weekly_reports],
+  });
+
+  it("um aviso da equipe recarrega os dados na hora, sem esqueleto", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    let payload: unknown = fixture;
+    const f = vi.fn(async () => ({ ok: true, json: async () => payload }));
+    vi.stubGlobal("fetch", f);
+    renderPortal();
+    expect(await screen.findByTestId("progress-value")).toHaveTextContent("64%");
+    await waitFor(() => expect(live.topics).toContain("portal:tok123"));
+    expect(screen.getAllByTestId("live-status")[0]).toHaveTextContent(/Ao vivo · atualizado às/);
+
+    payload = withReport(72, "Pintura da sala iniciada");
+    live.handlers.forEach((h) => h());
+    live.handlers.forEach((h) => h()); // rajada vira uma recarga só
+    await waitFor(() => expect(screen.getByTestId("progress-value")).toHaveTextContent("72%"));
+    expect(screen.getByTestId("trail-updates")).toHaveTextContent("Pintura da sala iniciada");
+    expect(screen.getByTestId("screen-inicio")).toBeInTheDocument();
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(f.mock.calls[0]).toEqual([expect.any(String), expect.objectContaining({ cache: "no-store" })]);
+  });
+
+  it("voltar para a aba confere de novo; recarga com erro mantém a tela", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    let mode: "ok" | "fail" | "new" = "ok";
+    const f = vi.fn(async () =>
+      mode === "fail"
+        ? { ok: false, json: async () => ({ error: "fora do ar" }) }
+        : { ok: true, json: async () => (mode === "new" ? withReport(80, "Bancadas instaladas") : fixture) },
+    );
+    vi.stubGlobal("fetch", f);
+    renderPortal();
+    expect(await screen.findByTestId("progress-value")).toHaveTextContent("64%");
+
+    mode = "fail";
+    fireEvent(window, new Event("focus"));
+    await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
+    expect(screen.getByTestId("progress-value")).toHaveTextContent("64%");
+    expect(screen.queryByText("Link inválido ou expirado")).not.toBeInTheDocument();
+
+    mode = "new";
+    fireEvent(document, new Event("visibilitychange"));
+    await waitFor(() => expect(screen.getByTestId("progress-value")).toHaveTextContent("80%"));
+  });
+
+  it("sai do canal ao fechar o portal", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    mockFetch();
+    const { unmount } = renderPortal();
+    await screen.findByTestId("screen-inicio");
+    await waitFor(() => expect(live.topics).toContain("portal:tok123"));
+    unmount();
+    expect(live.removed).toBe(1);
   });
 });

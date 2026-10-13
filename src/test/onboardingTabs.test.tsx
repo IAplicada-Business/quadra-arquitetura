@@ -315,7 +315,7 @@ describe("Projeto → Onboarding independente do link do portal", () => {
     expect(mocks.createToken).toHaveBeenCalledTimes(1);
   });
 
-  it("preview e 'Ver como o cliente' usam os dados reais da obra nas variáveis", () => {
+  it("preview usa os dados reais da obra nas variáveis e não há mais 'Ver como o cliente'", () => {
     mocks.sectionsByTemplate.tpl = [
       emptySection({ id: "t1", title: "{cliente} — bem-vindos", body: "Estamos em {fase}, entrega prevista para {entrega}." }),
     ];
@@ -324,12 +324,10 @@ describe("Projeto → Onboarding independente do link do portal", () => {
     ];
     render(<ProjectOnboardingTab projectId="p1" projectName="Apto 101" clientName="Ana & Beto" expectedEndDate="2026-12-20" />);
     expect(screen.getAllByText(/Estamos em Marcenaria, entrega prevista para 20 de dezembro\./).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Ana & Beto/).length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText(/Madalena/)).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /Ver como o cliente/ }));
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Ana & Beto")).toBeInTheDocument();
-    expect(within(dialog).getByText(/Estamos em Marcenaria/)).toBeInTheDocument();
+    // O portal real (link) substitui a visualização que parava na primeira tela.
+    expect(screen.queryByRole("button", { name: /Ver como o cliente/ })).not.toBeInTheDocument();
   });
 });
 

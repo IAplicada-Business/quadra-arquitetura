@@ -5,6 +5,7 @@ import {
   clientAdoption,
   constructionBlocks,
   deliveredScopes,
+  journeyPosition,
   projectHealth,
   trailActivities,
   upcomingDeliveries,
@@ -133,5 +134,24 @@ describe("próximas entregas", () => {
     expect(t.blocks).toHaveLength(3);
     expect(t.health.level).toBe("ok");
     expect(t.upcoming.length).toBeGreaterThan(0);
+  });
+});
+
+describe("linha do tempo da jornada", () => {
+  it("etapa atual é a primeira em andamento; percentual conta as concluídas", () => {
+    const blocks = constructionBlocks(base.activities!, HOJE);
+    expect(journeyPosition(blocks)).toEqual({ currentIndex: 1, total: 3, percent: 33, finished: false });
+    expect(buildPortalTrail(base, new Date(2026, 9, 13)).journey.currentIndex).toBe(1);
+  });
+
+  it("sem nada em andamento, a próxima a iniciar; tudo concluído, a última", () => {
+    const blocks = constructionBlocks(base.activities!, HOJE).map((b) => (b.state === "em_andamento" ? { ...b, state: "concluido" as const } : b));
+    expect(journeyPosition(blocks)).toMatchObject({ currentIndex: 2, percent: 67, finished: false });
+    const all = blocks.map((b) => ({ ...b, state: "concluido" as const }));
+    expect(journeyPosition(all)).toEqual({ currentIndex: 2, total: 3, percent: 100, finished: true });
+  });
+
+  it("obra sem etapas", () => {
+    expect(journeyPosition([])).toEqual({ currentIndex: -1, total: 0, percent: 0, finished: false });
   });
 });

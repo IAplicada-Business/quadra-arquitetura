@@ -13,7 +13,9 @@ import { GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, Resumos
 import { AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { buildOnboardingPlaceholders, sectionsFromJson, visibleSections } from "@/lib/onboarding";
-import { extractPendings, onboardingSeenKey, tabFromHash, type PortalData, type PortalTab } from "@/lib/portal";
+import { extractPendings, onboardingSeenKey, tabFromHash, type PortalTab } from "@/lib/portal";
+import { useLivePortalData } from "@/hooks/useLivePortalData";
+import { QuadraWatermark } from "@/components/portal/TrilhaBrand";
 
 function readSeen(key: string): boolean {
   try {
@@ -42,9 +44,7 @@ function writeSeen(key: string) {
  */
 export default function ClientPortal() {
   const { token } = useParams<{ token: string }>();
-  const [data, setData] = useState<PortalData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, setData, error, loading, updatedAt, refresh } = useLivePortalData(token);
   const [tab, setTab] = useState<PortalTab>(() => tabFromHash(typeof window !== "undefined" ? window.location.hash : ""));
   const [showWelcome, setShowWelcome] = useState<boolean | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -52,23 +52,6 @@ export default function ClientPortal() {
   const [responseText, setResponseText] = useState("");
   const [clientName, setClientName] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!token) return;
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-client-portal-data`;
-    fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-      body: JSON.stringify({ token }),
-    })
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Erro desconhecido");
-        setData(json);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [token]);
 
   const onboardingSections = useMemo(() => visibleSections(sectionsFromJson(data?.onboarding?.sections ?? [])), [data]);
   const hasWelcome = onboardingSections.length > 0;
@@ -149,6 +132,8 @@ export default function ClientPortal() {
         });
       }
       toast.success(status === "aprovado" ? "Aprovado com sucesso!" : "Resposta enviada!");
+      // Confirma com o servidor (e descarta qualquer recarga antiga em andamento).
+      void refresh();
       setRespondModal(null);
       setResponseText("");
     } catch (e: unknown) {
@@ -200,8 +185,14 @@ export default function ClientPortal() {
 
   if (showWelcome) {
     return (
-      <div className="trilha min-h-screen" data-testid="welcome-gate">
-        <OnboardingView sections={onboardingSections} placeholders={placeholders} onEnter={enterProject} />
+      <div className="trilha relative min-h-screen overflow-hidden" data-testid="welcome-gate">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
+          <QuadraWatermark className="-bottom-[10vh] -right-[8vw] w-[min(92vw,1100px)] md:w-[min(60vw,1100px)]" opacity={0.04} />
+          <QuadraWatermark className="-left-[14vw] -top-[12vh] hidden w-[min(40vw,640px)] lg:block" opacity={0.03} />
+        </div>
+        <div className="relative z-10 [&_[data-testid=onboarding-view]]:bg-transparent">
+          <OnboardingView sections={onboardingSections} placeholders={placeholders} onEnter={enterProject} />
+        </div>
       </div>
     );
   }
@@ -224,6 +215,7 @@ export default function ClientPortal() {
       onChange={goTab}
       onShowWelcome={hasWelcome ? () => setShowWelcome(true) : undefined}
       badges={{ pendencias: openPendings }}
+      updatedAt={updatedAt}
     >
       {tab === "inicio" && <InicioScreen {...screenProps} />}
       {tab === "pendencias" && <PendenciasScreen {...screenProps} />}
