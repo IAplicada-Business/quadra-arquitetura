@@ -22,7 +22,7 @@ export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { cont
 
   return (
     <section id="material" className="bg-brand-rosa py-16 md:py-20">
-      <div className="max-w-5xl mx-auto px-6 md:px-10 min-w-0">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

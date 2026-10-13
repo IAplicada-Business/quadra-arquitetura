@@ -917,20 +917,40 @@ function cleanList(value: unknown, def: SiteFieldDef): SiteListItem[] | null {
     .filter((v): v is Record<string, unknown> => !!v && typeof v === "object")
     .map((v) => {
       const item: SiteListItem = {
-        title: typeof v.title === "string" ? v.title : "",
-        desc: typeof v.desc === "string" ? v.desc : "",
+        title: typeof v.title === "string" ? semTravessao(v.title) : "",
+        desc: typeof v.desc === "string" ? semTravessao(v.desc) : "",
       };
       if (def.itemImage) item.image = typeof v.image === "string" ? v.image : "";
-      if (def.itemTag) item.tag = typeof v.tag === "string" ? v.tag : "";
-      if (def.itemBullets) item.bullets = typeof v.bullets === "string" ? v.bullets : "";
+      if (def.itemTag) item.tag = typeof v.tag === "string" ? semTravessao(v.tag) : "";
+      if (def.itemBullets) item.bullets = typeof v.bullets === "string" ? semTravessao(v.bullets) : "";
       return item;
     });
+}
+
+/**
+ * A Quadra não usa travessão no texto do site.
+ *
+ * A regra vale para o que está publicado, não só para o padrão: o texto
+ * vive em site_content e já tinha travessão salvo quando a regra foi
+ * decidida. Limpar só o padrão deixaria o site no ar com o traço, e
+ * pedir para o time reescrever campo a campo é trabalho manual que erra.
+ *
+ * Travessão entre espaços vira vírgula, porque é o uso que aparece no
+ * texto ("prazo e execução — e te mantém"). Colado, vira hífen, que é o
+ * que a pessoa quis dizer ao digitar em "arquiteto—cliente". Meia-risca
+ * entra na mesma conta: o olho não distingue e a regra é a mesma.
+ */
+export function semTravessao(texto: string): string {
+  return texto
+    .replace(/\s+[—–]\s+/g, ", ")
+    .replace(/[—–]/g, "-");
 }
 
 /** Valida o valor salvo contra o tipo do campo; null = inválido (usa padrão). */
 function parseValue(def: SiteFieldDef, value: unknown): unknown {
   if (def.type === "list") return cleanList(value, def);
   if (typeof value !== "string") return null;
+  if (def.type === "text" || def.type === "richtext") return semTravessao(value);
   /* Modelo que não existe mais (renomeado, removido numa versão nova do
      site) volta ao padrão em vez de deixar a dobra sem nada para
      renderizar. */

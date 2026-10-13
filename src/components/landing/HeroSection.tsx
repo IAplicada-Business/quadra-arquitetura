@@ -30,7 +30,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-12 lg:px-16 lg:py-20"
+          className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-10 lg:pl-container lg:pr-12 lg:py-20"
         >
           <p
             className="text-brand-terracota mb-6"

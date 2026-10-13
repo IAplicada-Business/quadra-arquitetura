@@ -25,7 +25,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-12 lg:px-16 lg:py-24"
+          className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-10 lg:pl-container lg:pr-12 lg:py-24"
         >
           <p
             className="text-brand-terracota mb-5"
