@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KanbanBoard, KanbanColumn, kanbanListClass, kanbanCardClass } from "@/components/visual/KanbanLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle2, Clock, Plus, ListChecks, LayoutGrid, List, Loader2, Send } from "lucide-react";
@@ -125,7 +126,7 @@ export default function VoiceTasksPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 h-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-display">Audio Tasks</h1>
@@ -203,21 +204,15 @@ export default function VoiceTasksPage() {
           </Card>
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KanbanBoard>
               {KANBAN_COLUMNS.map((col) => (
-                <div key={col.status} className={`rounded-lg border p-3 ${col.tone}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">{col.label}</h3>
-                    <Badge variant="outline" className="text-xs">{byStatus[col.status].length}</Badge>
-                  </div>
+                <KanbanColumn key={col.status} label={col.label} count={byStatus[col.status].length} tone={col.tone}>
                   <Droppable droppableId={col.status}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`space-y-2 min-h-[60vh] rounded transition-colors ${
-                          snapshot.isDraggingOver ? "bg-primary/10" : ""
-                        }`}
+                        className={kanbanListClass(snapshot.isDraggingOver)}
                       >
                         {byStatus[col.status].map((task, idx) => (
                           <Draggable key={task.id} draggableId={task.id} index={idx}>
@@ -226,9 +221,7 @@ export default function VoiceTasksPage() {
                                 ref={p.innerRef}
                                 {...p.draggableProps}
                                 {...p.dragHandleProps}
-                                className={`bg-card border rounded-md p-3 shadow-sm ${
-                                  s.isDragging ? "shadow-md ring-2 ring-primary/30" : ""
-                                }`}
+                                className={kanbanCardClass(s.isDragging)}
                               >
                                 <p className="text-sm font-medium leading-snug">{task.title}</p>
                                 {task.description && (
@@ -286,9 +279,9 @@ export default function VoiceTasksPage() {
                       </div>
                     )}
                   </Droppable>
-                </div>
+                </KanbanColumn>
               ))}
-            </div>
+            </KanbanBoard>
           </DragDropContext>
         )
       ) : Object.keys(grouped).length === 0 ? (
