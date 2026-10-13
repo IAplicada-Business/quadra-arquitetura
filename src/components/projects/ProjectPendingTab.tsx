@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { usePendingItems } from "@/hooks/usePendingItems";
 import { useScopeItems } from "@/hooks/useScopeItems";
 import { PendingItemForm } from "./PendingItemForm";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 function formatDate(d: string | null) {
   if (!d) return "—";
@@ -49,11 +50,11 @@ export function ProjectPendingTab({ projectId }: { projectId: string }) {
         <div>
           <h3 className="text-lg font-semibold text-display flex items-center gap-2">
             Pendências
+            <InfoHint>Controle de itens pendentes durante a obra.</InfoHint>
             {openCount > 0 && (
               <Badge variant="destructive" className="text-xs">{openCount} abertas</Badge>
             )}
           </h3>
-          <p className="text-sm text-muted-foreground">Controle de itens pendentes durante a obra</p>
         </div>
         <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
           <Plus className="h-4 w-4 mr-1" /> Nova Pendência

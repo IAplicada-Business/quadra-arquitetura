@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 interface PlaceholderPageProps {
   title: string;
@@ -9,8 +10,7 @@ interface PlaceholderPageProps {
 export function PlaceholderPage({ title, description, icon: Icon }: PlaceholderPageProps) {
   return (
     <div>
-      <h1 className="text-2xl font-bold font-display mb-1">{title}</h1>
-      <p className="text-muted-foreground mb-8">{description}</p>
+      <PageTitle title={title} description={description} className="mb-8" />
 
       <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-lg bg-muted/30">
         <div className="p-4 rounded-full bg-secondary mb-4">

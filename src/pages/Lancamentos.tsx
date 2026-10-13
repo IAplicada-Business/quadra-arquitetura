@@ -15,6 +15,7 @@ import { Plus, Pencil, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 import { format, addMonths, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PageSkeleton } from "@/components/visual/PageSkeleton";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const FIN_MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: String(i + 1).padStart(2, "0"),
@@ -287,10 +288,7 @@ export default function Lancamentos() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold">Lançamentos do Escritório</h1>
-          <p className="text-sm text-muted-foreground">Receitas e despesas do escritório, com ou sem projeto vinculado</p>
-        </div>
+        <PageTitle title="Lançamentos do Escritório" description="Receitas e despesas do escritório, com ou sem projeto vinculado" />
         <Button onClick={() => { setForm(emptyForm()); setEditingId(null); setFormOpen(true); }}>
           <Plus className="h-4 w-4 mr-1" /> Novo Lançamento
         </Button>

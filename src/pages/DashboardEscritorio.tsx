@@ -27,6 +27,8 @@ import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { MonthlyStackedChart } from "@/components/dashboard/MonthlyStackedChart";
 import { C } from "@/lib/chartColors";
 import Reports from "@/pages/Reports";
+import { PageTitle } from "@/components/layout/PageTitle";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
@@ -61,6 +63,10 @@ export default function DashboardEscritorio() {
 
   return (
     <div className="space-y-5">
+      <PageTitle
+        title="Dashboard Comercial"
+        description="Funil comercial e de parceiros, propostas em aberto, canais de aquisição e relatórios. Use o filtro “Funil” para alternar entre comercial e parceiros."
+      />
       <SegmentedTabs tab={tab} onChange={setTab} />
 
       {tab === "dashboard" && (
@@ -229,7 +235,7 @@ export default function DashboardEscritorio() {
                   />
                 </SectionCard>
 
-                <SectionCard title="Top parceiros por indicações" subtitle={PERIOD_LABELS[cmPeriod]}>
+                <SectionCard title={`Top parceiros — ${PERIOD_LABELS[cmPeriod]}`} subtitle="Parceiros com mais indicações no período">
                   {pm.topParceiros.length > 0 ? (
                     <RankBars items={pm.topParceiros.map((p) => ({ key: p.partnerId, label: p.name, value: p.count, to: `/partners/${p.partnerId}` }))} />
                   ) : (
@@ -250,7 +256,7 @@ export default function DashboardEscritorio() {
         </div>
       )}
 
-      {tab === "relatorios" && <Reports />}
+      {tab === "relatorios" && <Reports embedded />}
     </div>
   );
 }
@@ -334,10 +340,10 @@ function SectionCard({ title, subtitle, children, right }: { title: string; subt
     <Card className="min-w-0">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2 flex-wrap">
-          <div className="min-w-0">
-            <CardTitle className="text-base font-display">{title}</CardTitle>
-            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-          </div>
+          <CardTitle className="text-base font-display flex items-center gap-1.5 min-w-0">
+            {title}
+            {subtitle && <InfoHint>{subtitle}</InfoHint>}
+          </CardTitle>
           {right}
         </div>
       </CardHeader>
@@ -358,7 +364,7 @@ function RankBars({ items }: { items: { key: string; label: string; value: numbe
             <div className="flex-1 relative h-7 rounded-md overflow-hidden bg-muted/40">
               <div
                 className="absolute inset-y-0 left-0 transition-all rounded-r-[4px]"
-                style={{ width: `${it.value > 0 ? Math.max(4, (it.value / max) * 100) : 0}%`, background: `${C.navy}30`, borderLeft: `3px solid ${C.navy}` }}
+                style={{ width: `${it.value > 0 ? Math.max(4, (it.value / max) * 100) : 0}%`, background: C.navyTint, borderLeft: `3px solid ${C.navy}` }}
               />
               <div className="absolute inset-0 flex items-center px-3">
                 <span className="text-xs font-semibold tabular-nums text-foreground">{it.value}</span>

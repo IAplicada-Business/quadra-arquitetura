@@ -11,6 +11,7 @@ import { RichTextField } from "@/components/settings/proposal-blocks/RichTextFie
 import { OnboardingView } from "./OnboardingView";
 import { uploadOnboardingMedia } from "@/hooks/useOnboardingTemplate";
 import { emptySection, moveSection, ONBOARDING_PLACEHOLDERS, parseVideoUrl, SAMPLE_PLACEHOLDERS, validateVideoUrl, type OnboardingPlaceholders, type OnboardingSection } from "@/lib/onboarding";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
   sections: OnboardingSection[];
@@ -232,9 +233,12 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] gap-6 items-start">
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground rounded-md border border-dashed p-2.5">
-          A <strong>primeira seção é a capa</strong> (vídeo de boas-vindas em destaque); as seguintes viram os <strong>passos numerados</strong> 01, 02, 03.
-          Os textos aceitam variáveis que o portal preenche com os dados da obra:
+        <p className="text-sm font-medium flex items-center gap-1.5">
+          Seções
+          <InfoHint>
+            A <strong>primeira seção é a capa</strong> (vídeo de boas-vindas em destaque); as seguintes viram os <strong>passos numerados</strong> 01, 02, 03.
+            Os textos aceitam as variáveis abaixo, que o portal preenche com os dados da obra (clique para copiar).
+          </InfoHint>
         </p>
         <div className="flex flex-wrap gap-1.5" aria-label="Variáveis disponíveis">
           {ONBOARDING_PLACEHOLDERS.map((v) => (
@@ -316,10 +320,12 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
 
       <Card className="lg:sticky lg:top-14">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Preview: como o cliente vê</CardTitle>
-          <p className="text-[11px] text-muted-foreground">
-            Tela de boas-vindas do portal, {placeholders ? "com os dados desta obra" : "com dados de exemplo"}. Seções desligadas aparecem esmaecidas aqui e somem no portal.
-          </p>
+          <CardTitle className="text-sm flex items-center gap-1.5">
+            Preview: como o cliente vê
+            <InfoHint>
+              Tela de boas-vindas do portal, {placeholders ? "com os dados desta obra" : "com dados de exemplo"}. Seções desligadas aparecem esmaecidas aqui e somem no portal.
+            </InfoHint>
+          </CardTitle>
         </CardHeader>
         <CardContent className="max-h-[70vh] overflow-y-auto p-2">
           {sections.length === 0 ? (

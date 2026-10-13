@@ -1,4 +1,5 @@
 import { Construction } from "lucide-react";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 interface ContentPlaceholderProps {
   title: string;
@@ -8,10 +9,7 @@ export default function ContentPlaceholder({ title }: ContentPlaceholderProps) {
   return (
     <div className="space-y-6 p-0">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-playfair">{title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestão de Conteúdo</p>
-        </div>
+        <PageTitle title={title} description="Gestão de Conteúdo" />
       </div>
 
       <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-lg bg-muted/30">

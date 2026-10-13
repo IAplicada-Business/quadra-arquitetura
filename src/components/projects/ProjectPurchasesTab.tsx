@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useProjectPurchases } from "@/hooks/useProjectPurchases";
 import { PurchaseForm } from "./PurchaseForm";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 function formatCurrency(v: number | null) {
   if (v == null) return "—";
@@ -24,7 +25,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   instalado: { label: "Instalado", className: "bg-muted text-muted-foreground border-border" },
 };
 
-export function ProjectPurchasesTab({ projectId }: { projectId: string }) {
+export function ProjectPurchasesTab({ projectId, titleHint }: { projectId: string; titleHint?: ReactNode }) {
   const { items, isLoading, create, update, remove } = useProjectPurchases(projectId);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
@@ -35,7 +36,10 @@ export function ProjectPurchasesTab({ projectId }: { projectId: string }) {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-display">Lista de Compras</h3>
+          <h3 className="text-lg font-semibold text-display flex items-center gap-1.5">
+            Lista de Compras
+            {titleHint && <InfoHint>{titleHint}</InfoHint>}
+          </h3>
           <p className="text-sm text-muted-foreground">
             {items.length} itens • Total: {formatCurrency(total)}
           </p>

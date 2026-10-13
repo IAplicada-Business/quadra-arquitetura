@@ -88,7 +88,7 @@ export default function ProjectDetail() {
                 {(project as any).project_number}
               </Badge>
             )}
-            <h1 className="text-2xl font-bold text-display">{project.name}</h1>
+            <h1 className="text-2xl font-display font-semibold leading-tight">{project.name}</h1>
             <Badge variant="secondary">
               {statusLabels[project.status || ""] || project.status}
             </Badge>

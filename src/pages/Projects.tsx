@@ -31,6 +31,7 @@ import {
 import { format, subMonths, startOfMonth, startOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PageSkeleton } from "@/components/visual/PageSkeleton";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const typeLabels: Record<string, string> = {
   residencial: "Residencial",
@@ -165,10 +166,7 @@ export default function Projects() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-display">Projetos</h1>
-          <p className="text-muted-foreground text-sm">Pipeline de projetos e gestão de obra</p>
-        </div>
+        <PageTitle title="Projetos" description="Pipeline de projetos e gestão de obra" />
         <Button onClick={handleNew}>
           <Plus className="h-4 w-4 mr-2" /> Novo Projeto
         </Button>

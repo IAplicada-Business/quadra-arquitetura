@@ -18,6 +18,7 @@ import { useInstagramInspirations, type InstagramInspiration } from "@/hooks/use
 import { format, parseISO, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { InstagramMetric } from "@/hooks/useInstagramAnalysis";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 function fmtN(n: number | null | undefined) {
   if (n == null) return "—";
@@ -253,12 +254,7 @@ export default function ContentInstagram() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-display">Instagram</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Métricas semanais e inspirações de conteúdo
-          </p>
-        </div>
+        <PageTitle title="Instagram" description="Métricas semanais e inspirações de conteúdo" />
         {ownProfile && (
           <Badge variant="secondary" className="text-sm gap-1.5 px-3 py-1.5">
             <Instagram className="h-3.5 w-3.5" />

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { InvoiceNFList } from "@/components/projects/InvoiceNFList";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export default function InvoicesPage() {
   const { user } = useAuth();
@@ -18,10 +19,7 @@ export default function InvoicesPage() {
   return (
     <div className="space-y-6 p-0">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-playfair">Notas Fiscais</h1>
-          <p className="text-sm text-muted-foreground mt-1">Visão consolidada de todas as NFs</p>
-        </div>
+        <PageTitle title="Notas Fiscais" description="Visão consolidada de todas as NFs" />
       </div>
       <InvoiceNFList showProjectColumn projects={projects} />
     </div>

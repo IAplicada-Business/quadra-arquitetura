@@ -21,6 +21,7 @@ import {
 } from "@/lib/oportunidades.functions";
 import { Bug, CheckCircle2, Rocket, Clock3, ArrowRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 const TIPO_COR = {
   bug: "text-rose-600 bg-rose-50 border-rose-200",
@@ -116,10 +117,10 @@ export function OportunidadesDashboard({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Card className="rounded-3xl border-0 p-5 shadow-soft">
-          <h3 className="mb-4 font-display text-lg">Evolução das entregas</h3>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Entregas por mês (e bugs entre elas) — últimos 6 meses.
-          </p>
+          <h3 className="mb-4 font-display text-lg flex items-center gap-1.5">
+            Evolução das entregas
+            <InfoHint>Entregas por mês (e bugs entre elas) — últimos 6 meses.</InfoHint>
+          </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={m.serieEntregas} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -161,9 +162,12 @@ export function OportunidadesDashboard({
         </Card>
 
         <Card className="rounded-3xl border-0 p-5 shadow-soft">
-          <h3 className="mb-4 font-display text-lg">Impacto dos bugs</h3>
+          <h3 className="mb-4 font-display text-lg flex items-center gap-1.5">
+            Impacto dos bugs
+            <InfoHint>Corrigidos vs. ainda abertos.</InfoHint>
+          </h3>
           <p className="mb-4 text-sm text-muted-foreground">
-            Corrigidos vs. ainda abertos — {m.bugsBloqueantesAbertos} bloqueante(s) em aberto.
+            {m.bugsBloqueantesAbertos} bloqueante(s) em aberto.
           </p>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
@@ -202,10 +206,10 @@ export function OportunidadesDashboard({
       <Card className="overflow-hidden rounded-3xl border-0 shadow-soft">
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div>
-            <h3 className="font-display text-lg">Próximas etapas</h3>
-            <p className="text-sm text-muted-foreground">
-              Em desenvolvimento, planejado e backlog — por prioridade.
-            </p>
+            <h3 className="font-display text-lg flex items-center gap-1.5">
+              Próximas etapas
+              <InfoHint>Em desenvolvimento, planejado e backlog — por prioridade.</InfoHint>
+            </h3>
           </div>
           <Badge variant="secondary">{m.proximas.length}</Badge>
         </div>

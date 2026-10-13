@@ -17,6 +17,7 @@ import {
   type AcquisitionChannelCategory,
 } from "@/hooks/useAcquisitionChannels";
 import { usePermissions } from "@/hooks/usePermissions";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 const DEFAULT_COLOR = "#64748B";
 
@@ -74,7 +75,13 @@ export default function AcquisitionChannelsSettings() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-lg font-display">Canais de Aquisição</CardTitle>
+        <CardTitle className="text-lg font-display flex items-center gap-1.5">
+          Canais de Aquisição
+          <InfoHint>
+            Canais alimentam o formulário de leads, o filtro do pipeline e o dashboard comercial.
+            {!isAdmin && " Apenas administradores podem criar, editar, arquivar ou reordenar canais."}
+          </InfoHint>
+        </CardTitle>
         {isAdmin && !adding && !editingId && (
           <Button size="sm" onClick={() => { setAdding(true); setForm(emptyForm); }}>
             <Plus className="h-4 w-4 mr-1" /> Novo canal
@@ -82,11 +89,6 @@ export default function AcquisitionChannelsSettings() {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Canais alimentam o formulário de leads, o filtro do pipeline e o dashboard comercial.
-          {!isAdmin && " Apenas administradores podem criar, editar, arquivar ou reordenar canais."}
-        </p>
-
         {!isAdmin && archived.length === 0 && active.length === 0 && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <ShieldAlert className="h-4 w-4" /> Nenhum canal cadastrado ainda.

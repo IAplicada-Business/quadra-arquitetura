@@ -22,6 +22,7 @@ import { SendMessageModal } from "@/components/messages/SendMessageModal";
 import { ChannelBadge } from "@/components/leads/ChannelBadge";
 import { ChannelMultiSelectFilter, NO_CHANNEL_VALUE } from "@/components/leads/ChannelMultiSelectFilter";
 import { LeadFormDialog } from "@/components/leads/LeadFormDialog";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const originLabels: Record<string, string> = {
   indicacao: "Indicação", instagram: "Instagram", google: "Google", site: "Site", outro: "Outro",
@@ -201,10 +202,11 @@ export default function LeadsPipeline() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-display">Pipeline de Leads</h1>
-          {filtered.length < leads.length && (
-            <p className="text-sm text-muted-foreground">{filtered.length} de {leads.length}</p>
-          )}
+          <PageTitle
+            title="Pipeline de Leads"
+            description="Funil comercial: arraste os cards entre as etapas, do primeiro contato ao fechamento."
+            meta={filtered.length < leads.length ? `${filtered.length} de ${leads.length}` : undefined}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Tabs value={view} onValueChange={(v) => setView(v as any)}>

@@ -10,6 +10,7 @@ import { LeadFormDialog } from "@/components/leads/LeadFormDialog";
 import { PartnerDetailSheet } from "@/components/leads/PartnerDetailSheet";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const stageColors: Record<string, string> = {
   novo: "bg-blue-500/10 text-blue-700 border-blue-200",
@@ -99,10 +100,11 @@ export default function PartnersPipeline() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-display flex items-center gap-2">
-            <Handshake className="h-6 w-6 text-primary" /> Pipeline de Parceiros
-          </h1>
-          <p className="text-sm text-muted-foreground">Arquitetos e estúdios parceiros — pipeline independente do funil comercial</p>
+          <PageTitle
+            icon={<Handshake />}
+            title="Pipeline de Parceiros"
+            description="Arquitetos e estúdios parceiros — pipeline independente do funil comercial."
+          />
         </div>
         <Button onClick={openNew} size="sm">
           <Plus className="h-4 w-4 mr-1" /> Novo Parceiro

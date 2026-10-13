@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Calculator, Layers, Wrench, Upload } from "lucide-react";
 import { useLaborCosts, type LaborCost } from "@/hooks/useLaborCosts";
 import { toast } from "@/hooks/use-toast";
+import { InfoHint } from "@/components/visual/InfoHint";
 
 const DISCIPLINE_OPTIONS = [
   "Alvenaria", "Elétrica", "Hidráulica", "Pintura", "Acabamento",
@@ -146,11 +147,11 @@ export default function CalculationRulesTab() {
           <div>
             <h2 className="text-lg font-semibold font-display flex items-center gap-2">
               <Layers className="h-5 w-5" /> Índices de Materiais (Memória de Cálculo)
+              <InfoHint>
+                Estes índices são usados automaticamente para calcular quantidades de materiais ao cadastrar atividades de obra.
+                São valores globais do escritório — valem para todos os projetos.
+              </InfoHint>
             </h2>
-            <p className="text-sm text-muted-foreground max-w-xl">
-              Estes índices são usados automaticamente para calcular quantidades de materiais ao cadastrar atividades de obra.
-              São valores globais do escritório — valem para todos os projetos.
-            </p>
           </div>
           <div className="flex gap-2">
             <input
@@ -275,8 +276,8 @@ export default function CalculationRulesTab() {
           <div>
             <h2 className="text-lg font-semibold font-display flex items-center gap-2">
               <Wrench className="h-5 w-5" /> Custos de Mão de Obra por Disciplina
+              <InfoHint>Valores de referência por m² usados na prévia de orçamento</InfoHint>
             </h2>
-            <p className="text-sm text-muted-foreground">Valores de referência por m² usados na prévia de orçamento</p>
           </div>
           <Button size="sm" onClick={() => { setEditingLaborId(null); setLaborForm({ discipline: "", activity_type: "", cost_per_m2: 0, cost_per_unit: 0, unit: "m2", region: "Belo Horizonte", notes: "" }); setLaborDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-1.5" /> Novo Custo
@@ -396,8 +397,8 @@ export default function CalculationRulesTab() {
           <div>
             <h2 className="text-lg font-semibold font-display flex items-center gap-2">
               <Calculator className="h-5 w-5" /> Regras de Cálculo
+              <InfoHint>Fórmulas de referência para cálculo automático de materiais</InfoHint>
             </h2>
-            <p className="text-sm text-muted-foreground">Fórmulas de referência para cálculo automático de materiais</p>
           </div>
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1.5" /> Nova Regra
