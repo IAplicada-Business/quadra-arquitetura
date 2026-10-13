@@ -2,9 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, subMonths, differenceInDays, parseISO, startOfMonth, startOfYear } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { C } from "@/lib/chartColors";
+import { format, subMonths, differenceInDays, parseISO } from "date-fns";
+import { computeFunnel, inPeriod as inBounds, lastSixMonths, periodBounds, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
 
 interface LeadRow {
   id: string;
@@ -32,18 +31,7 @@ interface ProposalRow {
 
 const LOST_OR_CLOSED_LEAD_STATUSES = new Set(["perdido", "perdido_definitivo", "fechado"]);
 
-export interface FunilStage {
-  label: string;
-  count: number;
-  color: string;
-}
-
-export interface Oportunidade {
-  leadId: string;
-  leadName: string;
-  daysSinceContact: number;
-  proposalValue: number;
-}
+export type FunilStage = FunnelStageCount;
 
 export interface PropostaAberta {
   id: string;
@@ -61,7 +49,7 @@ export interface PipelineMonth {
   em_andamento: number;
 }
 
-export type ComercialPeriod = "mes_atual" | "mes_passado" | "trimestre" | "semestre" | "ano" | "tudo";
+export type ComercialPeriod = DashboardPeriod;
 
 export const PERIOD_LABELS: Record<ComercialPeriod, string> = {
   mes_atual:   "Este mês",
@@ -132,25 +120,8 @@ export function useComercialMetrics({
     if (!query.data) return null;
     const { leads, proposals } = query.data;
 
-    // Compute period window
-    const periodStart: Date | null = (() => {
-      switch (period) {
-        case "mes_atual":   return startOfMonth(today);
-        case "mes_passado": return startOfMonth(subMonths(today, 1));
-        case "trimestre":   return startOfMonth(subMonths(today, 2));
-        case "semestre":    return startOfMonth(subMonths(today, 5));
-        case "ano":         return startOfYear(today);
-        case "tudo":        return null;
-      }
-    })();
-    const periodEnd: Date | null = period === "mes_passado" ? startOfMonth(today) : null;
-
-    const inPeriod = (dateStr: string) => {
-      const d = new Date(dateStr);
-      if (periodStart && d < periodStart) return false;
-      if (periodEnd && d >= periodEnd) return false;
-      return true;
-    };
+    const bounds = periodBounds(period, today);
+    const inPeriod = (dateStr: string) => inBounds(dateStr, bounds);
 
     // Filter leads by period + origin + projectType
     const filteredLeads = leads.filter(
@@ -172,29 +143,9 @@ export function useComercialMetrics({
       : [];
 
     // Funil
-    const funnelLeads    = filteredLeads.length;
-    const funnelContato  = filteredLeads.filter((l) => ["em_contato", "contato_feito", "reuniao_agendada", "proposta_enviada", "fechado"].includes(l.status)).length;
-    const funnelReuniao  = filteredLeads.filter((l) => ["reuniao_agendada", "proposta_enviada", "fechado"].includes(l.status)).length;
-    const funnelProposta = filteredLeads.filter((l) => ["proposta_enviada", "fechado"].includes(l.status)).length;
-    const funnelFechado  = filteredLeads.filter((l) => l.status === "fechado").length;
-    const funnelPerdido  = filteredLeads.filter((l) => l.status === "perdido").length;
-
-    const funil: FunilStage[] = [
-      { label: "Leads",    count: funnelLeads,    color: C.navyFaint },
-      { label: "Contato",  count: funnelContato,  color: C.navyMid   },
-      { label: "Reunião",  count: funnelReuniao,  color: C.terra     },
-      { label: "Proposta", count: funnelProposta, color: C.warning   },
-      { label: "Fechado",  count: funnelFechado,  color: C.success   },
-    ];
-
-    const convRate = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
-    const funnelRates = [
-      convRate(funnelContato, funnelLeads),
-      convRate(funnelReuniao, funnelContato),
-      convRate(funnelProposta, funnelReuniao),
-      convRate(funnelFechado, funnelProposta),
-    ];
-    const conversaoTotal = convRate(funnelFechado, funnelLeads);
+    const { stages: funil, rates: funnelRates, total: conversaoTotal } = computeFunnel(filteredLeads);
+    const funnelFechado = funil[funil.length - 1].count;
+    const funnelPerdido = filteredLeads.filter((l) => l.status === "perdido").length;
 
     // Receita fechada: proposals aprovadas de leads no período
     const periodLeadIds = new Set(filteredLeads.map((l) => l.id));
@@ -235,23 +186,6 @@ export function useComercialMetrics({
       (p) => p.sent_at && differenceInDays(today, parseISO(p.sent_at)) > 7
     );
 
-    // Oportunidades quentes (leads com proposta_enviada, dos filtrados)
-    const leadsPropostaEnviada = filteredLeads
-      .filter((l) => l.status === "proposta_enviada")
-      .sort((a, b) => a.updated_at.localeCompare(b.updated_at))
-      .slice(0, 4);
-
-    const oportunidades: Oportunidade[] = leadsPropostaEnviada.map((l) => {
-      const daysSince = differenceInDays(today, parseISO(l.updated_at));
-      const proposal = proposals.find((p) => p.lead_id === l.id);
-      return {
-        leadId: l.id,
-        leadName: l.name,
-        daysSinceContact: daysSince,
-        proposalValue: proposal?.price_full ?? proposal?.final_value ?? 0,
-      };
-    });
-
     // Propostas em aberto (global)
     const propostasAbertas: PropostaAberta[] = proposalsAguardando
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -273,25 +207,17 @@ export function useComercialMetrics({
     const totalEmNegociacao = propostasAbertas.reduce((s, p) => s + p.value, 0);
 
     // Pipeline 6 meses (sempre últimos 6, independe do filtro de período para manter histórico)
-    const pipeline6m: PipelineMonth[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const m = subMonths(today, i);
-      const mStr = format(m, "yyyy-MM");
-      const label = format(m, "MMM", { locale: ptBR });
-      const capLabel = label.charAt(0).toUpperCase() + label.slice(1);
-
-      const mLeads = leads.filter(
-        (l) =>
-          (origin === "todos" || l.origin === origin) &&
-          (projectType === "todos" || l.project_type === projectType)
-      );
-
-      const fechados    = mLeads.filter((l) => l.status === "fechado" && l.updated_at?.startsWith(mStr)).length;
-      const propostas   = mLeads.filter((l) => l.status === "proposta_enviada" && l.created_at?.startsWith(mStr)).length;
-      const emAndamento = mLeads.filter((l) => ["contato_feito", "reuniao_agendada"].includes(l.status) && l.created_at?.startsWith(mStr)).length;
-
-      pipeline6m.push({ month: capLabel, fechados, propostas: propostas, em_andamento: emAndamento });
-    }
+    const mLeads = leads.filter(
+      (l) =>
+        (origin === "todos" || l.origin === origin) &&
+        (projectType === "todos" || l.project_type === projectType)
+    );
+    const pipeline6m: PipelineMonth[] = lastSixMonths(today).map(({ key, label }) => ({
+      month: label,
+      fechados: mLeads.filter((l) => l.status === "fechado" && l.updated_at?.startsWith(key)).length,
+      propostas: mLeads.filter((l) => l.status === "proposta_enviada" && l.created_at?.startsWith(key)).length,
+      em_andamento: mLeads.filter((l) => ["contato_feito", "reuniao_agendada"].includes(l.status) && l.created_at?.startsWith(key)).length,
+    }));
 
     return {
       funil,
@@ -309,7 +235,6 @@ export function useComercialMetrics({
         receitaFechada,
         leadsPerdidos: funnelPerdido,
       },
-      oportunidades,
       propostasAbertas,
       totalEmNegociacao,
       pipeline6m,
