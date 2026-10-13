@@ -199,11 +199,18 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
     font-feature-settings: "ss01", "cv11";
+    /* Escala do padrão: corpo em 14px com altura 1.5. As classes text-*
+       do Tailwind são em rem e continuam valendo — isto define só o que
+       herda, que antes pegava os 16px do browser. */
+    font-size: 14px;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
   h1 { @apply font-light; }
@@ -211,6 +218,15 @@
 }
 
 @layer utilities {
+  /* Rótulo de categoria do padrão: maiúscula espaçada, peso médio. */
+  .label-cat {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
   .text-display {
     font-family: var(--font-display);
   }
