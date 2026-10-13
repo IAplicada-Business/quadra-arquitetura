@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import DashboardEscritorio from "./pages/DashboardEscritorio";
 import DashboardFinanceiro from "./pages/DashboardFinanceiro";
 import DashboardObras from "./pages/DashboardObras";
@@ -53,8 +55,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      // Mesmo fundo --deep do login: não pisca claro antes de entrar.
+      <div className="flex items-center justify-center min-h-screen bg-deep" aria-busy="true">
+        <div className="animate-spin h-8 w-8 border-2 border-deep-foreground/30 border-t-deep-foreground rounded-full" />
       </div>
     );
   }
@@ -72,6 +75,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/esqueci-senha" element={<ForgotPassword />} />
+            <Route path="/redefinir-senha" element={<ResetPassword />} />
             <Route
               element={
                 <ProtectedRoute>
