@@ -20,6 +20,7 @@ import { Users, Plus, Shield, Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PAGE_GROUPS } from "@/lib/pagePermissions";
 import { Switch } from "@/components/ui/switch";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 interface UserRow {
   id: string;
@@ -237,10 +238,7 @@ export default function AdminUsersPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold font-display mb-1">Gestão de Usuários</h1>
-          <p className="text-muted-foreground text-sm">Edite dados, função e permissões de acesso por tela</p>
-        </div>
+        <PageTitle title="Gestão de Usuários" description="Edite dados, função e permissões de acesso por tela" />
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-1" /> Criar Usuário
         </Button>

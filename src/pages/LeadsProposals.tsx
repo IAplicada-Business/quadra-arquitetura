@@ -32,6 +32,7 @@ import { flushSync } from "react-dom";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { useContracts } from "@/hooks/useContracts";
 import { C } from "@/lib/chartColors";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const statusLabels: Record<string, string> = {
   rascunho: "Rascunho", enviada: "Enviada", aprovada: "Aprovada", rejeitada: "Rejeitada",
@@ -357,8 +358,11 @@ export default function LeadsProposals() {
               <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
             </Button>
           )}
-          <h1 className="text-2xl font-bold text-display">Propostas</h1>
-          <p className="text-sm text-muted-foreground">{proposals.length} proposta(s)</p>
+          <PageTitle
+            title="Propostas"
+            description="Propostas comerciais: monte, gere o PDF, envie e acompanhe a aprovação."
+            meta={<Badge variant="secondary" className="text-xs">{proposals.length}</Badge>}
+          />
         </div>
         {view === "list" && (
           <div className="flex gap-2">

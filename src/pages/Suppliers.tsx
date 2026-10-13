@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { handleDeleteError } from "@/lib/handleDeleteError";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const CATEGORIES = [
   "Pedreiro", "Eletricista", "Encanador", "Marcenaria", "Pintura", "Vidraceiro", "Serralheria", "Marmoraria", "Gesso", "Outros"
@@ -148,10 +149,7 @@ export default function Suppliers() {
   return (
     <div className="space-y-6 p-0 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-playfair">Fornecedores</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestão de parceiros e prestadores de serviço</p>
-        </div>
+        <PageTitle title="Fornecedores" description="Gestão de parceiros e prestadores de serviço" />
         <Button onClick={() => { setEditing(null); setFormOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" /> Novo Fornecedor
         </Button>

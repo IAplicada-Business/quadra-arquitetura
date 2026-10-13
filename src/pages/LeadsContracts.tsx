@@ -21,6 +21,7 @@ import { TemplateManager } from "@/components/leads/TemplateManager";
 import { SendMessageModal } from "@/components/messages/SendMessageModal";
 import type { ContractPageProps } from "@/components/leads/contract-pages/shared";
 import { DEFAULT_FORO } from "@/data/defaultContractClauses";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const statusLabels: Record<string, string> = {
   rascunho: "Rascunho", enviado: "Enviado", assinado: "Assinado", cancelado: "Cancelado",
@@ -314,10 +315,11 @@ export default function LeadsContracts() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-display">Contratos</h1>
-          <p className="text-sm text-muted-foreground">{contracts.length} contrato(s)</p>
-        </div>
+        <PageTitle
+          title="Contratos"
+          description="Contratos gerados a partir das propostas aprovadas: envio, assinatura e criação do projeto."
+          meta={<Badge variant="secondary" className="text-xs">{contracts.length}</Badge>}
+        />
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setActiveTab(activeTab === "templates" ? "lista" : "templates")}>
             <Settings2 className="h-4 w-4 mr-1" /> Templates

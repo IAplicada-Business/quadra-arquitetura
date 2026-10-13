@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { VoiceTaskForm } from "@/components/construction/VoiceTaskForm";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const priorityColors: Record<string, string> = {
   baixa: "bg-muted text-muted-foreground",
@@ -135,18 +136,14 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
   return (
     <div className={`flex flex-col gap-6 ${view === "kanban" ? "flex-1 md:min-h-0" : ""}`}>
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-display font-light">
-            {title ?? (mode === "quadra" ? "Kanban Quadra" : mode === "projects" ? "Kanban Projetos" : "Tarefas Quadra")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {mode === "quadra"
+        <PageTitle
+          title={title ?? (mode === "quadra" ? "Kanban Quadra" : mode === "projects" ? "Kanban Projetos" : "Tarefas Quadra")}
+          description={mode === "quadra"
               ? "Tarefas internas da Quadra (sem vínculo a uma obra específica)."
               : mode === "projects"
               ? "Tarefas vinculadas às obras em andamento."
               : "Centro de tarefas pessoais e por obra. Por voz, por digitação ou geradas automaticamente."}
-          </p>
-        </div>
+        />
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4 mr-1" /> Nova Tarefa
         </Button>

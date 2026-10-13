@@ -18,6 +18,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { MultiObrasView } from "@/components/dashboard/MultiObrasView";
 import { buildMultiObras } from "@/lib/multiObras";
+import { PageTitle } from "@/components/layout/PageTitle";
+import { InfoHint } from "@/components/visual/InfoHint";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, parseISO, differenceInDays, addDays } from "date-fns";
@@ -269,6 +271,10 @@ export default function DashboardObras() {
 
   return (
     <div className="space-y-5">
+      <PageTitle
+        title="Dashboard Obras"
+        description="Andamento das obras ativas, alertas e financeiro de obra. Em “Multi-obras”: ritmo de cada obra, linha do tempo e agenda dos fornecedores."
+      />
       {/* Uma tela só: "Visão" é um filtro, ao lado de busca e status
           (antes eram duas abas separadas com a mesma barra de filtros). */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -440,8 +446,10 @@ export default function DashboardObras() {
       {/* ═══ BLOCO 3 — FINANCEIRO DE OBRAS ═══ */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display">Orçado (comprometido) vs Gasto por Projeto</CardTitle>
-          <p className="text-xs text-muted-foreground">Quanto do comprometido em compras e pagamentos de cada obra já foi pago.</p>
+          <CardTitle className="text-base font-display flex items-center gap-1.5">
+            Orçado (comprometido) vs Gasto por Projeto
+            <InfoHint>Quanto do comprometido em compras e pagamentos de cada obra já foi pago.</InfoHint>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {finChartData.length > 0 ? (

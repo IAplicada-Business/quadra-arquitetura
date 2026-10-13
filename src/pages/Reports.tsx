@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import WeeklyReportView from "@/components/reports/WeeklyReportView";
 import { AccountingReport } from "@/components/reports/AccountingReport";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const REPORT_TYPES = [
   { id: "semanal", name: "Relatório Semanal de Obra", icon: Calendar, desc: "Resumo de atividades, fotos e pendências" },
@@ -16,7 +17,8 @@ const REPORT_TYPES = [
   { id: "cliente", name: "Prestação de Contas (Cliente)", icon: PieChart, desc: "Relatório formatado para apresentação ao cliente" },
 ];
 
-export default function Reports() {
+/** `embedded`: dentro de outra tela (aba Relatórios do Dashboard Comercial), sem título próprio. */
+export default function Reports({ embedded = false }: { embedded?: boolean } = {}) {
   const { user } = useAuth();
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -82,10 +84,7 @@ export default function Reports() {
   return (
     <div className="space-y-6 p-0 animate-fade-in print:p-0">
       <div className="flex items-center justify-between print:hidden">
-        <div>
-          <h1 className="text-2xl font-playfair">Relatórios</h1>
-          <p className="text-sm text-muted-foreground mt-1">Geração e exportação de relatórios gerenciais</p>
-        </div>
+        {!embedded && <PageTitle title="Relatórios" description="Geração e exportação de relatórios gerenciais" />}
       </div>
 
       {/* Filters - Hidden on Print */}

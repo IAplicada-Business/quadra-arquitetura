@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const typeConfig: Record<string, { icon: typeof Info; label: string; color: string }> = {
   task_overdue: { icon: Clock, label: "Tarefa atrasada", color: "text-orange-500" },
@@ -58,11 +59,11 @@ export default function NotificationsPage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold">Notificações</h1>
-          {unreadCount > 0 && <Badge variant="default" className="bg-accent text-accent-foreground">{unreadCount} não lidas</Badge>}
-        </div>
+        <PageTitle
+          icon={<Bell />}
+          title="Notificações"
+          meta={unreadCount > 0 ? <Badge variant="default" className="bg-accent text-accent-foreground">{unreadCount} não lidas</Badge> : undefined}
+        />
         {unreadCount > 0 && (
           <Button variant="outline" size="sm" onClick={() => markAllAsRead.mutate()}>
             Marcar todas como lidas

@@ -136,6 +136,7 @@ import {
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { cn, msgErro } from "@/lib/utils";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 type AbaOport = "dashboard" | "kanban";
 type ViewBoard = "kanban" | "lista";
@@ -427,15 +428,11 @@ export default function BuddyBugPage() {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 font-display text-2xl font-bold">
-            <Bug className="h-6 w-6 text-primary" /> Buddy · Bug
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Reporte bug, melhoria ou dúvida. A equipe IAplicada prioriza e entrega — e quem
-            reportou aprova a entrega.
-          </p>
-        </div>
+        <PageTitle
+          icon={<Bug />}
+          title="Buddy · Bug"
+          description="Reporte bug, melhoria ou dúvida. A equipe IAplicada prioriza e entrega — e quem reportou aprova a entrega."
+        />
         <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" onClick={exportarExcel} disabled={opts.length === 0}>
             <FileDown className="mr-1 h-4 w-4" /> Exportar Excel

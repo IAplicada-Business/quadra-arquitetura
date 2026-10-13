@@ -8,6 +8,7 @@ import type { ContentPost } from "@/hooks/useContentPosts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const COLUMN_STYLES: Record<string, { header: string; border: string }> = {
   ideia:      { header: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700", border: "border-slate-200 dark:border-slate-700" },
@@ -57,10 +58,7 @@ export default function ContentScripts() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-display">Roteiros</h1>
-          <p className="text-sm text-muted-foreground mt-1">Fluxo de produção de conteúdo</p>
-        </div>
+        <PageTitle title="Roteiros" description="Fluxo de produção de conteúdo" />
         <Button size="sm" onClick={() => { setSelectedPost(null); setSheetOpen(true); }}>
           <Plus className="h-4 w-4 mr-1" /> Novo Roteiro
         </Button>

@@ -15,6 +15,7 @@ import {
   statusEmojis,
   type ProjectStatus,
 } from "@/lib/projectConstants";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const columnBorderColors: Record<string, string> = {
   proposta: "border-muted",
@@ -157,12 +158,7 @@ export default function ProjectsKanban() {
     <div className="flex flex-col h-[calc(100vh-7rem)] space-y-4 animate-fade-in">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-playfair">Kanban de Projetos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Visão macro de todos os projetos por fase. Arraste para mover.
-          </p>
-        </div>
+        <PageTitle title="Kanban de Projetos" description="Visão macro de todos os projetos por fase. Arraste para mover." />
         <Button variant="outline" size="sm" onClick={() => navigate("/projects")}>
           <List className="h-4 w-4 mr-1" /> Ver lista
         </Button>

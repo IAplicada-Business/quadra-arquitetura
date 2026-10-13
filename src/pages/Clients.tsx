@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Search, Pencil, Trash2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 interface ClientProject {
   id: string;
@@ -264,10 +265,7 @@ export default function Clients() {
   return (
     <div className="space-y-6 p-0">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-playfair">Clientes</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerencie a carteira de clientes do escritório</p>
-        </div>
+        <PageTitle title="Clientes" description="Gerencie a carteira de clientes do escritório" />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNew}>
