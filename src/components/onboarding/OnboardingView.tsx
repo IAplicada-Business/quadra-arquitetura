@@ -1,5 +1,6 @@
 import { ArrowRight, ExternalLink, PlayCircle } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
+import { QuadraLogo } from "@/components/portal/TrilhaBrand";
 import {
   applyOnboardingPlaceholders,
   parseVideoUrl,
@@ -237,9 +238,9 @@ export function OnboardingView({ sections, placeholders, onEnter, enterLabel = "
   return (
     <div className={`trilha rounded-xl ${compact ? "px-4 py-6" : "px-4 py-10 sm:px-8"}`} data-testid="onboarding-view">
       <div className={`mx-auto ${compact ? "max-w-full" : "max-w-4xl"} space-y-8`}>
-        <p className="text-center font-display text-2xl tracking-tight text-[var(--trilha-navy)]">
-          quadra<span className="text-[var(--trilha-terracota)]">.</span>
-        </p>
+        <div className="flex justify-center">
+          <QuadraLogo className={compact ? "w-12" : "w-16 sm:w-20"} />
+        </div>
 
         {blocks.map((b) => {
           if (b.kind === "cards") return <CardsBlock key={b.items[0].section.id} items={b.items} compact={compact} />;
