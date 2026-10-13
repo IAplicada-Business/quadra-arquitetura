@@ -12,7 +12,7 @@ import { TrilhaShell } from "@/components/portal/TrilhaShell";
 import { GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, ResumosScreen } from "@/components/portal/PortalScreens";
 import { AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
-import { sectionsFromJson, visibleSections } from "@/lib/onboarding";
+import { buildOnboardingPlaceholders, sectionsFromJson, visibleSections } from "@/lib/onboarding";
 import { extractPendings, onboardingSeenKey, tabFromHash, type PortalData, type PortalTab } from "@/lib/portal";
 
 function readSeen(key: string): boolean {
@@ -186,7 +186,17 @@ export default function ClientPortal() {
     );
   }
 
-  const placeholders = { cliente: data.project.client_name, projeto: data.project.name };
+  const placeholders = buildOnboardingPlaceholders({
+    clientName: data.project.client_name,
+    projectName: data.project.name,
+    address: data.project.address,
+    city: data.project.city,
+    startDate: data.project.start_date,
+    expectedEndDate: data.project.expected_end_date,
+    moveInDate: data.project.client_move_in_date,
+    tasks: data.tasks,
+    reports: data.weekly_reports,
+  });
 
   if (showWelcome) {
     return (

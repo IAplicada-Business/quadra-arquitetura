@@ -1,3 +1,5 @@
+import { computeProgress, currentPhase, formatDateLong, type PortalTask, type PortalWeeklyReport } from "@/lib/portal";
+
 /**
  * Onboarding do cliente: modelo das seções, parse de vídeo e regras de
  * cópia template -> obra. Tudo puro (sem Supabase) pra ser testável.
@@ -133,22 +135,102 @@ export function starterSections(): OnboardingSection[] {
 /* Placeholders e título da capa                                        */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Variáveis dos textos do onboarding. O time escreve {cliente}, {fase},
+ * {entrega}... e o portal troca pelos dados da obra no banco (projects,
+ * clients, cronograma e relatórios semanais). Sem dado, cai num texto
+ * genérico pra frase continuar fazendo sentido.
+ */
 export interface OnboardingPlaceholders {
   cliente?: string | null;
   projeto?: string | null;
+  /** Etapa atual do cronograma ("Marcenaria"). */
+  fase?: string | null;
+  /** Progresso físico ("45%"). */
+  progresso?: string | null;
+  /** Início da obra ("09 de setembro"). */
+  inicio?: string | null;
+  /** Previsão de entrega. */
+  entrega?: string | null;
+  /** Data de mudança do cliente. */
+  mudanca?: string | null;
+  /** Endereço da obra. */
+  endereco?: string | null;
 }
 
-/** Nomes usados no preview do editor (mesmos do mockup). */
+export type OnboardingPlaceholderKey = keyof OnboardingPlaceholders;
+
+export interface PlaceholderDef {
+  key: OnboardingPlaceholderKey;
+  label: string;
+  /** Texto usado quando a obra não tem o dado. */
+  fallback: string;
+}
+
+export const ONBOARDING_PLACEHOLDERS: PlaceholderDef[] = [
+  { key: "cliente", label: "Nome do cliente", fallback: "Bem-vindos" },
+  { key: "projeto", label: "Nome da obra", fallback: "seu projeto" },
+  { key: "fase", label: "Etapa atual do cronograma", fallback: "a etapa atual" },
+  { key: "progresso", label: "Progresso da obra", fallback: "em andamento" },
+  { key: "inicio", label: "Início da obra", fallback: "data a definir" },
+  { key: "entrega", label: "Previsão de entrega", fallback: "data a definir" },
+  { key: "mudanca", label: "Data da mudança", fallback: "data a definir" },
+  { key: "endereco", label: "Endereço da obra", fallback: "o endereço da obra" },
+];
+
+/** Valores de exemplo do editor de modelos (Configurações), sem obra real. */
 export const SAMPLE_PLACEHOLDERS: OnboardingPlaceholders = {
   cliente: "Madalena & João",
   projeto: "Anteprojeto residencial",
+  fase: "Marcenaria",
+  progresso: "45%",
+  inicio: "09 de setembro",
+  entrega: "20 de dezembro",
+  mudanca: "10 de janeiro",
+  endereco: "Rua das Acácias, 120 · Belo Horizonte",
 };
 
-/** Troca {cliente} e {projeto} pelo nome real; sem nome, cai num genérico. */
+/** Troca {cliente}, {projeto}, {fase}... pelos dados da obra; sem dado, cai no texto genérico. */
 export function fillPlaceholders(text: string, p: OnboardingPlaceholders = {}): string {
-  const cliente = p.cliente?.trim() || "Bem-vindos";
-  const projeto = p.projeto?.trim() || "seu projeto";
-  return (text ?? "").replace(/\{\s*cliente\s*\}/gi, cliente).replace(/\{\s*projeto\s*\}/gi, projeto);
+  let out = text ?? "";
+  for (const def of ONBOARDING_PLACEHOLDERS) {
+    const value = p[def.key]?.trim() || def.fallback;
+    out = out.replace(new RegExp(`\\{\\s*${def.key}\\s*\\}`, "gi"), value);
+  }
+  return out;
+}
+
+/** Dados da obra que alimentam as variáveis (mesmo formato do portal). */
+export interface OnboardingProjectData {
+  clientName?: string | null;
+  projectName?: string | null;
+  address?: string | null;
+  city?: string | null;
+  startDate?: string | null;
+  expectedEndDate?: string | null;
+  moveInDate?: string | null;
+  tasks?: PortalTask[];
+  reports?: PortalWeeklyReport[];
+}
+
+/** Monta as variáveis a partir dos dados reais da obra (admin e portal usam a mesma regra). */
+export function buildOnboardingPlaceholders(d: OnboardingProjectData, today: Date = new Date()): OnboardingPlaceholders {
+  const tasks = d.tasks ?? [];
+  const reports = d.reports ?? [];
+  const phase = currentPhase(tasks, today);
+  const progress = computeProgress(reports, tasks);
+  const fmt = (iso: string | null | undefined) => (iso ? formatDateLong(iso) : null);
+  const endereco = [d.address, d.city].map((x) => x?.trim()).filter(Boolean).join(" · ") || null;
+  return {
+    cliente: d.clientName ?? null,
+    projeto: d.projectName ?? null,
+    fase: phase?.label ?? null,
+    progresso: progress == null ? null : `${progress}%`,
+    inicio: fmt(d.startDate),
+    entrega: fmt(d.expectedEndDate),
+    mudanca: fmt(d.moveInDate),
+    endereco,
+  };
 }
 
 export function applyOnboardingPlaceholders(sections: OnboardingSection[], p: OnboardingPlaceholders = {}): OnboardingSection[] {

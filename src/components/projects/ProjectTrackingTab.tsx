@@ -16,7 +16,8 @@ import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import { useSupplierAllocations } from "@/hooks/useSupplierAllocations";
 import { SupplierRatingDialog } from "@/components/construction/SupplierRatingDialog";
 import { WeeklyReportModal } from "./WeeklyReportModal";
-import { format, startOfWeek, endOfWeek } from "date-fns";
+import { format } from "date-fns";
+import { buildWeeklyAIContext, type ScheduleTaskLike, type WeeklyReportLike } from "@/lib/weeklyAIContext";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -162,15 +163,18 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
     ? Math.round(entries.reduce((s, e) => s + (e.workers_count || 0), 0) / entries.filter(e => e.workers_count).length) || 0
     : 0;
 
+  // Contexto da obra inteira (diário recente, cronograma, último relatório):
+  // a IA não depende mais de ter registro do diário nesta semana.
+  const buildAIContext = () =>
+    buildWeeklyAIContext({ entries, tasks: scheduleTasks as ScheduleTaskLike[], reports: reports as WeeklyReportLike[], progressPercent: avgProgress });
+  const hasAnyContext = entries.length > 0 || scheduleTasks.length > 0 || reports.length > 0;
+
   const handleGenerateAISummary = async () => {
-    const today = new Date();
-    const ws = startOfWeek(today, { weekStartsOn: 1 });
-    const we = endOfWeek(today, { weekStartsOn: 1 });
-    const weekEntries = entries.filter(e => {
-      const d = new Date(e.entry_date);
-      return d >= ws && d <= we;
-    });
-    if (weekEntries.length === 0) { toast.error("Nenhum registro nesta semana para gerar resumo"); return; }
+    const context = buildAIContext();
+    if (!context) {
+      toast.error("Sem dados para resumir", { description: "Registre o diário de obra ou monte o cronograma desta obra primeiro." });
+      return;
+    }
     setAiSummaryLoading(true);
     try {
       const session = (await supabase.auth.getSession()).data.session;
@@ -180,33 +184,30 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
           "Content-Type": "application/json",
           Authorization: `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({
-          project_id: projectId,
-          action: "weekly_summary",
-          data: {
-            diary_entries: weekEntries.map(e => ({
-              date: e.entry_date,
-              weather: e.weather,
-              workers: e.workers_count,
-              summary: e.summary,
-              observations: e.observations,
-              disciplines: e.disciplines_active,
-            })),
-            week_start: format(ws, "dd/MM/yyyy"),
-            week_end: format(we, "dd/MM/yyyy"),
-          },
-        }),
+        body: JSON.stringify({ project_id: projectId, action: "weekly_summary", data: context }),
       });
-      if (!resp.ok) throw new Error("Erro ao gerar resumo");
-      const result = await resp.json();
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(result?.error || `Erro ao gerar resumo (${resp.status})`);
       setPrefillData(result);
       setReportOpen(true);
-      toast.success("Resumo gerado! Revise e confirme.");
+      toast.success(
+        context.diary_scope === "semana" ? "Resumo gerado! Revise e confirme." : "Resumo gerado com o cronograma e os registros mais recentes. Revise e confirme.",
+      );
     } catch (err: any) {
-      toast.error(err.message || "Erro na geração do resumo");
+      toast.error("Não foi possível gerar o resumo", { description: err.message });
     } finally {
       setAiSummaryLoading(false);
     }
+  };
+
+  const handleInsights = async () => {
+    const context = buildAIContext();
+    if (!context) {
+      toast.error("Sem dados para analisar", { description: "Registre o diário de obra ou monte o cronograma desta obra primeiro." });
+      return;
+    }
+    const result = await callAction(projectId, "weekly_insights", context as unknown as Record<string, unknown>);
+    if (result) { setAiInsights(result); setAiInsightsOpen(true); }
   };
 
   return (
@@ -246,18 +247,11 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
           <Button size="sm" variant="outline" onClick={() => setMsgOpen(true)} disabled={!clientPhone}>
             <MessageSquare className="h-4 w-4 mr-1" /> Enviar Mensagem
           </Button>
-          <Button size="sm" variant="outline" onClick={handleGenerateAISummary} disabled={aiSummaryLoading}>
+          <Button size="sm" variant="outline" onClick={handleGenerateAISummary} disabled={aiSummaryLoading || !hasAnyContext}>
             {aiSummaryLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
             Gerar Resumo com IA
           </Button>
-          <Button size="sm" variant="outline" disabled={aiInsightsLoading || entries.length === 0} onClick={async () => {
-            const weekEntries = entries.slice(0, 10).map(e => ({
-              date: e.entry_date, weather: e.weather, workers: e.workers_count,
-              summary: e.summary, observations: e.observations, disciplines: e.disciplines_active,
-            }));
-            const result = await callAction(projectId, "weekly_insights", { diary_entries: weekEntries });
-            if (result) { setAiInsights(result); setAiInsightsOpen(true); }
-          }}>
+          <Button size="sm" variant="outline" disabled={aiInsightsLoading || !hasAnyContext} onClick={handleInsights}>
             {aiInsightsLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
             Insights da semana
           </Button>

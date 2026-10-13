@@ -22,6 +22,11 @@ const mocks = vi.hoisted(() => ({
   // Estado da obra no mock de useProjectOnboarding
   overrideSections: null as OnboardingSection[] | null,
   followedTemplateId: null as string | null,
+  // Link do portal e dados de evolução da obra
+  portalToken: { token: "tok123" } as { token: string } | null,
+  createToken: vi.fn(),
+  scheduleTasks: [] as unknown[],
+  reports: [] as unknown[],
 }));
 
 // Arrays estáveis entre renders, como o useMemo dos hooks reais.
@@ -86,7 +91,15 @@ vi.mock("@/hooks/useProjectOnboarding", () => ({
 }));
 
 vi.mock("@/hooks/useClientPortalToken", () => ({
-  useClientPortalToken: () => ({ activeToken: { token: "tok123" }, isLoading: false }),
+  useClientPortalToken: () => ({ activeToken: mocks.portalToken, isLoading: false, createToken: mocks.createToken, isCreating: false }),
+}));
+
+vi.mock("@/hooks/useScheduleTasks", () => ({
+  useScheduleTasks: () => ({ items: mocks.scheduleTasks }),
+}));
+
+vi.mock("@/hooks/useWeeklyReports", () => ({
+  useWeeklyReports: () => ({ reports: mocks.reports }),
 }));
 
 import OnboardingTemplateTab from "@/components/settings/OnboardingTemplateTab";
@@ -104,6 +117,10 @@ beforeEach(() => {
   };
   mocks.overrideSections = null;
   mocks.followedTemplateId = null;
+  mocks.portalToken = { token: "tok123" };
+  mocks.createToken.mockReset();
+  mocks.scheduleTasks = [];
+  mocks.reports = [];
 });
 
 describe("Configurações → Onboarding (modelos)", () => {
@@ -277,5 +294,34 @@ describe("Projeto → Onboarding (modelo por obra)", () => {
     render(<ProjectOnboardingTab projectId="p1" />);
     fireEvent.click(screen.getByRole("switch", { name: "Mostrar onboarding no portal desta obra" }));
     expect(mocks.setEnabled).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("Projeto → Onboarding independente do link do portal", () => {
+  it("sem link do portal, edita e mostra o preview, e gera o link ali mesmo", () => {
+    mocks.portalToken = null;
+    render(<ProjectOnboardingTab projectId="p1" projectName="Apto 101" />);
+    expect(screen.queryByText(/aba Acompanhamento/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("Boas-vindas").length).toBeGreaterThanOrEqual(2); // editor + preview
+    expect(screen.queryByRole("link", { name: /Abrir portal/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Gerar link do portal/ }));
+    expect(mocks.createToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("preview e 'Ver como o cliente' usam os dados reais da obra nas variáveis", () => {
+    mocks.sectionsByTemplate.tpl = [
+      emptySection({ id: "t1", title: "{cliente} — bem-vindos", body: "Estamos em {fase}, entrega prevista para {entrega}." }),
+    ];
+    mocks.scheduleTasks = [
+      { id: "s1", task_name: "Marcenaria", discipline: "Marcenaria", status: "em_execucao", start_date: "2026-01-01", end_date: "2099-12-31", progress_percentage: 30 },
+    ];
+    render(<ProjectOnboardingTab projectId="p1" projectName="Apto 101" clientName="Ana & Beto" expectedEndDate="2026-12-20" />);
+    expect(screen.getAllByText(/Estamos em Marcenaria, entrega prevista para 20 de dezembro\./).length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText(/Madalena/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Ver como o cliente/ }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Ana & Beto")).toBeInTheDocument();
+    expect(within(dialog).getByText(/Estamos em Marcenaria/)).toBeInTheDocument();
   });
 });

@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { RichTextField } from "@/components/settings/proposal-blocks/RichTextField";
 import { OnboardingView } from "./OnboardingView";
 import { uploadOnboardingMedia } from "@/hooks/useOnboardingTemplate";
-import { emptySection, moveSection, parseVideoUrl, SAMPLE_PLACEHOLDERS, validateVideoUrl, type OnboardingSection } from "@/lib/onboarding";
+import { emptySection, moveSection, ONBOARDING_PLACEHOLDERS, parseVideoUrl, SAMPLE_PLACEHOLDERS, validateVideoUrl, type OnboardingPlaceholders, type OnboardingSection } from "@/lib/onboarding";
 import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
@@ -21,6 +21,11 @@ interface Props {
   disabled?: boolean;
   /** Título mostrado no preview (nome da obra). */
   previewHeading?: string;
+  /**
+   * Dados reais da obra para as variáveis ({cliente}, {fase}...). Sem isso
+   * (editor de modelos), o preview usa valores de exemplo.
+   */
+  placeholders?: OnboardingPlaceholders;
 }
 
 const VIDEO_KIND_LABEL: Record<string, string> = {
@@ -207,7 +212,7 @@ function SectionFields({
  * a aba da obra): adicionar, remover, reordenar, ligar/desligar e editar
  * cada seção, com preview ao lado do jeito que o cliente vê.
  */
-export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, disabled, previewHeading }: Props) {
+export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, disabled, previewHeading, placeholders }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const patch = (id: string, p: Partial<OnboardingSection>) => onChange(sections.map((s) => (s.id === id ? { ...s, ...p } : s)));
@@ -232,9 +237,25 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
           Seções
           <InfoHint>
             A <strong>primeira seção é a capa</strong> (vídeo de boas-vindas em destaque); as seguintes viram os <strong>passos numerados</strong> 01, 02, 03.
-            Use <code>{"{cliente}"}</code> e <code>{"{projeto}"}</code> nos textos para puxar o nome do cliente e da obra.
+            Os textos aceitam as variáveis abaixo, que o portal preenche com os dados da obra (clique para copiar).
           </InfoHint>
         </p>
+        <div className="flex flex-wrap gap-1.5" aria-label="Variáveis disponíveis">
+          {ONBOARDING_PLACEHOLDERS.map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              title={`${v.label}. Clique para copiar.`}
+              className="rounded border bg-muted/40 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={() => {
+                navigator.clipboard?.writeText(`{${v.key}}`);
+                toast({ title: `{${v.key}} copiado`, description: v.label });
+              }}
+            >
+              {`{${v.key}}`}
+            </button>
+          ))}
+        </div>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="onboarding-sections">
             {(provided) => (
@@ -301,7 +322,9 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5">
             Preview: como o cliente vê
-            <InfoHint>Tela de boas-vindas do portal, com nomes de exemplo. Seções desligadas aparecem esmaecidas aqui e somem no portal.</InfoHint>
+            <InfoHint>
+              Tela de boas-vindas do portal, {placeholders ? "com os dados desta obra" : "com dados de exemplo"}. Seções desligadas aparecem esmaecidas aqui e somem no portal.
+            </InfoHint>
           </CardTitle>
         </CardHeader>
         <CardContent className="max-h-[70vh] overflow-y-auto p-2">
@@ -310,7 +333,7 @@ export function OnboardingSectionsEditor({ sections, onChange, uploadFolder, dis
           ) : (
             <OnboardingView
               sections={sections}
-              placeholders={{ cliente: SAMPLE_PLACEHOLDERS.cliente, projeto: previewHeading || SAMPLE_PLACEHOLDERS.projeto }}
+              placeholders={placeholders ?? { ...SAMPLE_PLACEHOLDERS, projeto: previewHeading || SAMPLE_PLACEHOLDERS.projeto }}
               onEnter={() => undefined}
               showInactive
               compact

@@ -3,18 +3,30 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Copy, ExternalLink, Layers, RotateCcw, Save, Undo2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Copy, ExternalLink, Eye, Layers, Link2, RotateCcw, Save, Undo2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useProjectOnboarding } from "@/hooks/useProjectOnboarding";
 import { useClientPortalToken } from "@/hooks/useClientPortalToken";
 import { OnboardingSectionsEditor } from "@/components/onboarding/OnboardingSectionsEditor";
-import { cloneSectionsForProject, invalidVideoSections, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
+import { useScheduleTasks } from "@/hooks/useScheduleTasks";
+import { useWeeklyReports } from "@/hooks/useWeeklyReports";
+import { OnboardingView } from "@/components/onboarding/OnboardingView";
+import { buildOnboardingPlaceholders, cloneSectionsForProject, invalidVideoSections, sectionsEqual, type OnboardingSection } from "@/lib/onboarding";
+import type { PortalTask, PortalWeeklyReport } from "@/lib/portal";
 import { InvalidVideosNotice } from "@/components/onboarding/InvalidVideosNotice";
 import { InfoHint } from "@/components/visual/InfoHint";
 
 interface Props {
   projectId: string;
   projectName?: string;
+  /** Dados da obra para as variáveis do onboarding ({cliente}, {entrega}...). */
+  clientName?: string | null;
+  address?: string | null;
+  city?: string | null;
+  startDate?: string | null;
+  expectedEndDate?: string | null;
+  moveInDate?: string | null;
 }
 
 /**
@@ -25,13 +37,33 @@ interface Props {
  * mudança nas seções, a obra ganha a própria cópia e deixa de ser afetada
  * pelo modelo; "Voltar a seguir o modelo" apaga a cópia.
  */
-export function ProjectOnboardingTab({ projectId, projectName }: Props) {
+export function ProjectOnboardingTab({ projectId, projectName, clientName, address, city, startDate, expectedEndDate, moveInDate }: Props) {
   const {
     effectiveSections, templateSections, template, templates, defaultTemplate, followedTemplateId,
     usesTemplate, isEnabled, isLoading, isFetched, dataUpdatedAt,
     saveOverride, setTemplate, setEnabled, resetToTemplate,
   } = useProjectOnboarding(projectId);
-  const { activeToken } = useClientPortalToken(projectId);
+  const { activeToken, createToken, isCreating } = useClientPortalToken(projectId);
+  const { items: scheduleTasks } = useScheduleTasks(projectId);
+  const { reports } = useWeeklyReports(projectId);
+  const [fullPreview, setFullPreview] = useState(false);
+
+  // Mesmas variáveis que o portal preenche, com os dados reais desta obra.
+  const placeholders = useMemo(
+    () =>
+      buildOnboardingPlaceholders({
+        clientName,
+        projectName,
+        address,
+        city,
+        startDate,
+        expectedEndDate,
+        moveInDate,
+        tasks: (scheduleTasks ?? []) as unknown as PortalTask[],
+        reports: (reports ?? []) as unknown as PortalWeeklyReport[],
+      }),
+    [clientName, projectName, address, city, startDate, expectedEndDate, moveInDate, scheduleTasks, reports],
+  );
 
   // Rascunho: quando a obra segue um modelo, o rascunho é uma cópia com
   // ids novos (é o que vira cópia personalizada ao salvar).
@@ -116,7 +148,10 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
             <Switch checked={isEnabled} aria-label="Mostrar onboarding no portal desta obra" onCheckedChange={(v) => setEnabled.mutate(v)} disabled={setEnabled.isPending} />
             Visível no portal
           </label>
-          {portalUrl && (
+          <Button size="sm" variant="outline" onClick={() => setFullPreview(true)} disabled={draft.length === 0}>
+            <Eye className="h-4 w-4 mr-1" /> Ver como o cliente
+          </Button>
+          {portalUrl ? (
             <>
               <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(portalUrl); toast({ title: "Link do portal copiado" }); }}>
                 <Copy className="h-4 w-4 mr-1" /> Copiar link do portal
@@ -125,6 +160,10 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
                 <a href={portalUrl} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4 mr-1" /> Abrir portal</a>
               </Button>
             </>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => createToken()} disabled={isCreating}>
+              <Link2 className="h-4 w-4 mr-1" /> {isCreating ? "Gerando link…" : "Gerar link do portal"}
+            </Button>
           )}
         </div>
       </div>
@@ -167,7 +206,7 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
 
       {!portalUrl && (
         <p className="text-xs text-muted-foreground rounded-md border border-dashed p-3">
-          Esta obra ainda não tem link do portal do cliente. Gere o link na aba Acompanhamento para o cliente acessar o onboarding.
+          Você já pode montar, ajustar e ver o onboarding desta obra. O link do portal só é necessário para enviar ao cliente: use "Gerar link do portal" quando quiser compartilhar.
         </p>
       )}
 
@@ -201,7 +240,19 @@ export function ProjectOnboardingTab({ projectId, projectName }: Props) {
 
       <InvalidVideosNotice errors={videoErrors} />
 
-      <OnboardingSectionsEditor sections={draft} onChange={setDraft} uploadFolder={projectId} disabled={saveOverride.isPending} previewHeading={projectName} />
+      <OnboardingSectionsEditor sections={draft} onChange={setDraft} uploadFolder={projectId} disabled={saveOverride.isPending} previewHeading={projectName} placeholders={placeholders} />
+
+      {/* Tela de boas-vindas em tamanho real, com os dados da obra, sem precisar do link do portal. */}
+      <Dialog open={fullPreview} onOpenChange={setFullPreview}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="px-6 pt-5">
+            <DialogTitle>Como o cliente vê{dirty ? " (rascunho, ainda não salvo)" : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="trilha p-2 sm:p-4">
+            <OnboardingView sections={draft} placeholders={placeholders} onEnter={() => setFullPreview(false)} enterLabel="Fechar visualização" />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
         <AlertDialogContent>
