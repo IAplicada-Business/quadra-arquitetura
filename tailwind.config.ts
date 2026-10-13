@@ -22,9 +22,9 @@ export default {
       },
       boxShadow: {
         xs: 'var(--shadow-xs)',
-        soft: 'var(--shadow-sm)',
-        elev: 'var(--shadow-md)',
-        float: 'var(--shadow-lg)',
+        soft: 'var(--shadow-soft)',
+        elev: 'var(--shadow-card)',
+        float: 'var(--shadow-elevated)',
         card: 'var(--shadow-card)',
         elevated: 'var(--shadow-elevated)',
       },

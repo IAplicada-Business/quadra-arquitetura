@@ -2,13 +2,14 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-// Refresh visual Sprint 5: cards ganham raio maior (rounded-xl), borda
-// mais sutil e sombra multi-layer. Mantemos a API do shadcn.
+// Onda 4 do padrão IAplicada: card sem borda, raio base (--radius, 16px)
+// e elevação leve no hover. rounded-lg aqui é maior que o rounded-xl de
+// antes: lg está mapeado para var(--radius). Mantemos a API do shadcn.
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-border/70 bg-card text-card-foreground shadow-soft transition-shadow",
+      "rounded-lg bg-card text-card-foreground shadow-soft transition-shadow hover:shadow-elev",
       className,
     )}
     {...props}
