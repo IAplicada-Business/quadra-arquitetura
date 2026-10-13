@@ -31,7 +31,10 @@
     --muted-foreground: 220 12% 45%;
 
     --accent: 6 40% 60%;                 /* #C4756E — terracota */
-    --accent-foreground: 0 0% 100%;
+    /* Navy, não branco: branco sobre o terracota dá 3,37 de contraste e
+       reprova em texto normal. O tema escuro já usava navy aqui — isto
+       alinha os dois. O fundo terracota não muda. */
+    --accent-foreground: 220 47% 14%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -55,7 +58,14 @@
     --success: 152 50% 38%;
     --success-foreground: 0 0% 100%;
     --warning: 32 88% 52%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 220 47% 18%;   /* branco sobre âmbar dava 2,48 */
+
+    /* "ink" = cor da LETRA quando ela é escrita sobre fundo claro ou
+       sobre a própria cor em tinta fraca (bg-warning/15, bg-accent/10).
+       Os badges de status usavam a cor cheia como texto e ficavam em
+       2,17 e 2,88. Nenhum fundo muda — muda só a letra. */
+    --warning-ink: 32 88% 32%;
+    --accent-ink: 6 40% 42%;
 
     /* Tipografia da marca */
     --font-display: 'Cormorant Garamond', serif;
@@ -186,7 +196,11 @@
     --success: 152 45% 40%;
     --success-foreground: 0 0% 100%;
     --warning: 32 78% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 220 47% 10%;
+
+    /* No escuro a letra vai para o lado claro da cor, não para o escuro. */
+    --warning-ink: 32 80% 64%;
+    --accent-ink: 6 55% 72%;
   }
 }
 
@@ -362,7 +376,9 @@
   --muted: 35 30% 90%;
   --muted-foreground: 234 18% 42%;
   --accent: 18 43% 59%;
-  --accent-foreground: 0 0% 100%;
+  --accent-foreground: 234 50% 20%;    /* branco aqui dava 3,06 */
+  --accent-ink: 18 48% 36%;
+  --warning-ink: 18 48% 36%;
   --border: 35 22% 82%;
   --input: 35 22% 82%;
   --ring: 18 43% 59%;

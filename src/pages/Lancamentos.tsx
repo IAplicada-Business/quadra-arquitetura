@@ -385,7 +385,7 @@ export default function Lancamentos() {
                       item.status === "pago" ? "bg-success/10 text-success border-success/30" :
                       item.status === "atrasado" ? "bg-destructive/10 text-destructive border-destructive/30" :
                       item.status === "cancelado" ? "bg-muted text-muted-foreground" :
-                      "bg-warning/10 text-warning border-warning/30"
+                      "bg-warning/10 text-warning-ink border-warning/30"
                     }>
                       {item.status === "pago" ? "Pago/Recebido" :
                        item.status === "atrasado" ? "Atrasado" :

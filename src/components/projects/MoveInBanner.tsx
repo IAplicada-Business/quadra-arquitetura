@@ -15,7 +15,7 @@ export function MoveInBanner({ moveInDate, today }: { moveInDate: string | null;
   const tone = days !== null && days < 0
     ? { box: "bg-destructive/5 border-destructive/30", icon: "text-destructive" }
     : days !== null && days <= 14
-      ? { box: "bg-warning/5 border-warning/30", icon: "text-warning" }
+      ? { box: "bg-warning/5 border-warning/30", icon: "text-warning-ink" }
       : { box: "bg-success/5 border-success/30", icon: "text-success" };
   const label = days === null
     ? "—"

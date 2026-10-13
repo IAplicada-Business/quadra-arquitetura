@@ -79,7 +79,7 @@ export function InstallPwaButton({ variant = "header" }: InstallPwaButtonProps) 
   return (
     <button
       onClick={handleInstall}
-      className="hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-accent/15 text-accent hover:bg-accent/25 text-xs font-medium transition-colors"
+      className="hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-accent/15 text-accent-ink hover:bg-accent/25 text-xs font-medium transition-colors"
       title="Instalar Quadra como aplicativo no seu dispositivo"
     >
       <Download className="h-3.5 w-3.5" />

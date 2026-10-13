@@ -32,14 +32,14 @@ function formatDate(d: string | null | undefined) {
 }
 
 const paymentStatusConfig: Record<string, { label: string; className: string }> = {
-  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-warning/30" },
+  pendente: { label: "Pendente", className: "bg-warning/15 text-warning-ink border-warning/30" },
   notificado: { label: "Notificado", className: "bg-primary/15 text-primary border-primary/30" },
   pago: { label: "Pago", className: "bg-success/15 text-success border-success/30" },
   atrasado: { label: "Atrasado", className: "bg-destructive/15 text-destructive border-destructive/30" },
 };
 
 function MarginBadge({ margin }: { margin: number }) {
-  const color = margin > 20 ? "bg-success/15 text-success" : margin >= 10 ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive";
+  const color = margin > 20 ? "bg-success/15 text-success" : margin >= 10 ? "bg-warning/15 text-warning-ink" : "bg-destructive/15 text-destructive";
   return <Badge variant="outline" className={`${color} text-sm font-bold`}>{margin.toFixed(1)}%</Badge>;
 }
 
@@ -291,7 +291,7 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
             </Card>
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Pendente</CardTitle></CardHeader>
-              <CardContent><p className="text-lg font-bold text-warning">{formatCurrency(paymentTotals.pending)}</p></CardContent>
+              <CardContent><p className="text-lg font-bold text-warning-ink">{formatCurrency(paymentTotals.pending)}</p></CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Total Geral</CardTitle></CardHeader>

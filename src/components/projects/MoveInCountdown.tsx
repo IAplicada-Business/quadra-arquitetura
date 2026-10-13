@@ -36,7 +36,7 @@ export function MoveInCountdown({ moveInDate, context, compact }: MoveInCountdow
   const accent = isOverdue
     ? "text-destructive"
     : isClose
-    ? "text-accent"
+    ? "text-accent-ink"
     : "text-primary";
 
   const label = isOverdue

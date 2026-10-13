@@ -173,7 +173,7 @@ export function AIChatBox() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-sidebar">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center">
-                  <MessageCircle className="h-4 w-4 text-accent" />
+                  <MessageCircle className="h-4 w-4 text-accent-ink" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">Assistente IA</h3>
@@ -223,7 +223,7 @@ export function AIChatBox() {
                         className={cn(
                           "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer text-xs group transition-colors",
                           conv.id === currentConversationId
-                            ? "bg-accent/10 text-accent"
+                            ? "bg-accent/10 text-accent-ink"
                             : "hover:bg-muted text-foreground"
                         )}
                       >
@@ -259,7 +259,7 @@ export function AIChatBox() {
                 <div className="space-y-4">
                   <div className="text-center py-4">
                     <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-3">
-                      <MessageCircle className="h-6 w-6 text-accent" />
+                      <MessageCircle className="h-6 w-6 text-accent-ink" />
                     </div>
                     <p className="text-sm font-medium text-foreground">Como posso ajudar?</p>
                     <p className="text-xs text-muted-foreground mt-1">

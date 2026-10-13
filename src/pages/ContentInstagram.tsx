@@ -423,7 +423,7 @@ export default function ContentInstagram() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
-                          {insp.is_favorite && <Star className="h-3.5 w-3.5 text-warning fill-warning" />}
+                          {insp.is_favorite && <Star className="h-3.5 w-3.5 text-warning-ink fill-warning" />}
                           <p className="font-medium text-sm truncate">{insp.title}</p>
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
