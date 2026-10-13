@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
-import { BookOpen, Calendar, CheckSquare, Home, Images, MessageCircle, Newspaper, Wallet } from "lucide-react";
+import { BookOpen, CheckSquare, Images, MessageCircle, Milestone, Newspaper, Wallet } from "lucide-react";
 import { PORTAL_TABS, WHATSAPP_URL, type PortalTab } from "@/lib/portal";
 
-const TAB_ICONS: Record<PortalTab, typeof Home> = {
-  inicio: Home,
-  cronograma: Calendar,
+const TAB_ICONS: Record<PortalTab, typeof Milestone> = {
+  inicio: Milestone,
   pendencias: CheckSquare,
   galeria: Images,
   orcamento: Wallet,
@@ -108,7 +107,7 @@ export function TrilhaShell({ clientName, projectName, active, onChange, onShowW
 
       {/* Barra inferior no celular */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--trilha-areia)] bg-[var(--trilha-creme)]/95 backdrop-blur md:hidden" aria-label="Telas da trilha (celular)">
-        <ul className="grid grid-cols-6">
+        <ul className="grid grid-cols-5">
           {PORTAL_TABS.map((t) => {
             const Icon = TAB_ICONS[t.key];
             const isActive = t.key === active;

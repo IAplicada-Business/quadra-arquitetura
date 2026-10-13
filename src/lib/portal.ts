@@ -73,9 +73,40 @@ export interface PortalPendingResponse {
   created_at: string;
 }
 
+/** Atividade do cronograma (project_activities), base dos blocos da trilha. */
+export interface PortalActivity {
+  id: string;
+  name: string;
+  discipline: string | null;
+  status: string | null;
+  progress_percent: number | null;
+  start_date: string | null;
+  end_date: string | null;
+}
+
+/** Item do Fechamento Cliente (o que o cliente precisa fechar/comprar). */
+export interface PortalClosingItem {
+  id: string;
+  description: string;
+  closing_date: string | null;
+  delivery_date: string | null;
+  status: string;
+}
+
+/** Visita técnica agendada (só tipo e data). */
+export interface PortalVisit {
+  id: string;
+  visit_date: string;
+  visit_type: string | null;
+}
+
 export interface PortalData {
   project: PortalProject;
   tasks: PortalTask[];
+  /** Atividades do Cronograma Reverso (edge function nova; antiga não manda). */
+  activities?: PortalActivity[];
+  closing_items?: PortalClosingItem[];
+  visits?: PortalVisit[];
   payments: PortalPayment[];
   invoices: PortalInvoice[];
   photos: PortalPhoto[];
@@ -89,7 +120,7 @@ export interface PortalData {
 /* Navegação                                                           */
 /* ------------------------------------------------------------------ */
 
-export type PortalTab = "inicio" | "cronograma" | "pendencias" | "galeria" | "orcamento" | "resumos";
+export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "resumos";
 
 export interface PortalTabDef {
   key: PortalTab;
@@ -99,8 +130,7 @@ export interface PortalTabDef {
 }
 
 export const PORTAL_TABS: PortalTabDef[] = [
-  { key: "inicio", label: "Início", short: "Início" },
-  { key: "cronograma", label: "Cronograma", short: "Cronograma" },
+  { key: "inicio", label: "Trilha", short: "Trilha" },
   { key: "pendencias", label: "Minhas pendências", short: "Pendências" },
   { key: "galeria", label: "Galeria", short: "Galeria" },
   { key: "orcamento", label: "Orçamento", short: "Orçamento" },
@@ -111,7 +141,11 @@ export function isPortalTab(v: string): v is PortalTab {
   return PORTAL_TABS.some((t) => t.key === v);
 }
 
-/** Aba a partir do hash da URL (#pendencias). Desconhecido => início. */
+/**
+ * Aba a partir do hash da URL (#pendencias). Desconhecido => trilha.
+ * Links antigos para #cronograma caem na trilha, que agora mostra os
+ * blocos de construção e as próximas entregas.
+ */
 export function tabFromHash(hash: string | null | undefined): PortalTab {
   const key = (hash ?? "").replace(/^#/, "").trim().toLowerCase();
   return isPortalTab(key) ? key : "inicio";

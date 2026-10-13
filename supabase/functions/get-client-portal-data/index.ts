@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
     const projectId = tokenData.project_id;
 
     // Fetch all data in parallel
-    const [projectRes, tasksRes, paymentsRes, invoicesRes, diaryRes, reportsRes, pendingRes] =
+    const nowIso = new Date().toISOString();
+    const [projectRes, tasksRes, paymentsRes, invoicesRes, diaryRes, reportsRes, pendingRes, activitiesRes, closingRes, visitsRes] =
       await Promise.all([
         supabase
           .from("projects")
@@ -100,6 +101,27 @@ Deno.serve(async (req) => {
           .select("id, weekly_report_id, pending_item, response_text, status, responded_at, client_name, created_at")
           .eq("project_id", projectId)
           .order("created_at", { ascending: false }),
+        // Trilha simplificada: blocos de construção / escopos entregues
+        // saem das atividades do Cronograma Reverso.
+        supabase
+          .from("project_activities")
+          .select("id, name, discipline, status, progress_percent, start_date, end_date")
+          .eq("project_id", projectId)
+          .order("position", { ascending: true }),
+        // Fechamento Cliente: o que depende do cliente (adoção / próximas entregas).
+        supabase
+          .from("client_closing_schedule")
+          .select("id, description, closing_date, delivery_date, status")
+          .eq("project_id", projectId)
+          .order("closing_date", { ascending: true }),
+        // Visitas futuras: só data e tipo (as notas são internas).
+        supabase
+          .from("site_visits")
+          .select("id, visit_date, visit_type")
+          .eq("project_id", projectId)
+          .gte("visit_date", nowIso)
+          .order("visit_date", { ascending: true })
+          .limit(20),
       ]);
 
     if (projectRes.error) {
@@ -187,6 +209,9 @@ Deno.serve(async (req) => {
         photos: photos.slice(0, 12),
         weekly_reports: reportsRes.data ?? [],
         pending_responses: pendingRes.data ?? [],
+        activities: activitiesRes.data ?? [],
+        closing_items: closingRes.data ?? [],
+        visits: visitsRes.data ?? [],
         onboarding,
       }),
       {
