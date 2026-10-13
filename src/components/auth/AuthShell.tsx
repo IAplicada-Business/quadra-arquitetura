@@ -13,11 +13,13 @@ interface AuthShellProps {
   subtitle?: ReactNode;
   /** Blobs animados atrás do logo (só no login). */
   blobs?: boolean;
+  /** Linha "Quadra · Gestão" acima do título. O login esconde. */
+  showEyebrow?: boolean;
   children?: ReactNode;
   footer?: ReactNode;
 }
 
-export function AuthShell({ title, subtitle, blobs = false, children, footer }: AuthShellProps) {
+export function AuthShell({ title, subtitle, blobs = false, showEyebrow = true, children, footer }: AuthShellProps) {
   return (
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-x-hidden bg-deep px-4 py-12 text-deep-foreground">
       {blobs && <AuthBlobs />}
@@ -25,8 +27,8 @@ export function AuthShell({ title, subtitle, blobs = false, children, footer }: 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <img src={logoBege} alt="Quadra Arquitetura" className="h-24 w-auto object-contain" />
-          <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.35em] text-deep-foreground/60">Quadra · Gestão</p>
-          <h1 className="mt-3 font-display text-3xl font-light leading-tight sm:text-4xl">{title}</h1>
+          {showEyebrow && <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.35em] text-deep-foreground/60">Quadra · Gestão</p>}
+          <h1 className={`${showEyebrow ? "mt-3" : "mt-6"} font-display text-3xl font-light leading-tight sm:text-4xl`}>{title}</h1>
           {subtitle && <p className="mt-3 text-sm leading-relaxed text-deep-foreground/70">{subtitle}</p>}
         </div>
 

@@ -30,8 +30,8 @@ export default function Login() {
   return (
     <AuthShell
       blobs
+      showEyebrow={false}
       title="Bem-vindo(a) de volta"
-      subtitle="Acesse o sistema de gestão Quadra"
       footer={
         <Link to="/esqueci-senha" className={authLinkClass}>
           Esqueci minha senha
