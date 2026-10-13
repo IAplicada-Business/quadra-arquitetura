@@ -235,13 +235,16 @@ export function Fio({ className = "" }: { className?: string }) {
 export function Rotulo({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div className={`flex items-center gap-4 ${className}`}>
+      {/* min-w-0 e não shrink-0: há rótulos longos ("Como você acompanha
+          o andamento"), e travar o encolhimento estourava a tela a 320px
+          em vez de deixar o texto quebrar em duas linhas. */}
       <p
-        className="text-brand-terracota shrink-0"
+        className="text-brand-terracota min-w-0"
         style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
       >
         {children}
       </p>
-      <Fio className="flex-1 bg-brand-terracota/30" />
+      <Fio className="flex-1 min-w-[1.5rem] bg-brand-terracota/30" />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
         {/* ── Painel ─────────────────────────────────────────────── */}
         <SequenciaEntrada
           atraso={0.15}
-          className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-10 lg:pl-container lg:pr-12 lg:py-20"
+          className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-10 lg:pl-14 lg:pr-12 lg:py-20 xl:pl-20"
         >
           <Item>
           <Rotulo className="mb-6">{content.eyebrow}</Rotulo>

@@ -28,7 +28,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
     <section ref={secao} id="sobre" className="bg-brand-creme overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         {/* ── Texto ──────────────────────────────────────────────── */}
-        <Revelar className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-10 lg:pl-container lg:pr-12 lg:py-24">
+        <Revelar className="order-2 lg:order-1 min-w-0 px-6 py-16 md:px-10 lg:pl-14 lg:pr-12 lg:py-24 xl:pl-20">
           <Rotulo className="mb-5">{content.eyebrow}</Rotulo>
 
           <h2
