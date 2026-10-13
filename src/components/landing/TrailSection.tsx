@@ -50,7 +50,7 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
               {content.eyebrow}
             </p>
             <h2
-              className="text-brand-navy mb-6"
+              className="title-balance text-brand-navy mb-6"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: 400,
@@ -77,14 +77,14 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
               {content.items.map((item, i) => (
                 <li key={i} className="flex gap-3 min-w-0">
                   <span aria-hidden className="text-brand-terracota shrink-0">
-                    —
+                    ·
                   </span>
                   <p
                     className="text-brand-navy/60 min-w-0"
                     style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
                   >
                     <span className="text-brand-navy font-medium">{item.title}</span>
-                    {item.desc ? <> — {item.desc}</> : null}
+                    {item.desc ? <>: {item.desc}</> : null}
                   </p>
                 </li>
               ))}

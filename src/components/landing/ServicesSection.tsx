@@ -45,7 +45,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
             {content.eyebrow}
           </p>
           <h2
-            className="text-brand-navy mb-5"
+            className="title-balance text-brand-navy mb-5"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,
@@ -88,7 +88,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                 )}
 
                 <h3
-                  className="text-brand-navy mb-4"
+                  className="title-balance text-brand-navy mb-4"
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "clamp(1.5rem, 2.2vw, 1.875rem)",
@@ -135,7 +135,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                             style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
                           >
                             <span aria-hidden className="text-brand-terracota shrink-0">
-                              —
+                              ·
                             </span>
                             <span className="min-w-0">{item}</span>
                           </li>

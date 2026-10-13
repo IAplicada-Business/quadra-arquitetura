@@ -7,6 +7,10 @@ import { TrailSection } from "@/components/landing/TrailSection";
 import { CasesSection } from "@/components/landing/CasesSection";
 import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
 import { AboutSection } from "@/components/landing/AboutSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { LeadMagnetSection } from "@/components/landing/LeadMagnetSection";
+import { FaqSection } from "@/components/landing/FaqSection";
+import { BlogSection } from "@/components/landing/BlogSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import type { SiteContent, SiteSectionKey } from "@/lib/siteContent";
@@ -32,22 +36,18 @@ function Section({ section, content }: { section: SiteSectionKey; content: SiteC
       return <ArchitectsSection content={content.architects} />;
     case "about":
       return <AboutSection content={content.about} />;
+    case "testimonials":
+      return <TestimonialsSection content={content.testimonials} />;
+    case "leadMagnet":
+      return <LeadMagnetSection content={content.leadMagnet} />;
+    case "faq":
+      return <FaqSection content={content.faq} />;
+    case "blog":
+      return <BlogSection content={content.blog} />;
     case "contact":
       return <ContactSection content={content.contact} preview />;
     case "footer":
       return <LandingFooter content={content.footer} />;
-    /* As dobras das etapas seguintes ainda não têm componente. O
-       TypeScript cobra cada chave do SiteSectionKey aqui, então a
-       ausência aparece em tempo de compilação, não como tela branca. */
-    case "testimonials":
-    case "leadMagnet":
-    case "faq":
-    case "blog":
-      return (
-        <div className="px-10 py-16 text-center text-sm text-muted-foreground">
-          Esta dobra ainda não foi publicada no site. O conteúdo já pode ser escrito e fica salvo.
-        </div>
-      );
   }
 }
 

@@ -35,7 +35,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
           </p>
 
           <h2
-            className="text-brand-navy mb-6"
+            className="title-balance text-brand-navy mb-6"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,

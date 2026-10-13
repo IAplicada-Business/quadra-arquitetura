@@ -1,13 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Instagram, Phone, Mail, MapPin, Loader2, Send, Link2, type LucideIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Instagram, Phone, Mail, MapPin, Loader2, Link2, type LucideIcon } from "lucide-react";
 import { useSiteLead, type SiteLeadPayload } from "@/hooks/useSiteLead";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
-import { SITE_DEFAULTS, contactIconKind, type ContactContent, type ContactIconKind } from "@/lib/siteContent";
+import { SITE_DEFAULTS, contactIconKind, splitParagraphs, type ContactContent, type ContactIconKind } from "@/lib/siteContent";
 
 const CONTACT_ICONS: Record<ContactIconKind, LucideIcon> = {
   instagram: Instagram,
@@ -23,114 +19,121 @@ interface ContactSectionProps {
   preview?: boolean;
 }
 
+/** Opções de select vêm do admin, uma por linha. */
+const linhas = (texto: string) => texto.split("\n").map((t) => t.trim()).filter(Boolean);
+
+/**
+ * O formulário da referência: nome, WhatsApp, quem é, onde é a obra e em
+ * que momento está.
+ *
+ * As três últimas respostas não têm coluna em `leads`, então vão
+ * compostas no campo de mensagem, rotuladas. Nenhuma migration para uma
+ * mudança de aparência, e nada se perde — quem abrir o lead no CRM lê as
+ * respostas inteiras. Se um dia valer filtrar por elas, aí sim compensa
+ * coluna de verdade.
+ *
+ * project_type vai como "outro" porque esta versão do formulário não
+ * pergunta o segmento. Deixar o "residencial" de antes rotularia errado
+ * todo lead vindo do site, inclusive os corporativos e de saúde.
+ *
+ * O e-mail saiu: a referência pede WhatsApp, que é por onde a Quadra
+ * responde. A coluna aceita nulo, então o lead entra igual.
+ */
 export function ContactSection({ content = SITE_DEFAULTS.contact, preview = false }: ContactSectionProps) {
   const { mutate: createLead, isPending } = useSiteLead();
-  const [form, setForm] = useState<SiteLeadPayload>({
-    name: "",
-    email: "",
-    phone: "",
-    projectType: "residencial",
-    message: "",
-  });
+  const opcoesQuem = linhas(content.optionsWho);
+  const opcoesMomento = linhas(content.optionsStage);
 
-  const isValid = form.name.trim() && form.email.trim() && form.phone.trim();
+  const [form, setForm] = useState({ nome: "", whatsapp: "", quem: "", onde: "", momento: "" });
+  const [enviado, setEnviado] = useState(false);
+
+  const valido = form.nome.trim().length > 1 && form.whatsapp.trim().length > 7;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || preview) return;
-    createLead(form, {
+    if (!valido || preview || isPending) return;
+
+    const extras = [
+      form.quem && `Você é: ${form.quem}`,
+      form.onde && `Onde é a obra: ${form.onde}`,
+      form.momento && `Em que momento está: ${form.momento}`,
+    ].filter(Boolean);
+
+    const payload: SiteLeadPayload = {
+      name: form.nome.trim(),
+      email: "",
+      phone: form.whatsapp.trim(),
+      projectType: "outro",
+      message: extras.join("\n"),
+    };
+
+    createLead(payload, {
       onSuccess: () => {
-        setForm({ name: "", email: "", phone: "", projectType: "residencial", message: "" });
+        setForm({ nome: "", whatsapp: "", quem: "", onde: "", momento: "" });
+        setEnviado(true);
       },
     });
   };
 
-  return (
-    <section id="contato" className="relative py-24 md:py-32 bg-brand-navy overflow-hidden">
-      {/* Decorative */}
-      <div
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-10 blur-3xl"
-        style={{ background: "hsl(var(--brand-terracota))" }}
-      />
+  const rotulo = { fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.16em", textTransform: "uppercase" as const };
+  const campo =
+    "w-full bg-transparent border-b border-brand-areia/25 py-2.5 text-brand-areia placeholder:text-brand-areia/35 outline-none transition-colors focus:border-brand-terracota min-w-0";
 
-      <div className="relative max-w-7xl mx-auto px-6 md:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-          {/* Left: text + contacts */}
+  return (
+    <section id="contato" className="bg-brand-navy py-20 md:py-28">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+          {/* ── Texto e canais ─────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            className="lg:col-span-5"
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="min-w-0"
           >
             <p
-              className="text-xs mb-5"
-              style={{
-                color: "hsl(var(--brand-terracota))",
-                letterSpacing: "6px",
-                fontFamily: "'Jost', sans-serif",
-                fontWeight: 500,
-              }}
+              className="text-brand-terracota mb-5"
+              style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.22em", fontWeight: 500 }}
             >
               {content.eyebrow}
             </p>
-
             <h2
-              className="mb-8"
+              className="title-balance text-brand-areia mb-6"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(2.25rem, 5vw, 3.75rem)",
-                color: "hsl(var(--brand-areia))",
-                fontWeight: 300,
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
+                fontWeight: 400,
+                fontSize: "clamp(1.75rem, 3vw, 2.5rem)",
+                lineHeight: 1.2,
+                letterSpacing: "-0.02em",
               }}
             >
-              <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))" } }} />
+              <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }} />
             </h2>
-
-            <div className="w-12 h-px bg-brand-terracota mb-8" />
-
-            <p
-              className="mb-10"
-              style={{
-                fontFamily: "'Jost', sans-serif",
-                fontSize: "1rem",
-                color: "hsl(var(--brand-areia))",
-                opacity: 0.8,
-                lineHeight: 1.8,
-                fontWeight: 300,
-              }}
+            <div
+              className="text-brand-areia/70 space-y-4 max-w-lg mb-9"
+              style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
             >
-              <RichText text={content.text} />
-            </p>
+              {splitParagraphs(content.text).map((p, i) => (
+                <p key={i}>
+                  <RichText text={p} />
+                </p>
+              ))}
+            </div>
 
-            <ul className="space-y-4">
+            <ul className="space-y-3.5">
               {content.contacts.map((c, i) => {
                 const Icon = CONTACT_ICONS[contactIconKind(c.desc)];
                 return (
-                  <li key={i}>
+                  <li key={i} className="min-w-0">
                     <a
                       href={c.desc || undefined}
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-start gap-4 text-brand-areia/80 hover:text-brand-areia transition-colors"
+                      rel="noreferrer"
+                      className="group inline-flex items-start gap-3 text-brand-areia/70 transition-colors hover:text-brand-areia min-w-0"
+                      style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", fontWeight: 300 }}
                     >
-                      <span
-                        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center border border-brand-terracota/40 transition-all group-hover:bg-brand-terracota group-hover:border-brand-terracota"
-                      >
-                        <Icon className="h-4 w-4" strokeWidth={1.5} />
-                      </span>
-                      <span
-                        className="leading-9"
-                        style={{
-                          fontFamily: "'Jost', sans-serif",
-                          fontSize: "0.9375rem",
-                          fontWeight: 300,
-                        }}
-                      >
-                        {c.title}
-                      </span>
+                      <Icon aria-hidden className="h-4 w-4 mt-0.5 shrink-0 text-brand-terracota" />
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere]">{c.title}</span>
                     </a>
                   </li>
                 );
@@ -138,130 +141,128 @@ export function ContactSection({ content = SITE_DEFAULTS.contact, preview = fals
             </ul>
           </motion.div>
 
-          {/* Right: form */}
+          {/* ── Formulário ─────────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="lg:col-span-7"
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="border border-brand-areia/20 p-7 md:p-9 min-w-0"
           >
-            <form
-              onSubmit={handleSubmit}
-              className="bg-brand-rosa p-8 md:p-12"
-              style={{ fontFamily: "'Jost', sans-serif" }}
-            >
-              <h3
-                className="mb-8"
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "1.75rem",
-                  color: "hsl(var(--brand-navy))",
-                  fontWeight: 400,
-                }}
-              >
-                {content.formTitle}
-              </h3>
+            <h3 className="sr-only">{content.formTitle}</h3>
 
-              <div className="space-y-5">
-                <div>
-                  <Label htmlFor="ln-name" className="text-xs uppercase tracking-widest text-brand-navy/70">
-                    Nome *
-                  </Label>
-                  <Input
-                    id="ln-name"
+            {enviado ? (
+              <div className="py-10 text-center" role="status">
+                <p
+                  className="text-brand-areia mb-3"
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", lineHeight: 1.3 }}
+                >
+                  Mensagem enviada.
+                </p>
+                <p
+                  className="text-brand-areia/60"
+                  style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", fontWeight: 300 }}
+                >
+                  A gente responde no WhatsApp que você deixou.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6 min-w-0">
+                <div className="min-w-0">
+                  <label htmlFor="contato-nome" className="block text-brand-terracota mb-1.5" style={rotulo}>
+                    Seu nome
+                  </label>
+                  <input
+                    id="contato-nome"
+                    value={form.nome}
+                    onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                    placeholder="Como podemos te chamar"
+                    className={campo}
                     required
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="mt-2 bg-transparent border-0 border-b border-brand-navy/20 rounded-none focus-visible:ring-0 focus-visible:border-brand-vinho px-0 text-brand-navy"
-                    placeholder="Seu nome completo"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <Label htmlFor="ln-email" className="text-xs uppercase tracking-widest text-brand-navy/70">
-                      Email *
-                    </Label>
-                    <Input
-                      id="ln-email"
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="mt-2 bg-transparent border-0 border-b border-brand-navy/20 rounded-none focus-visible:ring-0 focus-visible:border-brand-vinho px-0 text-brand-navy"
-                      placeholder="voce@email.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ln-phone" className="text-xs uppercase tracking-widest text-brand-navy/70">
-                      Telefone *
-                    </Label>
-                    <Input
-                      id="ln-phone"
-                      required
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="mt-2 bg-transparent border-0 border-b border-brand-navy/20 rounded-none focus-visible:ring-0 focus-visible:border-brand-vinho px-0 text-brand-navy"
-                      placeholder="(31) 90000-0000"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-xs uppercase tracking-widest text-brand-navy/70">
-                    Tipo de projeto
-                  </Label>
-                  <Select
-                    value={form.projectType}
-                    onValueChange={(v) => setForm({ ...form, projectType: v as SiteLeadPayload["projectType"] })}
-                  >
-                    <SelectTrigger className="mt-2 bg-transparent border-0 border-b border-brand-navy/20 rounded-none px-0 text-brand-navy focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="residencial">Residencial</SelectItem>
-                      <SelectItem value="comercial">Comercial</SelectItem>
-                      <SelectItem value="saude">Saude</SelectItem>
-                      <SelectItem value="outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="ln-message" className="text-xs uppercase tracking-widest text-brand-navy/70">
-                    Mensagem
-                  </Label>
-                  <Textarea
-                    id="ln-message"
-                    rows={4}
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="mt-2 bg-transparent border-0 border-b border-brand-navy/20 rounded-none focus-visible:ring-0 focus-visible:border-brand-vinho px-0 text-brand-navy resize-none"
-                    placeholder="Conte um pouco sobre o seu projeto..."
+                <div className="min-w-0">
+                  <label htmlFor="contato-whatsapp" className="block text-brand-terracota mb-1.5" style={rotulo}>
+                    WhatsApp
+                  </label>
+                  <input
+                    id="contato-whatsapp"
+                    type="tel"
+                    value={form.whatsapp}
+                    onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                    placeholder="(31) 9 0000-0000"
+                    className={campo}
+                    required
                   />
                 </div>
+
+                {opcoesQuem.length > 0 && (
+                  <div className="min-w-0">
+                    <label htmlFor="contato-quem" className="block text-brand-terracota mb-1.5" style={rotulo}>
+                      Você é
+                    </label>
+                    <select
+                      id="contato-quem"
+                      value={form.quem}
+                      onChange={(e) => setForm({ ...form, quem: e.target.value })}
+                      className={`${campo} [&>option]:text-brand-navy`}
+                    >
+                      <option value="">Cliente final ou arquiteto(a)</option>
+                      {opcoesQuem.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="min-w-0">
+                  <label htmlFor="contato-onde" className="block text-brand-terracota mb-1.5" style={rotulo}>
+                    Onde é a obra
+                  </label>
+                  <input
+                    id="contato-onde"
+                    value={form.onde}
+                    onChange={(e) => setForm({ ...form, onde: e.target.value })}
+                    placeholder="Bairro ou cidade"
+                    className={campo}
+                  />
+                </div>
+
+                {opcoesMomento.length > 0 && (
+                  <div className="min-w-0">
+                    <label htmlFor="contato-momento" className="block text-brand-terracota mb-1.5" style={rotulo}>
+                      Em que momento está
+                    </label>
+                    <select
+                      id="contato-momento"
+                      value={form.momento}
+                      onChange={(e) => setForm({ ...form, momento: e.target.value })}
+                      className={`${campo} [&>option]:text-brand-navy`}
+                    >
+                      <option value="">Pensando, com projeto pronto, obra em andamento…</option>
+                      {opcoesMomento.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <button
                   type="submit"
-                  disabled={!isValid || isPending}
-                  className="group w-full md:w-auto bg-brand-navy text-brand-areia px-10 py-4 text-xs uppercase transition-all hover:bg-[#2d4373] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-3 mt-4"
-                  style={{ letterSpacing: "3px", fontWeight: 500 }}
+                  disabled={!valido || isPending}
+                  className="w-full bg-brand-terracota text-brand-navy py-4 text-sm transition-colors hover:bg-brand-rosa disabled:opacity-45 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                  style={{ fontFamily: "'Jost', sans-serif", fontWeight: 500 }}
                 >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      Solicitar diagnostico gratuito
-                      <Send className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </>
-                  )}
+                  {isPending && <Loader2 aria-hidden className="h-4 w-4 animate-spin" />}
+                  {content.submitLabel}
                 </button>
-              </div>
-            </form>
+              </form>
+            )}
           </motion.div>
         </div>
       </div>

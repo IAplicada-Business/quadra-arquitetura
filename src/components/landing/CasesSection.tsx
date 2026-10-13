@@ -40,7 +40,7 @@ export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: 
           </p>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h2
-              className="text-brand-navy max-w-2xl min-w-0"
+              className="title-balance text-brand-navy max-w-2xl min-w-0"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: 400,

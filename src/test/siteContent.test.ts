@@ -95,7 +95,27 @@ describe("resolveSiteContent", () => {
 
   it("não altera o objeto de padrão", () => {
     resolveSiteContent([row("hero.title", "Outro")]);
-    expect(SITE_DEFAULTS.hero.title).toBe("Alguém que trabalha *só para você* — do número ao tijolo.");
+    expect(SITE_DEFAULTS.hero.title).toBe("Alguém que trabalha *só para você*, do número ao tijolo.");
+  });
+});
+
+/* Regra da Quadra: travessão não entra no texto do site. É fácil voltar
+   sem querer ao escrever conteúdo novo, então fica um teste segurando. */
+describe("texto do site", () => {
+  it("nenhuma dobra usa travessão", () => {
+    const comTravessao: string[] = [];
+    const varrer = (valor: unknown, caminho: string) => {
+      if (typeof valor === "string") {
+        if (valor.includes("\u2014")) comTravessao.push(caminho);
+        return;
+      }
+      if (Array.isArray(valor)) return valor.forEach((v, i) => varrer(v, `${caminho}[${i}]`));
+      if (valor && typeof valor === "object") {
+        for (const [k, v] of Object.entries(valor)) varrer(v, caminho ? `${caminho}.${k}` : k);
+      }
+    };
+    varrer(SITE_DEFAULTS, "");
+    expect(comTravessao).toEqual([]);
   });
 });
 

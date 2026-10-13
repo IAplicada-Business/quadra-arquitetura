@@ -41,7 +41,7 @@ export function ArchitectsSection({ content = SITE_DEFAULTS.architects }: { cont
               {content.eyebrow}
             </p>
             <h2
-              className="text-brand-areia mb-5"
+              className="title-balance text-brand-areia mb-5"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: 400,

@@ -54,7 +54,7 @@ export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: 
                 {content.eyebrow}
               </p>
               <h2
-                className="text-brand-navy mb-5"
+                className="title-balance text-brand-navy mb-5"
                 style={{
                   fontFamily: "'Cormorant Garamond', serif",
                   fontWeight: 400,

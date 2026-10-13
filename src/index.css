@@ -239,6 +239,14 @@
 }
 
 @layer utilities {
+  /* Títulos da landing: o navegador distribui as linhas em vez de
+     encher a primeira e jogar uma palavra sozinha para a última. O texto
+     é editável, então não dá para resolver com quebra na mão. Navegador
+     sem suporte cai na quebra normal, sem estrago. */
+  .title-balance {
+    text-wrap: balance;
+  }
+
   /* Rótulo de categoria do padrão: maiúscula espaçada, peso médio. */
   .label-cat {
     font-size: 11px;
