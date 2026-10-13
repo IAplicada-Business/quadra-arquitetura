@@ -12,6 +12,8 @@
  *             (linha em branco separa parágrafos onde o bloco tem parágrafos)
  *   image     URL pública; "" = imagem padrão que vem com o site
  *   list      lista de itens { title, desc, image?, tag?, bullets? }
+ *   select    uma das opções declaradas no campo; valor fora da lista
+ *             volta ao padrão em vez de quebrar a dobra
  */
 
 export type SiteSectionKey =
@@ -51,7 +53,7 @@ export const SITE_SECTION_KEYS: SiteSectionKey[] = [
   "footer",
 ];
 
-export type SiteFieldType = "text" | "richtext" | "image" | "list";
+export type SiteFieldType = "text" | "richtext" | "image" | "list" | "select";
 
 export interface SiteListItem {
   title: string;
@@ -87,6 +89,8 @@ export interface WhyContent {
 }
 
 export interface JourneyContent {
+  /** Modelo da dobra: etapas, linha do tempo ou cards. */
+  layout: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -126,6 +130,8 @@ export interface ArchitectsContent {
 }
 
 export interface TestimonialsContent {
+  /** Modelo da dobra: cards ou destaque. */
+  layout: string;
   eyebrow: string;
   title: string;
   linkLabel: string;
@@ -151,6 +157,8 @@ export interface FaqContent {
 }
 
 export interface BlogContent {
+  /** Modelo da dobra: cards ou lista. */
+  layout: string;
   eyebrow: string;
   title: string;
   linkLabel: string;
@@ -170,6 +178,8 @@ export interface AboutContent {
 }
 
 export interface ServicesContent {
+  /** Modelo da dobra: fases, lista ou cards. */
+  layout: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -178,6 +188,8 @@ export interface ServicesContent {
 }
 
 export interface PortfolioContent {
+  /** Modelo da dobra: cards ou lista. */
+  layout: string;
   eyebrow: string;
   title: string;
   linkLabel: string;
@@ -232,9 +244,9 @@ export interface SiteContent {
 export const SITE_DEFAULTS: SiteContent = {
   hero: {
     eyebrow: "VIABILIDADE · GERENCIAMENTO · BH",
-    title: "Alguém que trabalha *só para você* — do número ao tijolo.",
+    title: "Alguém que trabalha *só para você*, do número ao tijolo.",
     subtitle:
-      "Você não precisa entender de obra. Precisa saber quem entende. A Quadra coordena orçamento, fornecedores, prazo e execução — e te mantém no controle das decisões.",
+      "Você não precisa entender de obra. Precisa saber quem entende. A Quadra coordena orçamento, fornecedores, prazo e execução, e te mantém no controle das decisões.",
     ctaPrimary: "Falar com a Quadra",
     ctaSecondary: "Ver a jornada completa",
     image: "",
@@ -242,21 +254,22 @@ export const SITE_DEFAULTS: SiteContent = {
       { title: "2022", desc: "DESDE" },
       { title: "50", desc: "PROJETOS ATENDIDOS" },
       { title: "+80h", desc: "ECONOMIZADAS POR OBRA" },
-      { title: "3", desc: "SEGMENTOS: RESIDENCIAL, CORPORATIVO, SAÚDE" },
+      { title: "3", desc: "SEGMENTOS ATENDIDOS" },
     ],
-    note: "Visita técnica na frequência combinada — com relatório a cada visita.",
+    note: "Visita técnica na frequência combinada, com relatório a cada visita.",
   },
   why: {
     eyebrow: "POR QUE A QUADRA",
     title: "Porque, na maioria das obras, cada especialista defende *um lado diferente*.",
     items: [
-      { title: "Construtoras", desc: "entregam a obra — e respondem por ela, não por você." },
-      { title: "Arquitetos autônomos", desc: "entregam o projeto — e seguem em frente quando a obra começa." },
-      { title: "Consultores", desc: "dão conselho pontual — sem acompanhar a execução no dia a dia." },
+      { title: "Construtoras", desc: "entregam a obra e respondem por ela, não por você." },
+      { title: "Arquitetos autônomos", desc: "entregam o projeto e seguem em frente quando a obra começa." },
+      { title: "Consultores", desc: "dão conselho pontual, sem acompanhar a execução no dia a dia." },
     ],
-    closing: "A Quadra trabalha *só para você* — do número ao tijolo.",
+    closing: "A Quadra trabalha *só para você*, do número ao tijolo.",
   },
   services: {
+    layout: "fases",
     eyebrow: "NOSSOS SERVIÇOS",
     title: "Duas fases, *não contratos soltos*",
     subtitle:
@@ -266,7 +279,7 @@ export const SITE_DEFAULTS: SiteContent = {
         tag: "FASE 01",
         title: "Viabilidade",
         desc:
-          "Antes de qualquer decisão, você entende o custo real e a viabilidade da obra — em até 15 dias, com planilha e parecer técnico.",
+          "Antes de qualquer decisão, você entende o custo real e a viabilidade da obra, em até 15 dias, com planilha e parecer técnico.",
         bullets: [
           "EVF · Estudo de Viabilidade Financeira",
           "Levantamento de custos por etapa e disciplina",
@@ -279,7 +292,7 @@ export const SITE_DEFAULTS: SiteContent = {
         tag: "FASE 02",
         title: "Gerenciamento",
         desc:
-          "Visitas técnicas, validação da execução, especificação e acompanhamento de compra, com relatórios — para o projeto sair do papel exatamente como planejado.",
+          "Visitas técnicas, validação da execução, especificação e acompanhamento de compra, com relatórios, para o projeto sair do papel exatamente como planejado.",
         bullets: [
           "Visitas técnicas na frequência combinada",
           "Relatório com fotos a cada visita",
@@ -292,10 +305,11 @@ export const SITE_DEFAULTS: SiteContent = {
     ],
   },
   journey: {
+    layout: "etapas",
     eyebrow: "JORNADA DE GERENCIAMENTO",
     title: "Um caminho claro, do primeiro contato até *a obra em andamento*",
     subtitle:
-      "Nove etapas organizadas em três momentos — entendimento, decisão e execução — para você ter previsibilidade do início ao fim.",
+      "Nove etapas organizadas em três momentos: entendimento, decisão e execução. Assim você tem previsibilidade do início ao fim.",
     moments: [
       { title: "ENTENDIMENTO", desc: "O que a obra exige e quanto ela custa de verdade." },
       { title: "DECISÃO", desc: "Cenários na mesa para você escolher com clareza." },
@@ -310,7 +324,7 @@ export const SITE_DEFAULTS: SiteContent = {
       {
         tag: "ENTENDIMENTO",
         title: "Análise do projeto",
-        desc: "Estudamos plantas, especificações e memoriais para entender exatamente o que a obra exige — e onde estão os pontos de atenção.",
+        desc: "Estudamos plantas, especificações e memoriais para entender exatamente o que a obra exige e onde estão os pontos de atenção.",
       },
       {
         tag: "ENTENDIMENTO",
@@ -320,7 +334,7 @@ export const SITE_DEFAULTS: SiteContent = {
       {
         tag: "DECISÃO",
         title: "Desenhos de cenários",
-        desc: "Apresentamos cenários com diferentes combinações de escopo, prazo e investimento, para você decidir com clareza — nunca no escuro.",
+        desc: "Apresentamos cenários com diferentes combinações de escopo, prazo e investimento, para você decidir com clareza, nunca no escuro.",
       },
       {
         tag: "DECISÃO",
@@ -345,7 +359,7 @@ export const SITE_DEFAULTS: SiteContent = {
       {
         tag: "OBRA",
         title: "Contratações conforme cronograma",
-        desc: "Contratamos cada especialidade — elétrica, hidráulica, marcenaria, acabamentos — no momento certo do cronograma, sem atropelo.",
+        desc: "Contratamos elétrica, hidráulica, marcenaria e acabamentos no momento certo do cronograma, sem atropelo.",
       },
     ],
   },
@@ -354,7 +368,7 @@ export const SITE_DEFAULTS: SiteContent = {
     title: "A Trilha do Cliente",
     body: [
       "Um painel só seu, atualizado a cada visita técnica. Você abre no celular e vê em que ponto a obra está, o que já foi aprovado e o que precisa da sua decisão nos próximos dias.",
-      "A linha do tempo é reversa: tudo é calculado a partir da data em que você quer se mudar — não da data em que começamos. Assim cada atraso aparece como decisão a tomar, não como surpresa no fim.",
+      "A linha do tempo é reversa: tudo é calculado a partir da data em que você quer se mudar, não da data em que começamos. Assim cada atraso aparece como decisão a tomar, não como surpresa no fim.",
     ].join("\n\n"),
     items: [
       { title: "Nada de perguntar “como está a obra?”", desc: "o andamento já está lá quando você abre." },
@@ -380,8 +394,9 @@ export const SITE_DEFAULTS: SiteContent = {
     demoDecisionText: "Aprovar a bancada da cozinha para não atravessar o prazo de fabricação de 30 dias.",
   },
   portfolio: {
+    layout: "cards",
     eyebrow: "CASES",
-    title: "O que foi evitado — *não só o que ficou pronto*",
+    title: "O que foi evitado, *não só o que ficou pronto*",
     linkLabel: "Ver todos os cases",
     linkUrl: "https://instagram.com/quadraarq",
     items: [
@@ -412,10 +427,10 @@ export const SITE_DEFAULTS: SiteContent = {
     eyebrow: "PARA ARQUITETOS",
     title: "Conta com a Quadra",
     body:
-      "Um programa de parceria para arquitetos que querem seguir focados no projeto enquanto alguém especializado cuida da obra — sem perder a autoria nem a relação com o cliente.",
+      "Um programa de parceria para arquitetos que querem seguir focados no projeto enquanto alguém especializado cuida da obra, sem perder a autoria nem a relação com o cliente.",
     promises: [
       { tag: "sim", title: "Mantemos o arquiteto informado e respeitamos a autoria do projeto.", desc: "" },
-      { tag: "sim", title: "Protegemos a relação arquiteto-cliente — atuamos como extensão operacional.", desc: "" },
+      { tag: "sim", title: "Protegemos a relação arquiteto-cliente: atuamos como extensão operacional.", desc: "" },
       { tag: "sim", title: "Você participa ativamente dos grupos da obra, do começo ao fim.", desc: "" },
       { tag: "sim", title: "Você recebe uma senha de acesso à Trilha do Cliente, para apoiar o cliente no acompanhamento.", desc: "" },
       { tag: "nao", title: "Nunca alteramos decisões de projeto sem alinhamento.", desc: "" },
@@ -433,9 +448,9 @@ export const SITE_DEFAULTS: SiteContent = {
     eyebrow: "SOBRE A QUADRA",
     title: "Duas arquitetas, *nenhum outro interesse na mesa*",
     body: [
-      "A Quadra nasceu de uma dúvida que ouvíamos em toda obra: como é que o projeto sai do papel? Entre o desenho aprovado e a casa pronta existe um caminho que ninguém estava conduzindo — e foi nele que decidimos ficar.",
-      "Como arquitetas, nosso olhar é sensível à estética e à funcionalidade — cobramos prazo e preço sem perder de vista o que faz a casa ficar bonita e boa de viver.",
-      "Desde 2022 acompanhamos obras em Belo Horizonte no papel de quem representa o cliente: conferindo número, escopo e acabamento — fazendo seu sonho se tornar sua casa pronta.",
+      "A Quadra nasceu de uma dúvida que ouvíamos em toda obra: como é que o projeto sai do papel? Entre o desenho aprovado e a casa pronta existe um caminho que ninguém estava conduzindo, e foi nele que decidimos ficar.",
+      "Como arquitetas, nosso olhar é sensível à estética e à funcionalidade: cobramos prazo e preço sem perder de vista o que faz a casa ficar bonita e boa de viver.",
+      "Desde 2022 acompanhamos obras em Belo Horizonte no papel de quem representa o cliente: conferindo número, escopo e acabamento, fazendo seu sonho se tornar sua casa pronta.",
     ].join("\n\n"),
     photo: "",
     credits: [
@@ -449,31 +464,32 @@ export const SITE_DEFAULTS: SiteContent = {
     ],
   },
   testimonials: {
+    layout: "cards",
     eyebrow: "PROVA SOCIAL",
     title: "“Eu jamais faria outra obra *sem a Quadra*”",
     linkLabel: "Ver depoimentos no @quadraarq",
     linkUrl: "https://instagram.com/quadraarq",
     items: [
-      { title: "Nome do cliente", tag: "Residencial · BH", desc: "Espaço reservado para depoimento de cliente final — foco em tranquilidade e previsibilidade." },
-      { title: "Nome do cliente", tag: "Arquiteto parceiro", desc: "Espaço reservado para depoimento de arquiteto parceiro — foco em autoria preservada e obra bem coordenada." },
-      { title: "Nome do cliente", tag: "Corporativo · BH", desc: "Espaço reservado para depoimento com número — economia obtida ou problema evitado." },
+      { title: "Nome do cliente", tag: "Residencial · BH", desc: "Espaço reservado para depoimento de cliente final, com foco em tranquilidade e previsibilidade." },
+      { title: "Nome do cliente", tag: "Arquiteto parceiro", desc: "Espaço reservado para depoimento de arquiteto parceiro, com foco em autoria preservada e obra bem coordenada." },
+      { title: "Nome do cliente", tag: "Corporativo · BH", desc: "Espaço reservado para depoimento com número: economia obtida ou problema evitado." },
     ],
   },
   leadMagnet: {
     eyebrow: "MATERIAL GRATUITO",
     title: "Checklist: os 12 passos da *Obra sem Surto*",
-    body: "O que resolver antes do primeiro quebra-quebra — na ordem certa. Baixe e use, mesmo que você não contrate a Quadra.",
+    body: "O que resolver antes do primeiro quebra-quebra, na ordem certa. Baixe e use, mesmo que você não contrate a Quadra.",
     ctaLabel: "Receber checklist",
     image: "",
   },
   faq: {
     eyebrow: "PERGUNTAS FREQUENTES",
     title: "O que você provavelmente quer saber *antes de fechar*",
-    note: "Não achou a sua? Manda mensagem — respondemos sem compromisso.",
+    note: "Não achou a sua? Manda mensagem, respondemos sem compromisso.",
     items: [
       {
         title: "Preciso contratar as duas fases?",
-        desc: "Não. Cada fase é vendida separadamente e resolve uma dor diferente. Mas quem começa pela viabilidade e segue para o gerenciamento ganha continuidade técnica — a mesma equipe que entendeu a viabilidade já chega no canteiro conhecendo o projeto.",
+        desc: "Não. Cada fase é vendida separadamente e resolve uma dor diferente. Mas quem começa pela viabilidade e segue para o gerenciamento ganha continuidade técnica: a mesma equipe que entendeu a viabilidade já chega no canteiro conhecendo o projeto.",
       },
       {
         title: "Em que momento devo contratar a Quadra?",
@@ -481,7 +497,7 @@ export const SITE_DEFAULTS: SiteContent = {
       },
       {
         title: "Como funciona a compra de material e acabamento?",
-        desc: "A especificação e o acompanhamento são nossos; a compra é sua, no seu nome. Indicamos fornecedores, negociamos e conferimos prazo de entrega — sem ficar com margem sobre material.",
+        desc: "A especificação e o acompanhamento são nossos; a compra é sua, no seu nome. Indicamos fornecedores, negociamos e conferimos prazo de entrega, sem ficar com margem sobre material.",
       },
       {
         title: "A Quadra gerencia obras projetadas por outros arquitetos?",
@@ -489,11 +505,12 @@ export const SITE_DEFAULTS: SiteContent = {
       },
       {
         title: "Atendem toda a Belo Horizonte?",
-        desc: "Belo Horizonte e região metropolitana. Para obras fora dessa área, fale com a gente — avaliamos caso a caso.",
+        desc: "Belo Horizonte e região metropolitana. Para obras fora dessa área, fale com a gente, avaliamos caso a caso.",
       },
     ],
   },
   blog: {
+    layout: "cards",
     eyebrow: "BLOG",
     title: "Obra sem Surto",
     linkLabel: "Ver todos os artigos",
@@ -508,7 +525,7 @@ export const SITE_DEFAULTS: SiteContent = {
     eyebrow: "FALE CONOSCO",
     title: "Vamos falar sobre *o seu projeto*.",
     text:
-      "A primeira conversa é sem custo. Você conta o que quer fazer, a gente diz com franqueza o que é possível — e como o gerenciamento entra nessa conta.",
+      "A primeira conversa é sem custo. Você conta o que quer fazer, a gente diz com franqueza o que é possível e como o gerenciamento entra nessa conta.",
     formTitle: "Fale com a Quadra",
     contacts: [
       { title: "@quadraarq", desc: "https://instagram.com/quadraarq" },
@@ -516,7 +533,7 @@ export const SITE_DEFAULTS: SiteContent = {
       { title: "(31) 91244-672 · Mariana", desc: "https://wa.me/553191244672" },
       { title: "contato@quadraarquitetura.com", desc: "mailto:contato@quadraarquitetura.com" },
       {
-        title: "Belo Horizonte, MG — atendemos toda a região metropolitana.",
+        title: "Belo Horizonte, MG. Atendemos toda a região metropolitana.",
         desc: "https://maps.google.com/?q=Belo+Horizonte+MG",
       },
     ],
@@ -560,6 +577,8 @@ export interface SiteFieldDef {
   itemBullets?: string;
   /** Para image: largura máxima após redimensionar. */
   maxWidth?: number;
+  /** Para select: as opções válidas, na ordem em que aparecem. */
+  options?: { value: string; label: string; hint?: string }[];
 }
 
 export interface SiteSectionDef {
@@ -603,6 +622,16 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Serviços",
     description: "As duas fases, cada uma com o que está incluso.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "fases", label: "Duas fases lado a lado", hint: "O escopo abre no clique." },
+          { value: "lista", label: "Fases empilhadas", hint: "Uma embaixo da outra, com o escopo sempre à mostra." },
+          { value: "cards", label: "Cards compactos", hint: "Só resumo, sem o escopo." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "subtitle", type: "richtext", label: "Subtítulo" },
@@ -621,6 +650,16 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Jornada",
     description: "As nove etapas do gerenciamento, agrupadas em três momentos.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "etapas", label: "Lista numerada", hint: "Agrupada por momento, com o texto fixo ao lado." },
+          { value: "linha", label: "Linha do tempo", hint: "Marcadores ligados por um fio vertical." },
+          { value: "cards", label: "Cards numerados", hint: "Grade de cards, três por linha." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "subtitle", type: "richtext", label: "Subtítulo" },
@@ -666,6 +705,15 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Cases",
     description: "Os cases, com o que foi evitado em cada um.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "cards", label: "Cards com foto em cima", hint: "Três por linha." },
+          { value: "lista", label: "Lista com foto ao lado", hint: "Um por linha, foto à esquerda." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "linkLabel", type: "text", label: "Texto do link" },
@@ -674,6 +722,7 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
         name: "items",
         type: "list",
         label: "Cases",
+        hint: "Na história, use três parágrafos separados por linha em branco: o que aconteceu, o que foi evitado e as fases + local. Parágrafo que faltar simplesmente não aparece.",
         itemLabels: { title: "Título do case", desc: "História" },
         itemTag: "Segmento e fases",
         itemImage: true,
@@ -725,6 +774,15 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Prova social",
     description: "Depoimentos de clientes e arquitetos parceiros.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "cards", label: "Cards lado a lado", hint: "Todos do mesmo tamanho." },
+          { value: "destaque", label: "Um em destaque", hint: "O primeiro grande, os outros menores." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "linkLabel", type: "text", label: "Texto do link" },
@@ -766,6 +824,15 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
     label: "Blog",
     description: "Chamadas dos artigos do Obra sem Surto.",
     fields: [
+      {
+        name: "layout",
+        type: "select",
+        label: "Modelo da dobra",
+        options: [
+          { value: "cards", label: "Cards com foto", hint: "Três por linha." },
+          { value: "lista", label: "Lista de chamadas", hint: "Sem foto, uma por linha." },
+        ],
+      },
       { name: "eyebrow", type: "text", label: "Chamada (acima do título)" },
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "linkLabel", type: "text", label: "Texto do link" },
@@ -863,7 +930,12 @@ function cleanList(value: unknown, def: SiteFieldDef): SiteListItem[] | null {
 /** Valida o valor salvo contra o tipo do campo; null = inválido (usa padrão). */
 function parseValue(def: SiteFieldDef, value: unknown): unknown {
   if (def.type === "list") return cleanList(value, def);
-  return typeof value === "string" ? value : null;
+  if (typeof value !== "string") return null;
+  /* Modelo que não existe mais (renomeado, removido numa versão nova do
+     site) volta ao padrão em vez de deixar a dobra sem nada para
+     renderizar. */
+  if (def.type === "select" && !def.options?.some((o) => o.value === value)) return null;
+  return value;
 }
 
 /** Mescla as linhas do banco com o padrão. Chaves desconhecidas são ignoradas. */

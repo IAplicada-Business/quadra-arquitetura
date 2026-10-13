@@ -32,7 +32,7 @@ export function WhySection({ content = SITE_DEFAULTS.why }: { content?: WhyConte
           </p>
 
           <h2
-            className="text-brand-navy text-center mb-12 md:mb-16"
+            className="title-balance text-brand-navy text-center mb-12 md:mb-16"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,

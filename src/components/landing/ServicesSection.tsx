@@ -18,6 +18,10 @@ import { SITE_DEFAULTS, splitParagraphs, type ServicesContent } from "@/lib/site
  * justifica fechar uma ao abrir a outra.
  */
 export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?: ServicesContent }) {
+  const modelo = content.layout;
+  /* "lista" mostra o escopo sempre; "cards" não mostra escopo nenhum.
+     Só o modelo "fases" tem o que abrir e fechar. */
+  const comAcordeao = modelo !== "lista" && modelo !== "cards";
   const [abertas, setAbertas] = useState<Set<number>>(new Set());
 
   const alternar = (i: number) =>
@@ -45,7 +49,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
             {content.eyebrow}
           </p>
           <h2
-            className="text-brand-navy mb-5"
+            className="title-balance text-brand-navy mb-5"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,
@@ -64,9 +68,17 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          className={
+            modelo === "lista"
+              ? "space-y-6 max-w-3xl mx-auto"
+              : modelo === "cards"
+                ? "grid grid-cols-1 min-[520px]:grid-cols-2 lg:grid-cols-3 gap-5"
+                : "grid grid-cols-1 md:grid-cols-2 gap-6"
+          }
+        >
           {content.items.map((fase, i) => {
-            const aberta = abertas.has(i);
+            const aberta = comAcordeao ? abertas.has(i) : modelo === "lista";
             const itens = (fase.bullets ?? "").split("\n").map((t) => t.trim()).filter(Boolean);
 
             return (
@@ -88,7 +100,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                 )}
 
                 <h3
-                  className="text-brand-navy mb-4"
+                  className="title-balance text-brand-navy mb-4"
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "clamp(1.5rem, 2.2vw, 1.875rem)",
@@ -110,7 +122,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                   ))}
                 </div>
 
-                {itens.length > 0 && (
+                {itens.length > 0 && comAcordeao && (
                   <>
                     <button
                       type="button"
@@ -135,7 +147,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                             style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
                           >
                             <span aria-hidden className="text-brand-terracota shrink-0">
-                              —
+                              ·
                             </span>
                             <span className="min-w-0">{item}</span>
                           </li>
@@ -143,6 +155,23 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                       </ul>
                     )}
                   </>
+                )}
+
+                {itens.length > 0 && modelo === "lista" && (
+                  <ul className="mt-6 border-t border-brand-navy/10 pt-5 space-y-2.5">
+                    {itens.map((item, j) => (
+                      <li
+                        key={j}
+                        className="flex gap-3 text-brand-navy/70 min-w-0"
+                        style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
+                      >
+                        <span aria-hidden className="text-brand-terracota shrink-0">
+                          ·
+                        </span>
+                        <span className="min-w-0">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </motion.div>
             );

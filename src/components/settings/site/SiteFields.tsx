@@ -244,6 +244,31 @@ export function SiteField({ id, field, value, folder, defaultImageFor, onChange 
     );
   }
   const text = (value as string) ?? "";
+
+  if (field.type === "select") {
+    const atual = field.options?.find((o) => o.value === text) ?? field.options?.[0];
+    return (
+      <div className="space-y-1.5">
+        <Label htmlFor={id} className="text-xs font-semibold">
+          {field.label}
+        </Label>
+        <select
+          id={id}
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+        >
+          {field.options?.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {atual?.hint && <p className="text-[11px] text-muted-foreground">{atual.hint}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-xs font-semibold">{field.label}</Label>

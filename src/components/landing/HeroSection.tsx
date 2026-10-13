@@ -40,7 +40,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           </p>
 
           <h1
-            className="text-brand-areia mb-6"
+            className="title-balance text-brand-areia mb-6"
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,
@@ -116,6 +116,9 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
             src={content.image || coverImg}
             alt="Camilla e Mariana, sócias da Quadra Arquitetura"
             className="absolute inset-0 w-full h-full object-cover"
+            /* O recorte sobe no original para não cortar as cabeças: com
+               object-cover centralizado, a foto em pé perde o topo. */
+            style={{ objectPosition: "center 18%" }}
           />
         </div>
       </div>

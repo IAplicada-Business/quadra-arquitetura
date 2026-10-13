@@ -5,8 +5,13 @@ import { WhySection } from "@/components/landing/WhySection";
 import { JourneySection } from "@/components/landing/JourneySection";
 import { TrailSection } from "@/components/landing/TrailSection";
 import { AboutSection } from "@/components/landing/AboutSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { LeadMagnetSection } from "@/components/landing/LeadMagnetSection";
+import { FaqSection } from "@/components/landing/FaqSection";
+import { BlogSection } from "@/components/landing/BlogSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
-import { PortfolioSection } from "@/components/landing/PortfolioSection";
+import { CasesSection } from "@/components/landing/CasesSection";
+import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { usePublicSiteContent } from "@/hooks/useSiteContent";
@@ -37,8 +42,13 @@ export default function Landing() {
         <ServicesSection content={content.services} />
         <JourneySection content={content.journey} />
         <TrailSection content={content.trail} />
-        <PortfolioSection content={content.portfolio} />
+        <CasesSection content={content.portfolio} />
+        <ArchitectsSection content={content.architects} />
         <AboutSection content={content.about} />
+        <TestimonialsSection content={content.testimonials} />
+        <LeadMagnetSection content={content.leadMagnet} />
+        <FaqSection content={content.faq} />
+        <BlogSection content={content.blog} />
         <ContactSection content={content.contact} />
       </main>
       <LandingFooter content={content.footer} />

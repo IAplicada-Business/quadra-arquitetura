@@ -1,8 +1,16 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { AboutSection } from "@/components/landing/AboutSection";
+import { WhySection } from "@/components/landing/WhySection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
-import { PortfolioSection } from "@/components/landing/PortfolioSection";
+import { JourneySection } from "@/components/landing/JourneySection";
+import { TrailSection } from "@/components/landing/TrailSection";
+import { CasesSection } from "@/components/landing/CasesSection";
+import { ArchitectsSection } from "@/components/landing/ArchitectsSection";
+import { AboutSection } from "@/components/landing/AboutSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { LeadMagnetSection } from "@/components/landing/LeadMagnetSection";
+import { FaqSection } from "@/components/landing/FaqSection";
+import { BlogSection } from "@/components/landing/BlogSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import type { SiteContent, SiteSectionKey } from "@/lib/siteContent";
@@ -14,12 +22,28 @@ function Section({ section, content }: { section: SiteSectionKey; content: SiteC
   switch (section) {
     case "hero":
       return <HeroSection content={content.hero} />;
-    case "about":
-      return <AboutSection content={content.about} />;
+    case "why":
+      return <WhySection content={content.why} />;
     case "services":
       return <ServicesSection content={content.services} />;
+    case "journey":
+      return <JourneySection content={content.journey} />;
+    case "trail":
+      return <TrailSection content={content.trail} />;
     case "portfolio":
-      return <PortfolioSection content={content.portfolio} />;
+      return <CasesSection content={content.portfolio} />;
+    case "architects":
+      return <ArchitectsSection content={content.architects} />;
+    case "about":
+      return <AboutSection content={content.about} />;
+    case "testimonials":
+      return <TestimonialsSection content={content.testimonials} />;
+    case "leadMagnet":
+      return <LeadMagnetSection content={content.leadMagnet} />;
+    case "faq":
+      return <FaqSection content={content.faq} />;
+    case "blog":
+      return <BlogSection content={content.blog} />;
     case "contact":
       return <ContactSection content={content.contact} preview />;
     case "footer":
