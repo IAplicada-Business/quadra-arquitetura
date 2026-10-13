@@ -1,13 +1,17 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, FileText, Check, X, Send, Settings2, Download, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Send, Settings2, Download, ArrowLeft, Search } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProposals, Proposal } from "@/hooks/useProposals";
 import { useLeads } from "@/hooks/useLeads";
 import { useProposalTemplates } from "@/hooks/useProposalTemplates";
@@ -38,6 +42,13 @@ function formatCurrency(v: number | null) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
 
+const PROPOSALS_LIMIT = 5;
+
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return "—";
+  try { return format(parseISO(iso), "dd/MM/yyyy"); } catch { return "—"; }
+}
+
 function generateProposalNumber(proposals: Proposal[]): string {
   const year = new Date().getFullYear();
   const thisYear = proposals.filter(p => p.proposal_number?.startsWith(`PROP-${year}`));
@@ -57,6 +68,7 @@ export default function LeadsProposals() {
   const [view, setView] = useState<"list" | "form" | "templates">("list");
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [search, setSearch] = useState("");
   const [rejectOpen, setRejectOpen] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -317,7 +329,19 @@ export default function LeadsProposals() {
     setRejectReason("");
   };
 
-  const filtered = statusFilter === "todos" ? proposals : proposals.filter((p) => p.status === statusFilter);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return proposals.filter((p) => {
+      if (statusFilter !== "todos" && p.status !== statusFilter) return false;
+      if (!q) return true;
+      const a = p as any;
+      return [a.proposal_number, a.client_name, a.project_name, a.title, a.leads?.name]
+        .some((v) => typeof v === "string" && v.toLowerCase().includes(q));
+    });
+  }, [proposals, statusFilter, search]);
+
+  // No máximo 5 na tela; "Ver todas" abre o resto.
+  const more = useShowMore(filtered, PROPOSALS_LIMIT, `${statusFilter}|${search}`);
 
   if (isLoading) {
     return <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
@@ -378,74 +402,124 @@ export default function LeadsProposals() {
       {/* List view */}
       {view === "list" && (
         <>
-          <div className="flex gap-2 flex-wrap">
-            {["todos", "rascunho", "enviada", "aprovada", "rejeitada"].map((s) => (
-              <Button key={s} variant={statusFilter === s ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(s)}>
-                {s === "todos" ? "Todos" : statusLabels[s]}
-              </Button>
-            ))}
-          </div>
+          {/* Filtros no padrão das outras abas: busca + lista suspensa. */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por cliente, projeto ou número..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os status</SelectItem>
+                    {Object.entries(statusLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           {filtered.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">Nenhuma proposta encontrada.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((p) => (
-                <Card key={p.id} className="shadow-sm">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">{(p as any).proposal_number || "—"}</p>
-                        <p className="font-semibold text-sm">{(p as any).client_name || (p as any).title || (p.leads as any)?.name || "Lead"}</p>
-                        {(p as any).project_name && <p className="text-xs text-muted-foreground">{(p as any).project_name}</p>}
-                      </div>
-                      <Badge
-                        variant={p.status === "rejeitada" ? "destructive" : "secondary"}
-                        className={p.status === "aprovada" ? "bg-emerald-100 text-emerald-800 border-emerald-200" : ""}
-                        style={p.status === "enviada" ? { backgroundColor: C.navy, color: "white", borderColor: C.navy } : {}}
-                      >
-                        {statusLabels[p.status] || p.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-bold">{formatCurrency((p as any).price_full || (p as any).final_value || p.value)}</span>
-                      {(p as any).pdf_url && (
-                        <a href={(p as any).pdf_url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" variant="ghost" className="h-7"><Download className="h-3 w-3 mr-1" /> PDF</Button>
-                        </a>
-                      )}
-                    </div>
-                    <div className="flex gap-1 pt-1 flex-wrap">
-                      <Button size="sm" variant="ghost" className="h-7" onClick={() => openEdit(p)}><Pencil className="h-3 w-3" /></Button>
-                      <Button size="sm" variant="ghost" className="h-7 text-destructive" onClick={() => remove.mutate(p.id)}><Trash2 className="h-3 w-3" /></Button>
-                      {p.status === "rascunho" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs ml-auto" onClick={() => update.mutate({ id: p.id, status: "enviada", sent_at: new Date().toISOString() })}>
-                          <Send className="h-3 w-3 mr-1" /> Enviar
-                        </Button>
-                      )}
-                      {p.status === "enviada" && (
-                        <>
-                          <Button size="sm" variant="default" className="h-7 text-xs ml-auto" onClick={() => {
-                            update.mutate({ id: p.id, status: "aprovada", approved_at: new Date().toISOString() });
-                            setConvertProposal(p);
-                          }}>
-                            <Check className="h-3 w-3 mr-1" /> Aprovar
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setRejectOpen(p.id)}>
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </>
-                      )}
-                      {p.status === "aprovada" && (
-                        <Button size="sm" variant="secondary" className="h-7 text-xs ml-auto" onClick={() => navigate("/leads/contracts")}>
-                          Gerar Contrato
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[130px]">Nº</TableHead>
+                      <TableHead>Cliente / projeto</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Criada em</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {more.visible.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                          {(p as any).proposal_number || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <button type="button" className="text-left hover:underline" onClick={() => openEdit(p)}>
+                            <p className="font-medium text-sm">{(p as any).client_name || (p as any).title || (p.leads as any)?.name || "Lead"}</p>
+                            {(p as any).project_name && <p className="text-xs text-muted-foreground">{(p as any).project_name}</p>}
+                          </button>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums whitespace-nowrap">
+                          {formatCurrency((p as any).price_full || (p as any).final_value || p.value)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={p.status === "rejeitada" ? "destructive" : "secondary"}
+                            className={p.status === "aprovada" ? "bg-emerald-100 text-emerald-800 border-emerald-200" : ""}
+                            style={p.status === "enviada" ? { backgroundColor: C.navy, color: "white", borderColor: C.navy } : {}}
+                          >
+                            {statusLabels[p.status] || p.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground whitespace-nowrap">
+                          {fmtDate(p.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            {p.status === "rascunho" && (
+                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => update.mutate({ id: p.id, status: "enviada", sent_at: new Date().toISOString() })}>
+                                <Send className="h-3 w-3 mr-1" /> Enviar
+                              </Button>
+                            )}
+                            {p.status === "enviada" && (
+                              <>
+                                <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => {
+                                  update.mutate({ id: p.id, status: "aprovada", approved_at: new Date().toISOString() });
+                                  setConvertProposal(p);
+                                }}>
+                                  <Check className="h-3 w-3 mr-1" /> Aprovar
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 text-xs" title="Rejeitar" onClick={() => setRejectOpen(p.id)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
+                            {p.status === "aprovada" && (
+                              <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => navigate("/leads/contracts")}>
+                                Gerar Contrato
+                              </Button>
+                            )}
+                            {(p as any).pdf_url && (
+                              <a href={(p as any).pdf_url} target="_blank" rel="noopener noreferrer" title="Baixar PDF">
+                                <Button size="icon" variant="ghost" className="h-7 w-7"><Download className="h-3.5 w-3.5" /></Button>
+                              </a>
+                            )}
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Editar" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Excluir" onClick={() => remove.mutate(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <ShowMoreButton
+                expanded={more.expanded}
+                hasMore={more.hasMore}
+                total={filtered.length}
+                onToggle={more.toggle}
+                noun="propostas"
+              />
+            </Card>
           )}
         </>
       )}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus, Trash2, Pencil, FileSignature, Send, X, Settings2, MessageSquare } from "lucide-react";
+import { Plus, Trash2, Pencil, FileSignature, Send, X, Settings2, MessageSquare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { useContracts, Contract } from "@/hooks/useContracts";
 import { useProposals } from "@/hooks/useProposals";
 import { useContractTemplates } from "@/hooks/useContractTemplates";
@@ -28,6 +30,8 @@ function formatCurrency(v: number | null) {
   if (v == null) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
+
+const CONTRACTS_LIMIT = 5;
 
 function generateContractNumber(contracts: Contract[]): string {
   const year = new Date().getFullYear();
@@ -79,6 +83,7 @@ export default function LeadsContracts() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [search, setSearch] = useState("");
   const [cancelOpen, setCancelOpen] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [activeTab, setActiveTab] = useState("lista");
@@ -276,7 +281,19 @@ export default function LeadsContracts() {
     customClauses: formData.custom_clauses,
   }), [formData, installments, editingContract, contracts]);
 
-  const filtered = statusFilter === "todos" ? contracts : contracts.filter((c) => c.status === statusFilter);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return contracts.filter((c) => {
+      if (statusFilter !== "todos" && c.status !== statusFilter) return false;
+      if (!q) return true;
+      const a = c as any;
+      return [a.contract_number, a.client_name, a.proposals?.leads?.name, c.address, c.city]
+        .some((v) => typeof v === "string" && v.toLowerCase().includes(q));
+    });
+  }, [contracts, statusFilter, search]);
+
+  // No máximo 5 na tela; "Ver todos" abre o resto.
+  const more = useShowMore(filtered, CONTRACTS_LIMIT, `${statusFilter}|${search}`);
 
   // Auto-open contract from conversion flow
   useEffect(() => {
@@ -330,62 +347,113 @@ export default function LeadsContracts() {
         />
       ) : (
         <>
-          <div className="flex gap-2">
-            {["todos", "rascunho", "enviado", "assinado", "cancelado"].map((s) => (
-              <Button key={s} variant={statusFilter === s ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(s)}>
-                {s === "todos" ? "Todos" : statusLabels[s]}
-              </Button>
-            ))}
-          </div>
+          {/* Filtros no padrão das outras abas: busca + lista suspensa. */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por cliente, endereço ou número..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os status</SelectItem>
+                    {Object.entries(statusLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           {filtered.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">Nenhum contrato encontrado.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((c) => {
-                const leadName = (c as any).client_name || (c.proposals as any)?.leads?.name || "—";
-                return (
-                  <Card key={c.id} className="shadow-sm">
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-xs text-muted-foreground">{(c as any).contract_number || "—"}</p>
-                          <p className="font-semibold text-sm">{leadName}</p>
-                          <p className="text-xs text-muted-foreground">{c.address ? `${c.address}${c.city ? `, ${c.city}` : ""}` : "Sem endereço"}</p>
-                        </div>
-                        <Badge variant={c.status === "assinado" ? "default" : "secondary"}>{statusLabels[c.status] || c.status}</Badge>
-                      </div>
-                      <div className="text-sm font-bold">{formatCurrency(c.value)}</div>
-                      <div className="flex gap-1 pt-1 flex-wrap">
-                        <Button size="sm" variant="ghost" className="h-7" onClick={() => openEdit(c)}><Pencil className="h-3 w-3" /></Button>
-                        <Button size="sm" variant="ghost" className="h-7" onClick={() => setMsgContract(c)} title="Enviar mensagem"><MessageSquare className="h-3 w-3" /></Button>
-                        <Button size="sm" variant="ghost" className="h-7 text-destructive" onClick={() => remove.mutate(c.id)}><Trash2 className="h-3 w-3" /></Button>
-                        {c.status === "rascunho" && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs ml-auto" onClick={() => update.mutate({ id: c.id, status: "enviado", sent_at: new Date().toISOString() })}>
-                            <Send className="h-3 w-3 mr-1" /> Enviar
-                          </Button>
-                        )}
-                        {(c.status === "rascunho" || c.status === "enviado") && (
-                          <>
-                            <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => signAndCreateProject.mutate(c)} disabled={signAndCreateProject.isPending}>
-                              <FileSignature className="h-3 w-3 mr-1" /> Assinar
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setCancelOpen(c.id)}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </>
-                        )}
-                        {c.status === "assinado" && c.project_id && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs ml-auto" onClick={() => navigate(`/projects/${c.project_id}`)}>
-                            Ver Projeto
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <Card>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[130px]">Nº</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="hidden lg:table-cell">Endereço da obra</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {more.visible.map((c) => {
+                      const leadName = (c as any).client_name || (c.proposals as any)?.leads?.name || "—";
+                      return (
+                        <TableRow key={c.id}>
+                          <TableCell className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                            {(c as any).contract_number || "—"}
+                          </TableCell>
+                          <TableCell>
+                            <button type="button" className="text-left font-medium text-sm hover:underline" onClick={() => openEdit(c)}>
+                              {leadName}
+                            </button>
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                            {c.address ? `${c.address}${c.city ? `, ${c.city}` : ""}` : "Sem endereço"}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums whitespace-nowrap">
+                            {formatCurrency(c.value)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={c.status === "assinado" ? "default" : "secondary"}>{statusLabels[c.status] || c.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end gap-1">
+                              {c.status === "rascunho" && (
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => update.mutate({ id: c.id, status: "enviado", sent_at: new Date().toISOString() })}>
+                                  <Send className="h-3 w-3 mr-1" /> Enviar
+                                </Button>
+                              )}
+                              {(c.status === "rascunho" || c.status === "enviado") && (
+                                <>
+                                  <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => signAndCreateProject.mutate(c)} disabled={signAndCreateProject.isPending}>
+                                    <FileSignature className="h-3 w-3 mr-1" /> Assinar
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Cancelar contrato" onClick={() => setCancelOpen(c.id)}>
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                              {c.status === "assinado" && c.project_id && (
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => navigate(`/projects/${c.project_id}`)}>
+                                  Ver Projeto
+                                </Button>
+                              )}
+                              <Button size="icon" variant="ghost" className="h-7 w-7" title="Editar" onClick={() => openEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar mensagem" onClick={() => setMsgContract(c)}><MessageSquare className="h-3.5 w-3.5" /></Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Excluir" onClick={() => remove.mutate(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <ShowMoreButton
+                expanded={more.expanded}
+                hasMore={more.hasMore}
+                total={filtered.length}
+                onToggle={more.toggle}
+                noun="contratos"
+              />
+            </Card>
           )}
         </>
       )}
