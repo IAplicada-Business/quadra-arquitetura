@@ -96,6 +96,14 @@ describe("Login", () => {
     expect(screen.getByText("Painel")).toBeInTheDocument();
   });
 
+  it("mostra só o logo e o título, sem 'Quadra · Gestão' nem subtítulo", () => {
+    renderAt("/login");
+    expect(screen.getByAltText("Quadra Arquitetura")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Bem-vindo(a) de volta" })).toBeInTheDocument();
+    expect(screen.queryByText("Quadra · Gestão")).not.toBeInTheDocument();
+    expect(screen.queryByText("Acesse o sistema de gestão Quadra")).not.toBeInTheDocument();
+  });
+
   it("tem blobs e o link 'Esqueci minha senha'", () => {
     renderAt("/login");
     expect(screen.getByTestId("auth-blobs")).toBeInTheDocument();
