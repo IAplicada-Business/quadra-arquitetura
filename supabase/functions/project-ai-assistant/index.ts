@@ -28,6 +28,30 @@ async function callAI(anthropic: Anthropic, systemPrompt: string, userPrompt: st
   return JSON.parse(raw);
 }
 
+/**
+ * Texto do contexto da obra para os prompts semanais. Aceita o formato novo
+ * (diário recente + cronograma + último relatório, montado em
+ * src/lib/weeklyAIContext.ts) e o antigo (só diary_entries da semana).
+ */
+function weeklyContextText(data: any): { text: string; hasData: boolean } {
+  const diary = Array.isArray(data?.diary_entries) ? data.diary_entries : [];
+  const schedule = Array.isArray(data?.schedule) ? data.schedule : [];
+  const lastReport = data?.last_report ?? null;
+  const scopeLabel: Record<string, string> = {
+    semana: "registros desta semana",
+    ultimos_14_dias: "sem registros nesta semana; registros dos últimos 14 dias",
+    ultimos_registros: "sem registros recentes; últimos registros disponíveis",
+    nenhum: "nenhum registro no diário de obra",
+  };
+  const parts: string[] = [];
+  parts.push(`Semana de referência: ${data?.week_start || "?"} a ${data?.week_end || "?"}.`);
+  if (typeof data?.progress_percent === "number") parts.push(`Progresso médio do cronograma: ${data.progress_percent}%.`);
+  parts.push(`Diário de obra (${scopeLabel[data?.diary_scope] ?? "registros"}):\n${JSON.stringify(diary, null, 2)}`);
+  if (schedule.length > 0) parts.push(`Cronograma (etapas em andamento, próximas 2 semanas e concluídas nas últimas 2 semanas):\n${JSON.stringify(schedule, null, 2)}`);
+  if (lastReport) parts.push(`Último relatório semanal enviado ao cliente:\n${JSON.stringify(lastReport, null, 2)}`);
+  return { text: parts.join("\n\n"), hasData: diary.length > 0 || schedule.length > 0 || !!lastReport };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -132,11 +156,12 @@ serve(async (req) => {
 
     // ===== WEEKLY SUMMARY =====
     if (action === "weekly_summary") {
-      const { diary_entries, week_start, week_end } = data || {};
+      const ctx = weeklyContextText(data);
+      if (!ctx.hasData) return err("Sem diário, cronograma ou relatório anterior para resumir", 400);
       const parsed = await callAI(
         anthropic,
-        "Você é assistente de gestão de obras. Gere relatórios semanais profissionais e concisos em português do Brasil.",
-        `Com base neste diário de obra da semana ${week_start || ""} a ${week_end || ""}:\n${JSON.stringify(diary_entries || [], null, 2)}\n\nGere:\n1) Resumo do que foi executado (3-4 frases)\n2) Próximas etapas previstas (lista)\n3) Pendências que dependem do cliente (se houver)\nTom: profissional e direto.`,
+        "Você é assistente de gestão de obras. Gere relatórios semanais profissionais e concisos em português do Brasil, para o cliente da obra. Use só os dados fornecidos; não invente execução que não aparece no diário nem no cronograma.",
+        `Dados da obra:\n${ctx.text}\n\nGere:\n1) Resumo do andamento (3-4 frases). Se não houver registros nesta semana, baseie-se no cronograma e nos registros mais recentes e deixe claro o que está previsto x executado.\n2) Próximas etapas previstas (lista), a partir do cronograma.\n3) Pendências que dependem do cliente (se houver; senão, string vazia).\nTom: profissional e direto.`,
         {
           type: "object",
           properties: {
@@ -279,13 +304,13 @@ serve(async (req) => {
 
     // ===== WEEKLY INSIGHTS =====
     if (action === "weekly_insights") {
-      const { diary_entries } = data || {};
-      if (!diary_entries || diary_entries.length === 0) return err("No diary entries provided", 400);
+      const ctx = weeklyContextText(data);
+      if (!ctx.hasData) return err("Sem diário, cronograma ou relatório anterior para analisar", 400);
 
       const parsed = await callAI(
         anthropic,
-        "Você é um consultor de obras. Analise registros do diário de obra e forneça insights práticos e diretos em português do Brasil.",
-        `Com base no diário de obra desta semana:\n${JSON.stringify(diary_entries, null, 2)}\n\nIdentifique:\n1) Principais avanços\n2) Problemas ou riscos observados\n3) Sugestões para a próxima semana\nSeja direto e prático.`,
+        "Você é um consultor de obras. Analise o diário de obra e o cronograma e forneça insights práticos e diretos em português do Brasil. Use só os dados fornecidos.",
+        `Dados da obra:\n${ctx.text}\n\nIdentifique:\n1) Principais avanços\n2) Problemas ou riscos observados (inclua etapas atrasadas em relação ao cronograma e falta de registros no diário, se for o caso)\n3) Sugestões para a próxima semana\nSeja direto e prático.`,
         {
           type: "object",
           properties: {
