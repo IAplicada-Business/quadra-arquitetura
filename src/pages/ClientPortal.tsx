@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TrilhaShell } from "@/components/portal/TrilhaShell";
 import { GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, ResumosScreen } from "@/components/portal/PortalScreens";
+import { CronogramaScreen } from "@/components/portal/CronogramaScreen";
 import { AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { buildOnboardingPlaceholders, sectionsFromJson, visibleSections } from "@/lib/onboarding";
@@ -221,6 +222,7 @@ export default function ClientPortal() {
       {tab === "pendencias" && <PendenciasScreen {...screenProps} />}
       {tab === "galeria" && <GaleriaScreen {...screenProps} />}
       {tab === "orcamento" && <OrcamentoScreen {...screenProps} />}
+      {tab === "cronograma" && <CronogramaScreen data={data} />}
       {tab === "resumos" && <ResumosScreen {...screenProps} />}
 
       {/* Lightbox */}

@@ -28,6 +28,7 @@ import {
   type JourneyPosition,
 } from "@/lib/portalTrail";
 import { QuadraWatermark } from "./TrilhaBrand";
+import { DetalheDisciplinas, ScenariosSection } from "./ScenariosSection";
 
 interface ScreenProps {
   data: PortalData;
@@ -564,8 +565,16 @@ export function OrcamentoScreen({ data }: ScreenProps) {
   const paidPct = contracted > 0 ? Math.min(100, Math.round((paid / contracted) * 100)) : null;
 
   return (
-    <div className="space-y-6" data-testid="screen-orcamento">
-      <SectionTitle title="Orçamento" subtitle="Prestação de contas da obra: o que foi contratado, o que já foi pago e as notas dos materiais." />
+    <div className="space-y-10" data-testid="screen-orcamento">
+      <SectionTitle title="Orçamento" subtitle="Os cenários que estão na mesa e a prestação de contas da obra." />
+
+      {/* Cenários primeiro: a decisão que ainda está aberta vem antes do
+          histórico do que já foi pago. */}
+      <ScenariosSection data={data} />
+      <DetalheDisciplinas data={data} />
+
+      <section className="space-y-6">
+        <h3 className="font-display text-2xl text-[var(--trilha-navy)]">Prestação de contas</h3>
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "Contratado", value: contracted, dark: true },
@@ -629,7 +638,8 @@ export function OrcamentoScreen({ data }: ScreenProps) {
           </Card>
         )}
       </div>
-      {payments.length === 0 && invoices.length === 0 && <p className="text-sm text-[var(--trilha-navy)]/60">Ainda não há pagamentos ou notas registrados.</p>}
+        {payments.length === 0 && invoices.length === 0 && <p className="text-sm text-[var(--trilha-navy)]/60">Ainda não há pagamentos ou notas registrados.</p>}
+      </section>
     </div>
   );
 }
