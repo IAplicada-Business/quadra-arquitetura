@@ -141,11 +141,22 @@ describe("Trilha do Cliente (/client/:token)", () => {
     expect(within(inicio).getByTestId("trail-upcoming")).toBeInTheDocument();
   });
 
-  it("link antigo #cronograma cai na trilha", async () => {
+  /* #cronograma voltou a ser tela: o cronograma reverso e o de compra
+     e contratação moram nela. Links antigos caem no lugar certo. */
+  it("#cronograma abre o cronograma", async () => {
     localStorage.setItem("trilha:onboarding-seen:tok123", "1");
     mockFetch();
     window.history.replaceState(null, "", "/client/tok123#cronograma");
     renderPortal("#cronograma");
+    expect(await screen.findByTestId("screen-cronograma")).toBeInTheDocument();
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("hash desconhecido continua caindo na trilha", async () => {
+    localStorage.setItem("trilha:onboarding-seen:tok123", "1");
+    mockFetch();
+    window.history.replaceState(null, "", "/client/tok123#inexistente");
+    renderPortal("#inexistente");
     expect(await screen.findByTestId("screen-inicio")).toBeInTheDocument();
     window.history.replaceState(null, "", "/");
   });
@@ -172,9 +183,11 @@ describe("Trilha do Cliente (/client/:token)", () => {
     fireEvent.click(within(nav).getByRole("button", { name: /Resumo semanal/ }));
     expect(screen.getByTestId("screen-resumos")).toHaveTextContent("Forro de gesso concluído");
 
-    // A antiga tela Cronograma foi substituída pela Trilha.
-    expect(within(nav).queryByRole("button", { name: /Cronograma/ })).not.toBeInTheDocument();
-    fireEvent.click(within(nav).getByRole("button", { name: /Trilha/ }));
+    fireEvent.click(within(nav).getByRole("button", { name: /Cronograma/ }));
+    expect(screen.getByTestId("screen-cronograma")).toBeInTheDocument();
+    expect(window.location.hash).toBe("#cronograma");
+
+    fireEvent.click(within(nav).getByRole("button", { name: /^Trilha$/ }));
     expect(screen.getByTestId("screen-inicio")).toBeInTheDocument();
     window.history.replaceState(null, "", "/");
   });

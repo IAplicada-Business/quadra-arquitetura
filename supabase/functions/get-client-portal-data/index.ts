@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     // Fetch all data in parallel
     const nowIso = new Date().toISOString();
-    const [projectRes, tasksRes, paymentsRes, invoicesRes, diaryRes, reportsRes, pendingRes, activitiesRes, closingRes, visitsRes] =
+    const [projectRes, tasksRes, paymentsRes, invoicesRes, diaryRes, reportsRes, pendingRes, activitiesRes, closingRes, visitsRes, scopeRes, quotesRes, purchasesRes] =
       await Promise.all([
         supabase
           .from("projects")
@@ -122,6 +122,24 @@ Deno.serve(async (req) => {
           .gte("visit_date", nowIso)
           .order("visit_date", { ascending: true })
           .limit(20),
+        // Cenários orçamentários: a disciplina e o estado de contratação
+        // moram no escopo; as propostas concorrentes, nas cotações.
+        supabase
+          .from("scope_items")
+          .select("id, discipline, status, payment_terms")
+          .eq("project_id", projectId),
+        // Só o que o cliente precisa para comparar. Fica de fora o que é
+        // interno (user_id, supplier_id) e o que não é proposta.
+        supabase
+          .from("budget_quotes")
+          .select(
+            "id, scope_item_id, supplier_name, value, material_estimate, delivery_time, payment_terms, status, revision, is_current_revision, created_at"
+          )
+          .eq("project_id", projectId),
+        supabase
+          .from("purchases")
+          .select("id, name, category, supplier_name, value, deadline, status, payment_info, product_link")
+          .eq("project_id", projectId),
       ]);
 
     if (projectRes.error) {
@@ -198,6 +216,61 @@ Deno.serve(async (req) => {
       }
     });
 
+    // A disciplina da cotação vem do escopo: budget_quotes não guarda
+    // disciplina própria. Cotação órfã (sem escopo) entra sem disciplina
+    // e a tela a agrupa em "Sem disciplina", em vez de sumir com ela.
+    const scopeRows = (scopeRes.data ?? []) as Array<Record<string, unknown>>;
+    const disciplinaPorEscopo = new Map<string, string>();
+    for (const r of scopeRows) {
+      if (r.id) disciplinaPorEscopo.set(String(r.id), String(r.discipline ?? ""));
+    }
+
+    // `valid_until` e `note` são colunas novas. Enquanto a migração não
+    // roda em produção, a consulta acima falharia se as pedisse, então
+    // elas vêm numa consulta própria cujo erro é ignorado: antes da
+    // migração a tela aparece sem selo de validade e sem nota, depois
+    // ela acende sozinha. Esta consulta sai quando a migração estiver
+    // aplicada em todos os ambientes.
+    const validadePorCotacao = new Map<string, string | null>();
+    const notaPorEscopo = new Map<string, string | null>();
+    try {
+      const [vRes, nRes] = await Promise.all([
+        supabase.from("budget_quotes").select("id, valid_until").eq("project_id", projectId),
+        supabase.from("scope_items").select("id, note").eq("project_id", projectId),
+      ]);
+      for (const r of (vRes.data ?? []) as Array<Record<string, unknown>>) {
+        validadePorCotacao.set(String(r.id), (r.valid_until as string) ?? null);
+      }
+      for (const r of (nRes.data ?? []) as Array<Record<string, unknown>>) {
+        notaPorEscopo.set(String(r.id), (r.note as string) ?? null);
+      }
+    } catch {
+      // colunas ainda não existem: segue sem validade e sem nota
+    }
+
+    const quotes = ((quotesRes.data ?? []) as Array<Record<string, unknown>>).map((q) => ({
+      id: String(q.id),
+      discipline: q.scope_item_id ? disciplinaPorEscopo.get(String(q.scope_item_id)) ?? null : null,
+      supplier: (q.supplier_name as string) ?? null,
+      value: (q.value as number) ?? null,
+      material: (q.material_estimate as number) ?? null,
+      deliveryTime: (q.delivery_time as string) ?? null,
+      paymentTerms: (q.payment_terms as string) ?? null,
+      status: (q.status as string) ?? "pendente",
+      revision: (q.revision as string) ?? null,
+      isCurrentRevision: (q.is_current_revision as boolean) ?? null,
+      quotedAt: q.created_at ? String(q.created_at).slice(0, 10) : null,
+      validUntil: validadePorCotacao.get(String(q.id)) ?? null,
+    }));
+
+    const scope_items = scopeRows.map((r) => ({
+      id: String(r.id),
+      discipline: String(r.discipline ?? ""),
+      status: (r.status as string) ?? null,
+      paymentTerms: (r.payment_terms as string) ?? null,
+      note: notaPorEscopo.get(String(r.id)) ?? null,
+    }));
+
     const { clients: projectClient, ...projectFields } = projectRes.data as Record<string, unknown> & { clients?: { name?: string } | null };
 
     return new Response(
@@ -212,6 +285,9 @@ Deno.serve(async (req) => {
         activities: activitiesRes.data ?? [],
         closing_items: closingRes.data ?? [],
         visits: visitsRes.data ?? [],
+        quotes,
+        scope_items,
+        purchases: purchasesRes.data ?? [],
         onboarding,
       }),
       {

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BookOpen, CheckSquare, Images, MessageCircle, Milestone, Newspaper, Wallet } from "lucide-react";
+import { BookOpen, CalendarRange, CheckSquare, Images, MessageCircle, Milestone, Newspaper, Wallet } from "lucide-react";
 import { PORTAL_TABS, WHATSAPP_URL, type PortalTab } from "@/lib/portal";
 import { QuadraLogo, QuadraWatermark } from "./TrilhaBrand";
 
@@ -8,6 +8,7 @@ const TAB_ICONS: Record<PortalTab, typeof Milestone> = {
   pendencias: CheckSquare,
   galeria: Images,
   orcamento: Wallet,
+  cronograma: CalendarRange,
   resumos: Newspaper,
 };
 
@@ -162,7 +163,10 @@ export function TrilhaShell({ clientName, projectName, active, onChange, onShowW
 
       {/* Barra inferior no celular */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--trilha-areia)] bg-[var(--trilha-creme)]/95 backdrop-blur md:hidden" aria-label="Telas da trilha (celular)">
-        <ul className="grid grid-cols-5">
+        {/* A grade segue o número de abas em vez de uma contagem fixa:
+            com grid-cols-5 travado, a sexta aba caía numa segunda linha
+            e a barra cobria o conteúdo. */}
+        <ul className="grid" style={{ gridTemplateColumns: `repeat(${PORTAL_TABS.length}, minmax(0, 1fr))` }}>
           {PORTAL_TABS.map((t) => {
             const Icon = TAB_ICONS[t.key];
             const isActive = t.key === active;

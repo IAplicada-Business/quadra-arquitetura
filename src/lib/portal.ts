@@ -100,12 +100,67 @@ export interface PortalVisit {
   visit_type: string | null;
 }
 
+/**
+ * Cotação de fornecedor (budget_quotes + a disciplina do escopo).
+ *
+ * É a matéria-prima dos cenários: cada disciplina tem várias, e o
+ * cenário é uma escolha por disciplina. Ver `portalScenarios.ts`.
+ */
+export interface PortalQuote {
+  id: string;
+  /** Vem do scope_item; a cotação em si não guarda disciplina. */
+  discipline: string | null;
+  supplier: string | null;
+  /** Mão de obra / serviço. */
+  value: number | null;
+  /** Material, quando o fornecedor separa. */
+  material: number | null;
+  deliveryTime: string | null;
+  paymentTerms: string | null;
+  status: "pendente" | "cotado" | "aprovado" | "rejeitado";
+  revision: string | null;
+  isCurrentRevision: boolean | null;
+  /** Data da cotação (created_at). */
+  quotedAt: string | null;
+  /** Até quando o fornecedor segura o preço. */
+  validUntil: string | null;
+}
+
+/** Disciplina do escopo, com o estado de contratação e a nota da equipe. */
+export interface PortalScopeItem {
+  id: string;
+  discipline: string;
+  status: string | null;
+  paymentTerms: string | null;
+  /** Observação que a equipe escreve para o cliente ler. */
+  note: string | null;
+}
+
+/** Item que o cliente compra direto (purchases). */
+export interface PortalPurchase {
+  id: string;
+  name: string;
+  category: string | null;
+  supplier_name: string | null;
+  value: number | null;
+  deadline: string | null;
+  status: string | null;
+  payment_info: string | null;
+  product_link: string | null;
+}
+
 export interface PortalData {
   project: PortalProject;
   tasks: PortalTask[];
   /** Atividades do Cronograma Reverso (edge function nova; antiga não manda). */
   activities?: PortalActivity[];
   closing_items?: PortalClosingItem[];
+  /** Cotações por disciplina, base dos cenários orçamentários. */
+  quotes?: PortalQuote[];
+  /** Disciplinas do escopo (status de contratação e notas). */
+  scope_items?: PortalScopeItem[];
+  /** Compras do cliente, base do cronograma de compra. */
+  purchases?: PortalPurchase[];
   visits?: PortalVisit[];
   payments: PortalPayment[];
   invoices: PortalInvoice[];
@@ -120,7 +175,7 @@ export interface PortalData {
 /* Navegação                                                           */
 /* ------------------------------------------------------------------ */
 
-export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "resumos";
+export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "cronograma" | "resumos";
 
 export interface PortalTabDef {
   key: PortalTab;
@@ -134,6 +189,7 @@ export const PORTAL_TABS: PortalTabDef[] = [
   { key: "pendencias", label: "Minhas pendências", short: "Pendências" },
   { key: "galeria", label: "Galeria", short: "Galeria" },
   { key: "orcamento", label: "Orçamento", short: "Orçamento" },
+  { key: "cronograma", label: "Cronograma", short: "Cronograma" },
   { key: "resumos", label: "Resumo semanal", short: "Resumos" },
 ];
 
@@ -143,8 +199,6 @@ export function isPortalTab(v: string): v is PortalTab {
 
 /**
  * Aba a partir do hash da URL (#pendencias). Desconhecido => trilha.
- * Links antigos para #cronograma caem na trilha, que agora mostra os
- * blocos de construção e as próximas entregas.
  */
 export function tabFromHash(hash: string | null | undefined): PortalTab {
   const key = (hash ?? "").replace(/^#/, "").trim().toLowerCase();
