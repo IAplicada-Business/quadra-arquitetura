@@ -14,6 +14,7 @@ import CalculationRulesTab from "@/components/settings/CalculationRulesTab";
 import ProposalBrandingTab from "@/components/settings/ProposalBrandingTab";
 import OnboardingTemplateTab from "@/components/settings/OnboardingTemplateTab";
 import SiteContentTab from "@/components/settings/site/SiteContentTab";
+import BlogPostsTab from "@/components/settings/blog/BlogPostsTab";
 import { useContentSeries } from "@/hooks/useContentSeries";
 import SupplierCategoriesManager from "@/components/settings/SupplierCategoriesManager";
 import MessageTemplatesSettings from "@/components/settings/MessageTemplatesSettings";
@@ -193,6 +194,7 @@ export default function SettingsPage() {
           <TabsTrigger value="proposta">Proposta</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="site">Site</TabsTrigger>
+          <TabsTrigger value="blog">Blog</TabsTrigger>
         </TabsList>
 
         <TabsContent value="geral">
@@ -370,6 +372,10 @@ export default function SettingsPage() {
 
         <TabsContent value="site">
           <SiteContentTab />
+        </TabsContent>
+
+        <TabsContent value="blog">
+          <BlogPostsTab />
         </TabsContent>
       </Tabs>
     </div>
