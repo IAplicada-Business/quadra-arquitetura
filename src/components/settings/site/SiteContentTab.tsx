@@ -39,10 +39,13 @@ function defaultImage(section: SiteSectionKey, field: string, index: number): st
  * Rascunho local para todas as seções; o preview mostra a seção com o
  * rascunho e "Publicar" grava em site_content, que o site lê a cada acesso.
  */
-export default function SiteContentTab() {
+export default function SiteContentTab({ sections }: { sections?: SiteSectionKey[] } = {}) {
   const { rows, content, lastUpdatedAt, isLoading, isFetched, dataUpdatedAt, publish } = useSiteContentAdmin();
   const [draft, setDraft] = useState<SiteContent | null>(null);
-  const [active, setActive] = useState<SiteSectionKey>("hero");
+  /* `sections` restringe o editor a algumas seções (o /admin usa para
+     oferecer só "Depoimentos" numa aba própria). Sem ele, são todas. */
+  const visiveis = sections ? SITE_SECTION_DEFINITIONS.filter((d) => sections.includes(d.key)) : SITE_SECTION_DEFINITIONS;
+  const [active, setActive] = useState<SiteSectionKey>(visiveis[0]?.key ?? "hero");
   const dirtyRef = useRef(false);
 
   const dirty = draft != null && !siteContentEqual(draft, content);
@@ -107,8 +110,8 @@ export default function SiteContentTab() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Seções do site">
-        {SITE_SECTION_DEFINITIONS.map((s) => {
+      <div className={visiveis.length > 1 ? "flex flex-wrap gap-2" : "hidden"} role="tablist" aria-label="Seções do site">
+        {visiveis.map((s) => {
           const changed = !siteSectionEqual(draft, content, s.key);
           return (
             <Button

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -79,5 +79,43 @@ describe("site público lendo site_content", () => {
     respondWith({ data: null, error: { message: "offline" } });
     renderLanding();
     expect(await screen.findByText(/A Quadra nasceu de uma dúvida/)).toBeInTheDocument();
+  });
+
+  it("a dobra de depoimentos (feedbacks) está no ar, mesmo só com o texto-modelo", async () => {
+    respondWith({ data: [], error: null });
+    renderLanding();
+    await screen.findByText(/A Quadra nasceu de uma dúvida/);
+    expect(screen.getAllByText(/Espaço reservado para depoimento/).length).toBeGreaterThan(0);
+    expect(document.getElementById("depoimentos")).not.toBeNull();
+  });
+
+  it("depoimento publicado substitui o texto-modelo", async () => {
+    respondWith({
+      data: [
+        {
+          key: "testimonials.items",
+          type: "list",
+          value_json: [{ title: "Ana Souza", tag: "Residencial · BH", desc: "A obra terminou no prazo e dentro do orçamento." }],
+        },
+      ],
+      error: null,
+    });
+    renderLanding();
+    expect(await screen.findByText("A obra terminou no prazo e dentro do orçamento.")).toBeInTheDocument();
+    expect(screen.getByText("Ana Souza")).toBeInTheDocument();
+    expect(screen.queryByText(/Espaço reservado para depoimento/)).not.toBeInTheDocument();
+  });
+
+  it('botão secundário "Portfólio" leva aos projetos, não à jornada', async () => {
+    respondWith({ data: [{ key: "hero.ctaSecondary", type: "text", value_json: "Portfólio" }], error: null });
+    const projetos = document.createElement("div");
+    projetos.id = "projetos";
+    const rolar = vi.fn();
+    projetos.scrollIntoView = rolar;
+    document.body.appendChild(projetos);
+    renderLanding();
+    fireEvent.click(await screen.findByRole("button", { name: "Portfólio" }));
+    expect(rolar).toHaveBeenCalled();
+    projetos.remove();
   });
 });

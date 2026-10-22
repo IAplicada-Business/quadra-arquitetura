@@ -52,7 +52,7 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
             </h2>
 
             <div
-              className="text-brand-navy/60 space-y-4 mb-8"
+              className="text-brand-navy/75 space-y-4 mb-8"
               style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
             >
               {splitParagraphs(content.body).map((p, i) => (
@@ -69,7 +69,7 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
                     ·
                   </span>
                   <p
-                    className="text-brand-navy/60 min-w-0"
+                    className="text-brand-navy/75 min-w-0"
                     style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
                   >
                     <span className="text-brand-navy font-medium">{item.title}</span>
@@ -81,7 +81,7 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
 
             {content.note && (
               <p
-                className="text-brand-navy/45 mt-8"
+                className="text-brand-navy/60 mt-8"
                 style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.8125rem", lineHeight: 1.6, fontStyle: "italic" }}
               >
                 {content.note}
@@ -123,7 +123,7 @@ export function TrailSection({ content = SITE_DEFAULTS.trail }: { content?: Trai
               <div className="h-1 flex-1 bg-brand-areia/15 rounded-full overflow-hidden">
                 <div className="h-full bg-brand-terracota rounded-full" style={{ width: `${progresso}%` }} />
               </div>
-              <span className="text-brand-areia/60 shrink-0 tabular-nums" style={{ fontSize: "11px" }}>
+              <span className="text-brand-areia/60 shrink-0 lining-nums tabular-nums" style={{ fontSize: "11px" }}>
                 {progresso}% concluído
               </span>
             </div>

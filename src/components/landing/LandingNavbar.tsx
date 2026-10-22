@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logoBege from "@/assets/logo-bege.png";
 import logoAzul from "@/assets/logo-azul.png";
@@ -20,7 +20,14 @@ const links = [
 
 export function LandingNavbar() {
   const navigate = useNavigate();
+  /* O mesmo menu serve a /blog: fora da home, o link de seção leva à home
+     já ancorado em vez de procurar uma seção que não está na página. */
+  const { pathname } = useLocation();
+  const naHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
+  /* Seção em que o leitor está, para acender o link do menu. */
+  const [secaoAtiva, setSecaoAtiva] = useState<string | null>(null);
+  const ativo = pathname.startsWith("/blog") ? "#blog" : secaoAtiva;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   /* Quanto da página já foi percorrido. É o único indicador de
@@ -32,15 +39,38 @@ export function LandingNavbar() {
   const progresso = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 80);
+      // No topo (hero) nenhuma seção do menu está ativa.
+      if (window.scrollY < 300) setSecaoAtiva(null);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /* A faixa estreita no meio da tela define a seção "atual": a que
+     cruza a linha de leitura, não a que só raspa a borda. */
+  useEffect(() => {
+    if (!naHome || typeof IntersectionObserver === "undefined") return;
+    const alvos = links.map((l) => document.querySelector(l.href)).filter((el): el is Element => !!el);
+    const io = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) if (e.isIntersecting && window.scrollY >= 300) setSecaoAtiva(`#${e.target.id}`);
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    alvos.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [naHome]);
+
   const smoothTo = (href: string) => {
+    setMobileOpen(false);
+    if (!naHome) {
+      navigate(`/${href}`);
+      return;
+    }
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    setMobileOpen(false);
   };
 
   return (
@@ -62,7 +92,7 @@ export function LandingNavbar() {
           centro do que sobra entre logo e link. */}
       <div className="w-full px-6 md:px-10 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => (naHome ? window.scrollTo({ top: 0, behavior: "smooth" }) : navigate("/"))}
           className="flex items-center justify-self-start"
           aria-label="Quadra Arquitetura"
         >
@@ -79,10 +109,21 @@ export function LandingNavbar() {
             <button
               key={l.href}
               onClick={() => smoothTo(l.href)}
-              className="text-brand-navy/80 text-xs tracking-wider uppercase whitespace-nowrap transition-colors hover:text-brand-navy"
-              style={{ letterSpacing: "1.5px", fontWeight: 400 }}
+              aria-current={ativo === l.href ? "true" : undefined}
+              className={`group relative py-1 text-xs tracking-wider uppercase whitespace-nowrap transition-colors hover:text-brand-navy focus-visible:outline-none focus-visible:text-brand-navy ${
+                ativo === l.href ? "text-brand-navy" : "text-brand-navy/70"
+              }`}
+              style={{ letterSpacing: "1.5px", fontWeight: ativo === l.href ? 500 : 400 }}
             >
               {l.label}
+              {/* Sublinhado que se risca: aceso na seção atual, e como
+                  prévia no hover nas demais. */}
+              <span
+                aria-hidden
+                className={`absolute inset-x-0 -bottom-0.5 h-px origin-left bg-brand-terracota transition-transform duration-500 ${
+                  ativo === l.href ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-focus-visible:scale-x-100"
+                }`}
+              />
             </button>
           ))}
         </div>
@@ -97,7 +138,7 @@ export function LandingNavbar() {
             className="text-brand-navy/50 text-[11px] tracking-wider uppercase whitespace-nowrap transition-colors hover:text-brand-navy"
             style={{ letterSpacing: "1.5px" }}
           >
-            Area da Equipe
+            Área da Equipe
           </button>
         </div>
 
@@ -138,7 +179,7 @@ export function LandingNavbar() {
                   className="text-brand-areia/70 text-xs tracking-widest uppercase"
                   style={{ letterSpacing: "2px" }}
                 >
-                  Area da Equipe
+                  Área da Equipe
                 </button>
               </div>
             </div>

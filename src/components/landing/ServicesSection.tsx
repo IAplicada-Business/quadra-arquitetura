@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, splitParagraphs, type ServicesContent } from "@/lib/siteContent";
 import { Item, Revelar, Rotulo, Sequencia } from "@/components/landing/Motion";
@@ -50,7 +50,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
             <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }} />
           </h2>
           <p
-            className="text-brand-navy/60"
+            className="text-brand-navy/75"
             style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
           >
             <RichText text={content.subtitle} />
@@ -69,9 +69,32 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
           {content.items.map((fase, i) => {
             const aberta = comAcordeao ? abertas.has(i) : modelo === "lista";
             const itens = (fase.bullets ?? "").split("\n").map((t) => t.trim()).filter(Boolean);
+            /* Fase só com título (conteúdo ainda não preenchido no admin):
+               em vez de um cartão baixo e vazio, ganha altura, ancora o
+               título embaixo e oferece o próximo passo. */
+            const enxuto = !fase.desc.trim() && itens.length === 0;
 
             return (
-              <Item key={i} className="bg-brand-creme border border-brand-navy/10 p-7 md:p-9 min-w-0 flex flex-col">
+              <Item
+                key={i}
+                className={`group relative overflow-hidden bg-brand-creme border border-brand-navy/10 p-7 md:p-9 min-w-0 flex flex-col transition-[box-shadow,border-color] duration-500 hover:border-brand-terracota/40 hover:shadow-card ${
+                  enxuto ? "min-h-[14rem] justify-end" : ""
+                }`}
+              >
+                {/* A linha terracota se risca no hover: o traço de projeto
+                    da landing, agora também como resposta ao toque. */}
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-brand-terracota transition-transform duration-700 group-hover:scale-x-100"
+                />
+                {/* Numeral fantasma: dá peso de "fase" sem competir com o título. */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -right-1 -top-4 select-none text-brand-navy/[0.045]"
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "8rem", lineHeight: 1, fontWeight: 500 }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 {fase.tag && (
                   <p
                     className="text-brand-terracota mb-3"
@@ -94,7 +117,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                 </h3>
 
                 <div
-                  className="text-brand-navy/65 flex-1"
+                  className="text-brand-navy/75 flex-1"
                   style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
                 >
                   {splitParagraphs(fase.desc).map((p, j) => (
@@ -103,6 +126,19 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                     </p>
                   ))}
                 </div>
+
+                {enxuto && (
+                  <button
+                    type="button"
+                    onClick={() => document.querySelector("#contato")?.scrollIntoView({ behavior: "smooth" })}
+                    aria-label={`Falar com a Quadra sobre ${fase.title.trim()}`}
+                    className="mt-6 flex w-full items-center justify-between gap-3 border-t border-brand-navy/10 pt-5 text-left text-brand-navy transition-colors hover:text-brand-terracota focus-visible:outline-none focus-visible:text-brand-terracota"
+                    style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", fontWeight: 500 }}
+                  >
+                    <span>Falar com a Quadra</span>
+                    <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                )}
 
                 {itens.length > 0 && comAcordeao && (
                   <>
@@ -125,12 +161,16 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                         {itens.map((item, j) => (
                           <li
                             key={j}
-                            className="flex gap-3 text-brand-navy/70 min-w-0"
-                            style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
+                            className="flex gap-3 text-brand-navy/70 min-w-0 animate-fade-in motion-reduce:animate-none [animation-fill-mode:backwards]"
+                            style={{
+                              fontFamily: "'Jost', sans-serif",
+                              fontSize: "0.875rem",
+                              lineHeight: 1.65,
+                              fontWeight: 300,
+                              animationDelay: `${j * 60}ms`,
+                            }}
                           >
-                            <span aria-hidden className="text-brand-terracota shrink-0">
-                              ·
-                            </span>
+                            <span aria-hidden className="mt-[0.55em] block h-1.5 w-1.5 shrink-0 bg-brand-terracota" />
                             <span className="min-w-0">{item}</span>
                           </li>
                         ))}
@@ -147,9 +187,7 @@ export function ServicesSection({ content = SITE_DEFAULTS.services }: { content?
                         className="flex gap-3 text-brand-navy/70 min-w-0"
                         style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
                       >
-                        <span aria-hidden className="text-brand-terracota shrink-0">
-                          ·
-                        </span>
+                        <span aria-hidden className="mt-[0.55em] block h-1.5 w-1.5 shrink-0 bg-brand-terracota" />
                         <span className="min-w-0">{item}</span>
                       </li>
                     ))}

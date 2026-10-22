@@ -63,14 +63,14 @@ export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: 
             return (
               <ItemArtigo key={i} className={
                   lista
-                    ? "bg-brand-creme grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] min-w-0"
-                    : "bg-brand-creme flex flex-col min-w-0"
+                    ? "group bg-brand-creme grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] min-w-0 transition-shadow duration-500 hover:shadow-card"
+                    : "group bg-brand-creme flex flex-col min-w-0 transition-shadow duration-500 hover:shadow-card"
                 }>
                 <div className={lista ? "aspect-[4/3] md:aspect-auto overflow-hidden" : "aspect-[4/3] overflow-hidden"}>
                   <img
                     src={caso.image || FOTOS_PADRAO[i % FOTOS_PADRAO.length]}
                     alt={caso.title}
-                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-105"
                     loading="lazy"
                   />
                 </div>
@@ -94,7 +94,7 @@ export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: 
 
                   {historia && (
                     <p
-                      className="text-brand-navy/60 flex-1"
+                      className="text-brand-navy/75 flex-1"
                       style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.7, fontWeight: 300 }}
                     >
                       <RichText text={historia} />
@@ -112,7 +112,7 @@ export function CasesSection({ content = SITE_DEFAULTS.portfolio }: { content?: 
 
                   {meta && (
                     <p
-                      className="border-t border-brand-navy/10 mt-5 pt-4 text-brand-navy/45"
+                      className="border-t border-brand-navy/10 mt-5 pt-4 text-brand-navy/60"
                       style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.8125rem" }}
                     >
                       {meta}

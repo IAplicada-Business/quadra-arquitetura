@@ -45,7 +45,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
           </h2>
 
           <div
-            className="text-brand-navy/60 space-y-4 max-w-xl"
+            className="text-brand-navy/75 space-y-4 max-w-xl"
             style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
           >
             {splitParagraphs(content.body).map((p, i) => (
@@ -74,7 +74,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
                     </p>
                   )}
                   <dd
-                    className="text-brand-navy/60"
+                    className="text-brand-navy/75"
                     style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.7, fontWeight: 300 }}
                   >
                     {socia.desc}
@@ -89,7 +89,7 @@ export function AboutSection({ content = SITE_DEFAULTS.about }: { content?: Abou
               {content.badges.map((selo, i) => (
                 <ItemLista
                   key={i}
-                  className="border border-brand-navy/20 px-4 py-2.5 text-brand-navy/60 whitespace-nowrap"
+                  className="border border-brand-navy/20 px-4 py-2.5 text-brand-navy/75 whitespace-nowrap"
                   style={{ fontFamily: "'Jost', sans-serif", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase" }}
                 >
                   {selo.title}

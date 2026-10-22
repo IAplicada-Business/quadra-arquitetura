@@ -247,6 +247,30 @@
     text-wrap: balance;
   }
 
+  /* Trama de módulos quadrados: o "quadra" do nome e os painéis de
+     carvalho da foto das sócias, em linha fina. Vai num elemento
+     decorativo à parte (absolute, aria-hidden), porque a máscara que
+     desvanece as bordas esconderia o texto se estivesse na própria
+     dobra. Só usa a paleta: areia sobre navy, 5% de opacidade. */
+  .trama-quadra {
+    background-image:
+      linear-gradient(hsl(var(--brand-areia) / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--brand-areia) / 0.06) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 25% 35%, #000 0%, transparent 78%);
+    mask-image: radial-gradient(ellipse 80% 70% at 25% 35%, #000 0%, transparent 78%);
+  }
+
+  /* Variante para fundo claro: navy a 5%. */
+  .trama-quadra-clara {
+    background-image:
+      linear-gradient(hsl(var(--brand-navy) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--brand-navy) / 0.05) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 80% 20%, #000 0%, transparent 78%);
+    mask-image: radial-gradient(ellipse 80% 70% at 80% 20%, #000 0%, transparent 78%);
+  }
+
   /* Rótulo de categoria do padrão: maiúscula espaçada, peso médio. */
   .label-cat {
     font-size: 11px;

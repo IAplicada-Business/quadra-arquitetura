@@ -22,8 +22,16 @@ const atalhos = [
  * O que sobra é o que de fato pertence ao rodapé: quem assina, por onde
  * navegar sem subir, e a linha legal.
  */
-export function LandingFooter({ content = SITE_DEFAULTS.footer }: { content?: FooterContent }) {
-  const smoothTo = (href: string) => document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+export function LandingFooter({
+  content = SITE_DEFAULTS.footer,
+  irPara,
+}: {
+  content?: FooterContent;
+  /** Fora da home (páginas do blog) o atalho navega até a âncora em vez de rolar. */
+  irPara?: (href: string) => void;
+}) {
+  const smoothTo =
+    irPara ?? ((href: string) => document.querySelector(href)?.scrollIntoView({ behavior: "smooth" }));
 
   return (
     <footer className="bg-brand-navy border-t border-brand-areia/10" style={{ fontFamily: "'Jost', sans-serif" }}>

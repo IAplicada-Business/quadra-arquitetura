@@ -46,7 +46,7 @@ export function FaqSection({ content = SITE_DEFAULTS.faq }: { content?: FaqConte
             </h2>
             {content.note && (
               <p
-                className="text-brand-navy/55"
+                className="text-brand-navy/65"
                 style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
               >
                 {content.note}
@@ -79,7 +79,7 @@ export function FaqSection({ content = SITE_DEFAULTS.faq }: { content?: FaqConte
                   {aberta && (
                     <dd
                       id={`faq-${i}`}
-                      className="text-brand-navy/60 pb-6 pr-8 min-w-0"
+                      className="text-brand-navy/75 pb-6 pr-8 min-w-0"
                       style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
                     >
                       <RichText text={item.desc} />
