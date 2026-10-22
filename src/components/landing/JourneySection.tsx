@@ -57,7 +57,7 @@ function ListaNumerada({ grupos }: { grupos: Grupo[] }) {
               <ItemLista key={n} className="flex gap-5 md:gap-7 border-b border-brand-navy/10 py-6 last:border-0 min-w-0">
                 <span
                   aria-hidden
-                  className="text-brand-terracota/70 shrink-0 tabular-nums"
+                  className="text-brand-terracota/70 shrink-0 lining-nums tabular-nums"
                   style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.5rem", lineHeight: 1.2 }}
                 >
                   {String(n).padStart(2, "0")}
@@ -70,7 +70,7 @@ function ListaNumerada({ grupos }: { grupos: Grupo[] }) {
                     {etapa.title}
                   </h3>
                   <p
-                    className="text-brand-navy/60"
+                    className="text-brand-navy/75"
                     style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
                   >
                     {etapa.desc}
@@ -100,7 +100,7 @@ function LinhaDoTempo({ grupos }: { grupos: Grupo[] }) {
               <ItemLista key={n} className="relative pb-9 last:pb-0 min-w-0">
                 <span
                   aria-hidden
-                  className="absolute top-1.5 grid place-items-center h-6 w-6 rounded-full bg-brand-terracota text-brand-navy tabular-nums"
+                  className="absolute top-1.5 grid place-items-center h-6 w-6 rounded-full bg-brand-terracota text-brand-navy lining-nums tabular-nums"
                   style={{ left: "-2.4rem", fontFamily: "'Jost', sans-serif", fontSize: "10px", fontWeight: 600 }}
                 >
                   {n}
@@ -112,7 +112,7 @@ function LinhaDoTempo({ grupos }: { grupos: Grupo[] }) {
                   {etapa.title}
                 </h3>
                 <p
-                  className="text-brand-navy/60"
+                  className="text-brand-navy/75"
                   style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.7, fontWeight: 300 }}
                 >
                   {etapa.desc}
@@ -138,7 +138,7 @@ function CardsNumerados({ grupos }: { grupos: Grupo[] }) {
               <ItemLista key={n} className="border border-brand-navy/12 bg-brand-creme/60 p-5 min-w-0">
                 <span
                   aria-hidden
-                  className="text-brand-terracota/70 tabular-nums"
+                  className="text-brand-terracota/70 lining-nums tabular-nums"
                   style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.375rem", lineHeight: 1 }}
                 >
                   {String(n).padStart(2, "0")}
@@ -150,7 +150,7 @@ function CardsNumerados({ grupos }: { grupos: Grupo[] }) {
                   {etapa.title}
                 </h3>
                 <p
-                  className="text-brand-navy/60"
+                  className="text-brand-navy/75"
                   style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.875rem", lineHeight: 1.65, fontWeight: 300 }}
                 >
                   {etapa.desc}
@@ -189,7 +189,7 @@ export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: 
                 <RichText text={content.title} styles={{ em: { color: "hsl(var(--brand-terracota))", fontStyle: "italic" } }} />
               </h2>
               <p
-                className="text-brand-navy/60 mb-8"
+                className="text-brand-navy/75 mb-8"
                 style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.9375rem", lineHeight: 1.75, fontWeight: 300 }}
               >
                 <RichText text={content.subtitle} />
@@ -200,7 +200,7 @@ export function JourneySection({ content = SITE_DEFAULTS.journey }: { content?: 
                   <li key={i} className="flex items-center gap-2.5 min-w-0">
                     <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand-terracota shrink-0" />
                     <span
-                      className="text-brand-navy/60 truncate"
+                      className="text-brand-navy/75 truncate"
                       style={{ fontFamily: "'Jost', sans-serif", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase" }}
                     >
                       {m.title}

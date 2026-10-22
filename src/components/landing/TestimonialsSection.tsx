@@ -53,7 +53,7 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
                 destaque && i === 0 ? "md:col-span-2 md:row-span-2 bg-brand-pedra/40" : ""
               }`}>
               <blockquote
-                className="text-brand-navy/65 flex-1"
+                className="text-brand-navy/75 flex-1"
                 style={{
                   fontFamily: "'Jost', sans-serif",
                   fontSize: destaque && i === 0 ? "1.125rem" : "0.9375rem",
@@ -72,7 +72,7 @@ export function TestimonialsSection({ content = SITE_DEFAULTS.testimonials }: { 
                 </p>
                 {dep.tag && (
                   <p
-                    className="text-brand-navy/45 mt-1 truncate"
+                    className="text-brand-navy/60 mt-1 truncate"
                     style={{ fontFamily: "'Jost', sans-serif", fontSize: "0.8125rem" }}
                   >
                     {dep.tag}

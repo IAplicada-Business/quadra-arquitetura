@@ -1,5 +1,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { Contador } from "@/components/landing/Efeitos";
 import coverImg from "@/assets/socias-cover.jpg";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, type HeroContent } from "@/lib/siteContent";
@@ -29,15 +31,25 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  /* O rótulo do botão secundário é editável ("Ver a jornada completa",
+     "Portfólio"…), e o destino precisa acompanhar o que ele promete: um
+     botão "Portfólio" que rola para a jornada quebra a confiança no
+     primeiro clique. */
+  const destinoSecundario = /portf|case|projeto|obras/i.test(content.ctaSecondary) ? "#projetos" : "#jornada";
+
   return (
     /* pt-[68px]: a navbar é fixa e opaca, então a primeira dobra precisa
        começar abaixo dela em vez de passar por baixo. */
     <section ref={secao} id="inicio" className="relative w-full overflow-hidden bg-brand-navy pt-[68px] lg:pt-[72px]">
       <div className="grid lg:grid-cols-2 min-h-[640px]">
         {/* ── Painel ─────────────────────────────────────────────── */}
+        {/* A trama e a marca d'água ficam numa camada própria: a máscara
+            que desvanece a trama esconderia o texto se estivesse nele. */}
+        <div className="order-2 lg:order-1 relative flex min-w-0 overflow-hidden">
+        <div aria-hidden className="trama-quadra absolute inset-0" />
         <SequenciaEntrada
           atraso={0.15}
-          className="order-2 lg:order-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-10 lg:pl-14 lg:pr-12 lg:py-20 xl:pl-20"
+          className="relative flex-1 flex flex-col justify-center min-w-0 px-6 py-14 md:px-10 lg:pl-14 lg:pr-12 lg:py-20 xl:pl-20"
         >
           <Item>
           <Rotulo className="mb-6">{content.eyebrow}</Rotulo>
@@ -73,13 +85,14 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           <Item className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <button
               onClick={() => smoothTo("#contato")}
-              className="bg-brand-terracota text-brand-navy px-8 py-4 text-sm transition-colors hover:bg-brand-rosa"
+              className="group inline-flex items-center justify-center gap-3 bg-brand-terracota text-brand-navy px-8 py-4 text-sm transition-colors hover:bg-brand-rosa focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-areia focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
               style={{ fontFamily: "'Jost', sans-serif", fontWeight: 500 }}
             >
               {content.ctaPrimary}
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </button>
             <button
-              onClick={() => smoothTo("#jornada")}
+              onClick={() => smoothTo(destinoSecundario)}
               className="text-brand-areia text-sm pb-1 border-b border-brand-areia/40 transition-colors hover:border-brand-areia self-start sm:self-auto"
               style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400 }}
             >
@@ -91,9 +104,14 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
           {content.stats.length > 0 && (
             <Item>
               <div className="h-px bg-brand-areia/20 my-10 max-w-xl" />
-              <dl className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-x-10 gap-y-7 max-w-xl">
+              {/* Uma faixa de dados: quatro colunas separadas por fio fino,
+                  em vez de uma grade 2x2 solta. Abaixo de 520px volta a duas. */}
+              <dl className="grid grid-cols-2 min-[520px]:grid-cols-4 gap-x-6 gap-y-7 max-w-xl">
                 {content.stats.map((stat, i) => (
-                  <div key={i} className="min-w-0">
+                  <div
+                    key={i}
+                    className="min-w-0 min-[520px]:border-l min-[520px]:border-brand-areia/20 min-[520px]:pl-5 min-[520px]:first:border-l-0 min-[520px]:first:pl-0"
+                  >
                     <dt
                       className="text-brand-terracota"
                       style={{
@@ -103,7 +121,7 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
                         fontWeight: 400,
                       }}
                     >
-                      {stat.title}
+                      <Contador valor={stat.title} />
                     </dt>
                     <dd
                       className="text-brand-areia/70 mt-1"
@@ -117,9 +135,13 @@ export function HeroSection({ content = SITE_DEFAULTS.hero }: { content?: HeroCo
             </Item>
           )}
         </SequenciaEntrada>
+        </div>
 
         {/* ── Foto ───────────────────────────────────────────────── */}
-        <div className="order-1 lg:order-2 relative min-h-[280px] lg:min-h-0">
+        {/* overflow-hidden: a foto é maior que o quadro (folga do paralaxe) e,
+            sem o corte, o excedente pintava por cima da faixa terracota logo
+            abaixo, escondendo o texto dela. */}
+        <div className="order-1 lg:order-2 relative min-h-[280px] lg:min-h-0 overflow-hidden">
           {/* A foto é 18% mais alta que o quadro e começa deslocada para
               cima na mesma medida. Essa folga é o que o paralaxe consome:
               sem ela, deslocar a imagem abriria faixa vazia na borda. */}

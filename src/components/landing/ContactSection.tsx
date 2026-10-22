@@ -4,6 +4,7 @@ import { useSiteLead, type SiteLeadPayload } from "@/hooks/useSiteLead";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
 import { SITE_DEFAULTS, contactIconKind, splitParagraphs, type ContactContent, type ContactIconKind } from "@/lib/siteContent";
 import { ItemLista, Revelar, Rotulo, SequenciaUl } from "@/components/landing/Motion";
+import { MarcaDagua } from "@/components/landing/Efeitos";
 
 const CONTACT_ICONS: Record<ContactIconKind, LucideIcon> = {
   instagram: Instagram,
@@ -80,8 +81,10 @@ export function ContactSection({ content = SITE_DEFAULTS.contact, preview = fals
     "w-full bg-transparent border-b border-brand-areia/25 py-2.5 text-brand-areia placeholder:text-brand-areia/35 outline-none transition-colors focus:border-brand-terracota min-w-0";
 
   return (
-    <section id="contato" className="bg-brand-navy py-20 md:py-28">
-      <div className="max-w-6xl mx-auto px-6 md:px-10 min-w-0">
+    <section id="contato" className="relative overflow-hidden bg-brand-navy py-20 md:py-28">
+      <div aria-hidden className="trama-quadra absolute inset-0" />
+      <MarcaDagua tom="bege" className="absolute -bottom-24 -left-16 hidden w-[34rem] opacity-[0.035] lg:block" />
+      <div className="relative max-w-6xl mx-auto px-6 md:px-10 min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* ── Texto e canais ─────────────────────────────────── */}
           <Revelar className="min-w-0">

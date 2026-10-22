@@ -144,6 +144,12 @@ export default {
           from: { opacity: "0", transform: "scale(0.96)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        /* Letreiro da landing: a faixa tem o conteúdo duplicado, então
+           andar metade da largura fecha o laço sem salto. */
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -151,7 +157,7 @@ export default {
         "fade-in": "fade-in 0.4s ease-out",
         "slide-in-left": "slide-in-left 0.3s ease-out",
         "rocket-pop": "rocket-pop 0.18s ease-out",
-      },
+        marquee: "marquee 48s linear infinite",      },
     },
   },
   plugins: [require("tailwindcss-animate")],
