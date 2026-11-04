@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrencyBRL, formatDateBR, type PortalData } from "@/lib/portal";
@@ -85,7 +85,7 @@ const DESTAQUE_LINHA: Partial<Record<SituacaoEtapa, string>> = {
   em_andamento: "bg-[#ffc7ce]",
 };
 
-function TabelaReversa({ etapas }: { etapas: EtapaCronograma[] }) {
+export function TabelaReversa({ etapas }: { etapas: EtapaCronograma[] }) {
   const linhas = [...etapas].reverse();
   const celula = "border border-[#7f7f7f] px-2 py-[3px] text-center";
   return (
@@ -124,68 +124,98 @@ function TabelaReversa({ etapas }: { etapas: EtapaCronograma[] }) {
   );
 }
 
-/** Uma linha do cronograma de compra e contratação. */
-function LinhaCompra({ linha }: { linha: LinhaDeCompra }) {
-  const prazo =
-    linha.urgencia === "fechado"
-      ? linha.status
-      : linha.diasAteLimite === null
-        ? "sem data"
-        : linha.diasAteLimite < 0
-          ? `${Math.abs(linha.diasAteLimite)} dias atrás`
-          : linha.diasAteLimite === 0
-            ? "hoje"
-            : `em ${linha.diasAteLimite} dias úteis`;
+const MESES = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
 
+/** "2026-09-11" → "SETEMBRO/2026" (o mês da data limite, como na planilha). */
+function mesAno(iso: string | null): string {
+  if (!iso) return "SEM DATA";
+  const [ano, mes] = iso.split("-");
+  return `${MESES[Number(mes) - 1] ?? ""}/${ano}`;
+}
+
+/** Cor da DATA LIMITE DE FECHAMENTO: vermelho vencida, salmão se é esta semana, verde se já fechou. */
+const DESTAQUE_LIMITE: Partial<Record<UrgenciaLinha, string>> = {
+  atrasado: "bg-[#ff0000] font-bold",
+  esta_semana: "bg-[#f8cbad]",
+  fechado: "bg-[#6fcf7f]",
+};
+
+/**
+ * O cronograma de compra e contratação no formato do "Cronograma de
+ * fechamento" da Q153: MÊS/ANO, DATA DE ENTREGA (quando a obra precisa),
+ * DATA LIMITE DE FECHAMENTO, DESCRIÇÃO e PRAZO DE ENTREGA, com uma faixa
+ * por mês (o mês da data limite) e a data mais próxima primeiro.
+ */
+export function TabelaFechamento({ linhas }: { linhas: LinhaDeCompra[] }) {
+  const ordenadas = [...linhas].sort((a, b) => {
+    if (a.fecharAte && b.fecharAte && a.fecharAte !== b.fecharAte) return a.fecharAte < b.fecharAte ? -1 : 1;
+    if (a.fecharAte && !b.fecharAte) return -1;
+    if (!a.fecharAte && b.fecharAte) return 1;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  });
+  const grupos: { mes: string; linhas: LinhaDeCompra[] }[] = [];
+  for (const l of ordenadas) {
+    const mes = mesAno(l.fecharAte);
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.mes === mes) ultimo.linhas.push(l);
+    else grupos.push({ mes, linhas: [l] });
+  }
+  const celula = "border border-[#7f7f7f] px-2 py-[3px] text-center";
   return (
-    <li className="grid grid-cols-1 items-start gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="min-w-0 truncate text-sm font-medium text-[var(--trilha-navy)]">{linha.nome}</p>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${CORES_URGENCIA[linha.urgencia]}`}>
-            {linha.tipo === "contratacao" ? "contratar" : "comprar"}
-          </span>
-          {linha.link && (
-            <a
-              href={linha.link}
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0 text-[var(--trilha-terracota)] hover:underline"
-              aria-label={`Abrir o produto ${linha.nome}`}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
-        </div>
-        <p className="mt-0.5 text-xs text-[var(--trilha-navy)]/50">
-          {[
-            linha.fornecedor,
-            linha.condicao,
-            /* Por que a data é essa: é a parte que o cliente não
-               adivinha e a que justifica a urgência. */
-            linha.precisaEm && linha.entregaDias
-              ? `obra precisa em ${formatDateBR(linha.precisaEm)} · ${linha.entregaDias} dias de entrega`
-              : linha.precisaEm
-                ? `obra precisa em ${formatDateBR(linha.precisaEm)}`
-                : null,
-          ]
-            .filter(Boolean)
-            .join(" · ") || linha.disciplina}
-        </p>
-      </div>
-      <div className="sm:text-right">
-        {linha.valor !== null && (
-          <p className="text-sm font-medium tabular-nums text-[var(--trilha-navy)]">{formatCurrencyBRL(linha.valor)}</p>
-        )}
-        <p
-          className={`text-xs ${
-            linha.urgencia === "atrasado" ? "font-medium text-[#8c4a36]" : "text-[var(--trilha-navy)]/55"
-          }`}
-        >
-          {linha.fecharAte && linha.urgencia !== "fechado" ? `fechar até ${formatDateBR(linha.fecharAte)}` : prazo}
-        </p>
-      </div>
-    </li>
+    <div className="overflow-x-auto" data-testid="tabela-fechamento">
+      <table className="w-full min-w-[720px] border-collapse border border-[#7f7f7f] font-sans text-[12px] leading-tight text-black">
+        <thead>
+          <tr className="bg-[#bfbfbf]">
+            <th colSpan={5} className="border border-[#7f7f7f] px-2 py-5 text-center text-[12px] font-bold">
+              CRONOGRAMA DE FECHAMENTO
+            </th>
+          </tr>
+          <tr className="bg-[#d9d9d9] font-bold">
+            <th className={`${celula} w-[13%]`}>MÊS / ANO</th>
+            <th className={`${celula} w-[16%]`}>DATA DE ENTREGA</th>
+            <th className={`${celula} w-[20%]`}>DATA LIMITE DE FECHAMENTO</th>
+            <th className={celula}>DESCRIÇÃO</th>
+            <th className={`${celula} w-[16%]`}>PRAZO DE ENTREGA</th>
+          </tr>
+        </thead>
+        <tbody>
+          {grupos.map((g) => (
+            <Fragment key={g.mes}>
+              <tr className="bg-[#d9d9d9] font-bold">
+                <td colSpan={5} className={celula}>{g.mes}</td>
+              </tr>
+              {g.linhas.map((l) => (
+                <tr key={l.id} className="bg-white">
+                  <td className={celula}>{g.mes}</td>
+                  <td className={celula}>{formatDateBR(l.precisaEm)}</td>
+                  <td className={`${celula} ${DESTAQUE_LIMITE[l.urgencia] ?? ""}`}>{formatDateBR(l.fecharAte)}</td>
+                  <td className={celula}>
+                    {l.nome}
+                    {l.link && (
+                      <a
+                        href={l.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-1.5 inline-block align-middle text-[var(--trilha-terracota)]"
+                        aria-label={`Abrir o produto ${l.nome}`}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </td>
+                  <td className={celula}>{l.entregaDias ? `${l.entregaDias} dias úteis` : ""}</td>
+                </tr>
+              ))}
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--trilha-navy)]/60">
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#ff0000] align-middle" />data limite vencida</span>
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#f8cbad] align-middle" />fechar esta semana</span>
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#6fcf7f] align-middle" />já fechado</span>
+      </p>
+    </div>
   );
 }
 
@@ -271,15 +301,7 @@ export function CronogramaScreen({ data }: { data: PortalData }) {
               <Kpi label="A desembolsar" valor={formatCurrencyBRL(compras.aDesembolsar)} detalhe={`${compras.pendentes} em aberto`} />
             </div>
 
-            <Card className="border-[var(--trilha-areia)] bg-white/95">
-              <CardContent className="p-0">
-                <ul className="divide-y divide-[var(--trilha-areia)] px-5">
-                  {compras.linhas.map((l) => (
-                    <LinhaCompra key={l.id} linha={l} />
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <TabelaFechamento linhas={compras.linhas} />
           </>
         ) : (
           <p className="text-sm text-[var(--trilha-navy)]/60">
