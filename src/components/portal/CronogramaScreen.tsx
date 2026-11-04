@@ -70,38 +70,57 @@ function Kpi({ label, valor, detalhe }: { label: string; valor: string; detalhe?
   );
 }
 
-/** Uma linha do cronograma reverso. */
-function LinhaEtapa({ etapa }: { etapa: EtapaCronograma }) {
-  const m = etapa.metricas;
+/**
+ * O cronograma reverso no formato da planilha Q153: faixa cinza com o
+ * título, cabeçalho COMEÇO / TÉRMINO / SERVIÇO EXECUTADO / PRAZO (DIAS
+ * ÚTEIS), linhas zebradas com tudo centralizado e o último marco no topo
+ * (é "reverso": lê-se de trás para frente, a partir da entrega).
+ * As cores de destaque seguem a planilha: verde para o que foi
+ * concluído, vermelho para o que está atrasado, rosa para o que está
+ * em andamento.
+ */
+const DESTAQUE_LINHA: Partial<Record<SituacaoEtapa, string>> = {
+  concluida: "bg-[#6fcf7f] font-bold",
+  atrasada: "bg-[#ff4d4d]",
+  em_andamento: "bg-[#ffc7ce]",
+};
+
+function TabelaReversa({ etapas }: { etapas: EtapaCronograma[] }) {
+  const linhas = [...etapas].reverse();
+  const celula = "border border-[#7f7f7f] px-2 py-[3px] text-center";
   return (
-    <li className="grid grid-cols-1 items-start gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="min-w-0 text-sm font-medium text-[var(--trilha-navy)]">{etapa.nome}</p>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${CORES_ETAPA[etapa.situacao]}`}>
-            {ROTULO_ETAPA[etapa.situacao]}
-          </span>
-        </div>
-        <p className="mt-0.5 text-xs text-[var(--trilha-navy)]/50">
-          {etapa.disciplina}
-          {etapa.inicio && ` · ${formatDateBR(etapa.inicio)}`}
-          {etapa.termino && ` a ${formatDateBR(etapa.termino)}`}
-        </p>
-        {etapa.progresso > 0 && etapa.progresso < 100 && (
-          <div className="mt-1.5 h-1 max-w-xs overflow-hidden rounded-full bg-[var(--trilha-areia)]">
-            <div className="h-full rounded-full bg-[var(--trilha-terracota)]" style={{ width: `${etapa.progresso}%` }} />
-          </div>
-        )}
-      </div>
-      <div className="text-xs tabular-nums text-[var(--trilha-navy)]/60 sm:text-right">
-        {etapa.prazoPlanilha !== null && <p>{etapa.prazoPlanilha} dias úteis</p>}
-        {etapa.situacao === "atrasada" && (
-          <p className="font-medium text-[#8c4a36]">{m.overdueDays} de atraso</p>
-        )}
-        {etapa.situacao === "em_andamento" && m.remainingDays !== null && <p>faltam {m.remainingDays}</p>}
-        {etapa.situacao === "a_iniciar" && m.daysToStart !== null && <p>começa em {m.daysToStart}</p>}
-      </div>
-    </li>
+    <div className="overflow-x-auto" data-testid="tabela-reversa">
+      <table className="w-full min-w-[640px] border-collapse border border-[#7f7f7f] font-sans text-[12px] leading-tight text-black">
+        <thead>
+          <tr className="bg-[#bfbfbf]">
+            <th colSpan={4} className="border border-[#7f7f7f] px-2 py-5 text-center text-[12px] font-bold">
+              CRONOGRAMA REVERSO
+            </th>
+          </tr>
+          <tr className="bg-white font-bold">
+            <th className={`${celula} w-[18%]`}>COMEÇO</th>
+            <th className={`${celula} w-[18%]`}>TÉRMINO</th>
+            <th className={celula}>SERVIÇO EXECUTADO</th>
+            <th className={`${celula} w-[20%]`}>PRAZO (DIAS ÚTEIS)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {linhas.map((e, i) => (
+            <tr key={e.id} className={DESTAQUE_LINHA[e.situacao] ?? (i % 2 === 1 ? "bg-[#d9d9d9]" : "bg-white")}>
+              <td className={celula}>{formatDateBR(e.inicio)}</td>
+              <td className={celula}>{formatDateBR(e.termino)}</td>
+              <td className={celula}>{e.nome}</td>
+              <td className={celula}>{e.prazoPlanilha ?? ""}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--trilha-navy)]/60">
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#6fcf7f] align-middle" />concluída</span>
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#ffc7ce] align-middle" />em andamento</span>
+        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#ff4d4d] align-middle" />atrasada</span>
+      </p>
+    </div>
   );
 }
 
@@ -225,15 +244,7 @@ export function CronogramaScreen({ data }: { data: PortalData }) {
               <Kpi label="A iniciar" valor={String(resumo.aIniciar)} />
             </div>
 
-            <Card className="border-[var(--trilha-areia)] bg-white/95">
-              <CardContent className="p-0">
-                <ul className="divide-y divide-[var(--trilha-areia)] px-5">
-                  {etapas.map((e) => (
-                    <LinhaEtapa key={e.id} etapa={e} />
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <TabelaReversa etapas={etapas} />
           </>
         ) : (
           <p className="text-sm text-[var(--trilha-navy)]/60">
