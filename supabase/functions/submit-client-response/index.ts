@@ -57,6 +57,21 @@ Deno.serve(async (req) => {
 
     const projectId = tokenData.project_id;
 
+    // Idempotência: se essa pendência já foi respondida (duplo clique, reenvio),
+    // devolve a resposta existente em vez de criar outra e notificar de novo.
+    const { data: existingResponse } = await supabase
+      .from("client_pending_responses")
+      .select()
+      .eq("weekly_report_id", weekly_report_id)
+      .eq("pending_item", pending_item)
+      .maybeSingle();
+    if (existingResponse) {
+      return new Response(JSON.stringify({ success: true, duplicate: true, data: existingResponse }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Insert response
     const { data: responseData, error: insertError } = await supabase
       .from("client_pending_responses")
@@ -73,6 +88,19 @@ Deno.serve(async (req) => {
       .single();
 
     if (insertError) {
+      // 23505: outra requisição inseriu entre a checagem e o insert (índice único).
+      if ((insertError as { code?: string }).code === "23505") {
+        const { data: dup } = await supabase
+          .from("client_pending_responses")
+          .select()
+          .eq("weekly_report_id", weekly_report_id)
+          .eq("pending_item", pending_item)
+          .maybeSingle();
+        return new Response(JSON.stringify({ success: true, duplicate: true, data: dup }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: insertError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

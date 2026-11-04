@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BookOpen, CalendarRange, CheckSquare, Images, MessageCircle, Milestone, Newspaper, Wallet } from "lucide-react";
+import { BookOpen, CalendarRange, CheckSquare, Images, MessageCircle, Milestone, Newspaper, ShoppingBag, Wallet } from "lucide-react";
 import { PORTAL_TABS, WHATSAPP_URL, type PortalTab } from "@/lib/portal";
 import { QuadraLogo, QuadraWatermark } from "./TrilhaBrand";
 
@@ -9,6 +9,7 @@ const TAB_ICONS: Record<PortalTab, typeof Milestone> = {
   galeria: Images,
   orcamento: Wallet,
   cronograma: CalendarRange,
+  compras: ShoppingBag,
   resumos: Newspaper,
 };
 

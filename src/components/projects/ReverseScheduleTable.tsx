@@ -56,6 +56,8 @@ interface Props {
    * (ou reabre) direto na linha, sem abrir o formulário.
    */
   onToggleDone?: (activity: ProjectActivity, done: boolean) => void;
+  /** Id da atividade cujo check de entregue está salvando (desabilita só essa linha). */
+  doneBusyId?: string | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -202,6 +204,7 @@ export function ReverseScheduleTable({
   onChecklistRemove,
   onChecklistAdd,
   onToggleDone,
+  doneBusyId,
   checklistPhotos,
 }: Props) {
   const today = todayProp ?? todayIso();
@@ -441,7 +444,8 @@ export function ReverseScheduleTable({
                           <button
                             type="button"
                             data-testid={`done-toggle-${a.id}`}
-                            disabled={disabled}
+                            disabled={disabled || doneBusyId === a.id}
+                            aria-busy={doneBusyId === a.id}
                             aria-pressed={m.isFinished}
                             aria-label={m.isFinished ? `Reabrir ${a.name}` : `Marcar ${a.name} como entregue`}
                             title={m.isFinished ? "Entregue — clique para reabrir" : "Marcar como entregue"}

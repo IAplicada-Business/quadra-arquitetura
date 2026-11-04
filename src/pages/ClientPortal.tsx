@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TrilhaShell } from "@/components/portal/TrilhaShell";
 import { GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, ResumosScreen } from "@/components/portal/PortalScreens";
+import { ComprasScreen } from "@/components/portal/screens/ComprasScreen";
 import { CronogramaScreen } from "@/components/portal/CronogramaScreen";
 import { AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ export default function ClientPortal() {
   const [responseText, setResponseText] = useState("");
   const [clientName, setClientName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const inFlightResponses = useRef(new Set<string>());
 
   const onboardingSections = useMemo(() => visibleSections(sectionsFromJson(data?.onboarding?.sections ?? [])), [data]);
   const hasWelcome = onboardingSections.length > 0;
@@ -86,6 +88,19 @@ export default function ClientPortal() {
   };
 
   const submitResponse = async (reportId: string, pendingItem: string, status: "aprovado" | "respondido", text?: string) => {
+    // Trava síncrona (submitting é state e só vale no próximo render) + já respondida.
+    const key = `${reportId}::${pendingItem}`;
+    if (inFlightResponses.current.has(key)) return;
+    if (data?.pending_responses?.some((r) => r.weekly_report_id === reportId && r.pending_item === pendingItem)) return;
+    inFlightResponses.current.add(key);
+    try {
+      await submitResponseInner(reportId, pendingItem, status, text);
+    } finally {
+      inFlightResponses.current.delete(key);
+    }
+  };
+
+  const submitResponseInner = async (reportId: string, pendingItem: string, status: "aprovado" | "respondido", text?: string) => {
     let name = clientName;
     if (!name) {
       name = prompt("Seu nome (para registro):") || "";
@@ -118,7 +133,10 @@ export default function ClientPortal() {
         setData({
           ...data,
           pending_responses: [
-            ...(data.pending_responses || []),
+            // Sem duplicar: se o servidor devolveu uma resposta já existente, substitui.
+            ...(data.pending_responses || []).filter(
+              (r) => !(r.weekly_report_id === reportId && r.pending_item === pendingItem),
+            ),
             {
               id: json.data?.id || crypto.randomUUID(),
               weekly_report_id: reportId,
@@ -223,6 +241,7 @@ export default function ClientPortal() {
       {tab === "galeria" && <GaleriaScreen {...screenProps} />}
       {tab === "orcamento" && <OrcamentoScreen {...screenProps} />}
       {tab === "cronograma" && <CronogramaScreen data={data} />}
+      {tab === "compras" && <ComprasScreen {...screenProps} />}
       {tab === "resumos" && <ResumosScreen {...screenProps} />}
 
       {/* Lightbox */}

@@ -177,7 +177,7 @@ export interface PortalData {
 /* Navegação                                                           */
 /* ------------------------------------------------------------------ */
 
-export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "cronograma" | "resumos";
+export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "cronograma" | "compras" | "resumos";
 
 export interface PortalTabDef {
   key: PortalTab;
@@ -192,6 +192,7 @@ export const PORTAL_TABS: PortalTabDef[] = [
   { key: "galeria", label: "Galeria", short: "Galeria" },
   { key: "orcamento", label: "Orçamento", short: "Orçamento" },
   { key: "cronograma", label: "Cronograma", short: "Cronograma" },
+  { key: "compras", label: "Compras", short: "Compras" },
   { key: "resumos", label: "Resumo semanal", short: "Resumos" },
 ];
 

@@ -24,6 +24,29 @@ export interface ProjectActivity {
   created_at: string;
 }
 
+/** Status de project_activities → status de schedule_tasks (portal do cliente). */
+export const ACTIVITY_TO_TASK_STATUS: Record<string, string> = {
+  pendente: "planejado",
+  em_andamento: "em_execucao",
+  concluida: "executado",
+  bloqueada: "atrasado",
+};
+
+/**
+ * Patch aplicado ao marcar/reabrir uma atividade como entregue.
+ * Entregar = concluída com 100%. Reabrir volta para "em andamento" se já
+ * começou (start_date <= hoje) ou "pendente", com progresso 0.
+ */
+export function resolveDonePatch(
+  activity: Pick<ProjectActivity, "start_date">,
+  done: boolean,
+  today: string,
+): { status: string; progress_percent: number } {
+  if (done) return { status: "concluida", progress_percent: 100 };
+  const started = !!activity.start_date && activity.start_date <= today;
+  return { status: started ? "em_andamento" : "pendente", progress_percent: 0 };
+}
+
 export interface CascadeChange {
   id: string;
   name: string;
@@ -327,5 +350,55 @@ export function useProjectActivities(projectId: string | undefined) {
     },
   });
 
-  return { activities: query.data ?? [], isLoading: query.isLoading, create, update, remove, batchUpdateDates, updateDates };
+  /**
+   * Check "entregue" direto na linha. Otimista (cache atualizado na hora,
+   * rollback em erro), espelha o status em schedule_tasks (portal do cliente
+   * e dashboard leem de lá) e mostra um toast claro de confirmação.
+   */
+  const markDone = useMutation({
+    mutationFn: async ({ activity, done }: { activity: ProjectActivity; done: boolean }) => {
+      const patch = resolveDonePatch(activity, done, new Date().toISOString().split("T")[0]);
+      const { error } = await supabase.from("project_activities").update(patch).eq("id", activity.id);
+      if (error) throw error;
+      // Espelho no portal: só atualiza se a atividade já foi sincronizada.
+      const { error: taskError } = await supabase
+        .from("schedule_tasks")
+        .update({ status: ACTIVITY_TO_TASK_STATUS[patch.status] ?? "planejado", progress_percentage: patch.progress_percent })
+        .eq("source_activity_id", activity.id);
+      if (taskError) console.warn("[markDone] schedule_tasks não sincronizado:", taskError.message);
+      return { activity, done, patch };
+    },
+    onMutate: async ({ activity, done }) => {
+      const key = ["project_activities", projectId];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ProjectActivity[]>(key);
+      const patch = resolveDonePatch(activity, done, new Date().toISOString().split("T")[0]);
+      queryClient.setQueryData<ProjectActivity[]>(key, (old) =>
+        (old ?? []).map((a) => (a.id === activity.id ? { ...a, ...patch } : a)),
+      );
+      return { previous };
+    },
+    onSuccess: ({ activity, done }) => {
+      toast({
+        title: done ? "Atividade entregue" : "Atividade reaberta",
+        description: done
+          ? `"${activity.name}" foi marcada como entregue (100%).`
+          : `"${activity.name}" voltou a ficar em aberto.`,
+      });
+    },
+    onError: (e: Error, { activity, done }, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(["project_activities", projectId], ctx.previous);
+      toast({
+        title: done ? "Não foi possível marcar como entregue" : "Não foi possível reabrir",
+        description: `"${activity.name}": ${e.message}`,
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["project_activities", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["schedule_tasks", projectId] });
+    },
+  });
+
+  return { activities: query.data ?? [], isLoading: query.isLoading, create, update, remove, batchUpdateDates, updateDates, markDone };
 }
