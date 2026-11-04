@@ -21,6 +21,17 @@ import { useProjectAI } from "@/hooks/useProjectAI";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InfoHint } from "@/components/visual/InfoHint";
+import { ProjectPurchasesTab } from "./ProjectPurchasesTab";
+import { DisciplineFilter } from "./DisciplineFilter";
+import { DisciplinePieChart } from "./DisciplinePieChart";
+import { useDisciplineFilter } from "@/hooks/useDisciplineFilter";
+import {
+  aggregateExecuted,
+  aggregatePlanned,
+  filterByDisciplines,
+  paymentDiscipline,
+  purchaseDiscipline,
+} from "@/lib/disciplineAccounts";
 
 function formatCurrency(v: number | null | undefined) {
   if (v == null) return "—";
@@ -155,12 +166,47 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
     };
   }, [payments.items, purchases.items, taxRate]);
 
+  // Filtro de disciplina (compartilhado com a lista de compras)
+  const { selected: disciplineFilter } = useDisciplineFilter(projectId);
+  const { data: scopeItems = [] } = useQuery({
+    queryKey: ["scope_items_values", projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("scope_items").select("discipline, estimated_value").eq("project_id", projectId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!projectId,
+  });
+  const scopeDiscipline = (s: { discipline: string | null }) => paymentDiscipline({ budget_quotes: { scope_items: s } });
+  const availableDisciplines = useMemo(
+    () => [
+      ...payments.items.map((p) => paymentDiscipline(p)),
+      ...purchases.items.map((p) => purchaseDiscipline(p)),
+      ...scopeItems.map(scopeDiscipline),
+    ],
+    [payments.items, purchases.items, scopeItems],
+  );
+  const filteredPayments = useMemo(
+    () => filterByDisciplines(payments.items, disciplineFilter, paymentDiscipline),
+    [payments.items, disciplineFilter],
+  );
+  const filteredPurchases = useMemo(
+    () => filterByDisciplines(purchases.items, disciplineFilter, purchaseDiscipline),
+    [purchases.items, disciplineFilter],
+  );
+  const filteredScope = useMemo(
+    () => filterByDisciplines(scopeItems, disciplineFilter, scopeDiscipline),
+    [scopeItems, disciplineFilter],
+  );
+  const executedSlices = useMemo(() => aggregateExecuted(filteredPayments, filteredPurchases), [filteredPayments, filteredPurchases]);
+  const plannedSlices = useMemo(() => aggregatePlanned(filteredScope, filteredPurchases), [filteredScope, filteredPurchases]);
+
   // Payment totals
   const paymentTotals = useMemo(() => {
-    const paid = payments.items.filter((p) => p.status === "pago").reduce((s, p) => s + p.value, 0);
-    const pending = payments.items.filter((p) => p.status !== "pago").reduce((s, p) => s + p.value, 0);
+    const paid = filteredPayments.filter((p) => p.status === "pago").reduce((s, p) => s + p.value, 0);
+    const pending = filteredPayments.filter((p) => p.status !== "pago").reduce((s, p) => s + p.value, 0);
     return { paid, pending, total: paid + pending };
-  }, [payments.items]);
+  }, [filteredPayments]);
 
   // Group payments: parent rows + children
   const { parentRows, childrenMap } = useMemo(() => {
@@ -168,7 +214,7 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
     const parentIds = new Set<string>();
 
     // Find all children (have parent_payment_id)
-    for (const p of payments.items) {
+    for (const p of filteredPayments) {
       const parentId = (p as any).parent_payment_id as string | null;
       if (parentId) {
         if (!children.has(parentId)) children.set(parentId, []);
@@ -178,10 +224,10 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
     }
 
     // Parent rows = items that are NOT children themselves
-    const parents = payments.items.filter((p) => !(p as any).parent_payment_id);
+    const parents = filteredPayments.filter((p) => !(p as any).parent_payment_id);
 
     return { parentRows: parents, childrenMap: children };
-  }, [payments.items]);
+  }, [filteredPayments]);
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -276,14 +322,30 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
 
   return (
     <div className="space-y-4 animate-fade-in">
+      <div className="flex flex-wrap items-center gap-2" data-testid="discipline-filter-bar">
+        <DisciplineFilter projectId={projectId} available={availableDisciplines} />
+        {disciplineFilter.length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            Filtrando por: {disciplineFilter.join(", ")} (vale para pagamentos, compras e gráfico)
+          </span>
+        )}
+      </div>
+
       <Tabs defaultValue="pagamentos">
         <TabsList>
           <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
+          <TabsTrigger value="compras">Compras</TabsTrigger>
           <TabsTrigger value="notas">NF Compras</TabsTrigger>
           <TabsTrigger value="dre">Resultado do Projeto</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="compras" className="mt-4">
+          <ProjectPurchasesTab projectId={projectId} showDisciplineFilter={false} />
+        </TabsContent>
+
         <TabsContent value="pagamentos" className="space-y-4 mt-4">
+          <DisciplinePieChart planned={plannedSlices} executed={executedSlices} />
+
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-3">
             <Card>
@@ -316,9 +378,9 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
             <div className="flex justify-center py-12">
               <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
             </div>
-          ) : payments.items.length === 0 ? (
+          ) : filteredPayments.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
-              Nenhum pagamento cadastrado.
+              {payments.items.length === 0 ? "Nenhum pagamento cadastrado." : "Nenhum pagamento nas disciplinas selecionadas."}
             </div>
           ) : (
             <Table>

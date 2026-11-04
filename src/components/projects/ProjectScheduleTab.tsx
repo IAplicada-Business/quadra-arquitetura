@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useProjectActivities, computeRecalculateAll, type ProjectActivity } from "@/hooks/useProjectActivities";
+import { useProjectActivities, computeRecalculateAll, ACTIVITY_TO_TASK_STATUS, type ProjectActivity } from "@/hooks/useProjectActivities";
 import { useClientClosingSchedule } from "@/hooks/useClientClosingSchedule";
 import { useDeliveryChecklist, type DeliveryChecklistItem } from "@/hooks/useDeliveryChecklist";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,14 +32,6 @@ import { ClientClosingSchedule } from "./ClientClosingSchedule";
 import { ClientCountdownList } from "./ClientCountdownList";
 import { DeliveryChecklistItemDialog, type DeliveryChecklistDraft } from "./DeliveryChecklistItemDialog";
 import { GeneralDeliveryChecklist } from "./ActivityDeliveryChecklist";
-
-/** Status de project_activities → status de schedule_tasks (portal do cliente). */
-const ACTIVITY_TO_TASK_STATUS: Record<string, string> = {
-  pendente: "planejado",
-  em_andamento: "em_execucao",
-  concluida: "executado",
-  bloqueada: "atrasado",
-};
 
 function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
@@ -68,6 +60,7 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
     update: updateActivity,
     batchUpdateDates,
     updateDates,
+    markDone,
   } = useProjectActivities(projectId);
   const { items: closingItems } = useClientClosingSchedule(projectId);
   const checklist = useDeliveryChecklist(projectId);
@@ -151,12 +144,9 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
 
   // Check "entregue" na linha do reverso: conclui (100%) ou reabre a atividade.
   const handleToggleDone = (activity: ProjectActivity, done: boolean) => {
-    if (done) {
-      updateActivity.mutate({ id: activity.id, status: "concluida", progress_percent: 100 });
-      return;
-    }
-    const started = !!activity.start_date && activity.start_date <= todayIso();
-    updateActivity.mutate({ id: activity.id, status: started ? "em_andamento" : "pendente", progress_percent: 0 });
+    // Ignora clique repetido na mesma linha enquanto a anterior salva.
+    if (markDone.isPending && markDone.variables?.activity.id === activity.id) return;
+    markDone.mutate({ activity, done });
   };
 
   const handleGanttEdit = (task: { id: string }) => {
@@ -406,6 +396,7 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
             onChecklistRemove={(id) => checklist.remove.mutate(id)}
             onChecklistAdd={(activityId) => setChecklistDialog({ open: true, activityId })}
             onToggleDone={handleToggleDone}
+            doneBusyId={markDone.isPending ? markDone.variables?.activity.id ?? null : null}
             checklistPhotos={checklistPhotos}
           />
 

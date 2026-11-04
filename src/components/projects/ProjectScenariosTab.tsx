@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Plus, Trash2, Check, DollarSign, BarChart3, Loader2, FileDown, FileX, Info, CheckCircle2, ArrowRight, RotateCcw, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { addDays, addWeeks, format } from "date-fns";
+import { buildCotacaoInstallments, createSingleFlight } from "@/lib/cotacaoInstallments";
+import { format } from "date-fns";
 
 function formatCurrency(v: number | null | undefined) {
   if (v == null) return "—";
@@ -92,59 +93,65 @@ export function ProjectScenariosTab({ projectId, onTabChange }: ProjectScenarios
     ? (approvedScenario.scenario_items || []).filter(i => i.is_included).reduce((s, i) => s + (i.estimated_value || 0), 0)
     : 0;
 
-  const handleApproveCotacao = async () => {
-    if (!user || !approvedScenario) return;
-    setApprovalLoading(true);
-    try {
-      const numInstallments = Math.max(1, parseInt(approvalInstallments) || 1);
-      const valorParcela = approvedTotal / numInstallments;
-      const startDate = new Date(approvalStartDate);
+  // Trava síncrona: setApprovalLoading só vale no próximo render, então dois
+  // cliques rápidos (ou duas abas) passavam e geravam parcelas em dobro.
+  const approveGuard = useRef(createSingleFlight()).current;
 
-      // 1. Update project
-      await supabase.from("projects").update({
-        cotacao_aprovada: true,
-        cotacao_valor_total: approvedTotal,
-        cotacao_aprovada_at: new Date().toISOString(),
-      } as any).eq("id", projectId);
-
-      // 2. Generate payments
-      const payments = [];
-      for (let i = 0; i < numInstallments; i++) {
-        let dueDate: Date;
-        if (approvalInterval === "semanal") {
-          dueDate = addWeeks(startDate, i);
-        } else if (approvalInterval === "quinzenal") {
-          dueDate = addDays(startDate, i * 15);
-        } else {
-          dueDate = addDays(startDate, i * 30);
+  const handleApproveCotacao = () =>
+    approveGuard(async () => {
+      if (!user || !approvedScenario) return;
+      setApprovalLoading(true);
+      try {
+        // Checa no banco (não no estado da tela): se já existem parcelas da
+        // cotação, não gera de novo — cobre aba desatualizada e segundo clique.
+        const { count: existing, error: checkErr } = await supabase
+          .from("payments")
+          .select("id", { count: "exact", head: true })
+          .eq("project_id", projectId)
+          .eq("source", "cotacao");
+        if (checkErr) throw checkErr;
+        if ((existing ?? 0) > 0) {
+          queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+          queryClient.invalidateQueries({ queryKey: ["payments", projectId] });
+          setApprovalModalOpen(false);
+          toast.info("Esta cotação já foi aprovada: as parcelas já existem em Prestação de Contas.");
+          return;
         }
-        payments.push({
-          project_id: projectId,
-          user_id: user.id,
-          description: `Parcela ${i + 1}/${numInstallments} — Obra`,
-          value: Math.round(valorParcela * 100) / 100,
-          due_date: format(dueDate, "yyyy-MM-dd"),
-          status: "pendente" as const,
-          source: "cotacao",
-          installment_number: i + 1,
-          total_installments: numInstallments,
-        });
-      }
-      const { error: payErr } = await supabase.from("payments").insert(payments);
-      if (payErr) throw payErr;
 
-      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
-      queryClient.invalidateQueries({ queryKey: ["payments", projectId] });
-      setApprovalModalOpen(false);
-      toast.success(`Cotação aprovada. ${numInstallments} pagamentos criados em Prestação de Contas.`, {
-        action: onTabChange ? { label: "Ver pagamentos", onClick: () => onTabChange("financeiro") } : undefined,
-      });
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao aprovar cotação");
-    } finally {
-      setApprovalLoading(false);
-    }
-  };
+        const numInstallments = Math.max(1, parseInt(approvalInstallments) || 1);
+        const payments = buildCotacaoInstallments({
+          projectId,
+          userId: user.id,
+          total: approvedTotal,
+          count: numInstallments,
+          startDate: new Date(approvalStartDate),
+          interval: approvalInterval,
+        });
+
+        // 1. Parcelas primeiro: se falhar, o projeto não fica marcado como aprovado.
+        const { error: payErr } = await supabase.from("payments").insert(payments);
+        if (payErr) throw payErr;
+
+        // 2. Marca o projeto
+        const { error: projErr } = await supabase.from("projects").update({
+          cotacao_aprovada: true,
+          cotacao_valor_total: approvedTotal,
+          cotacao_aprovada_at: new Date().toISOString(),
+        } as any).eq("id", projectId);
+        if (projErr) throw projErr;
+
+        queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+        queryClient.invalidateQueries({ queryKey: ["payments", projectId] });
+        setApprovalModalOpen(false);
+        toast.success(`Cotação aprovada. ${numInstallments} pagamentos criados em Prestação de Contas.`, {
+          action: onTabChange ? { label: "Ver pagamentos", onClick: () => onTabChange("financeiro") } : undefined,
+        });
+      } catch (err: any) {
+        toast.error(err.message || "Erro ao aprovar cotação");
+      } finally {
+        setApprovalLoading(false);
+      }
+    });
 
   const handleReviseCotacao = async () => {
     setReviseLoading(true);

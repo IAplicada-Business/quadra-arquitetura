@@ -233,6 +233,19 @@ describe("Cronograma Reverso", () => {
     expect(onToggleDone).toHaveBeenCalledWith(expect.objectContaining({ id: "a5" }), false);
   });
 
+  it("desabilita só o check da linha que está salvando", () => {
+    const onToggleDone = vi.fn();
+    renderTable([demolicao, act({ id: "a9", name: "Pintura", start_date: "2026-10-01", end_date: "2026-10-05", duration_days: 5, position: 5 })], {
+      onToggleDone,
+      doneBusyId: "a1",
+    });
+    const busy = screen.getByRole("button", { name: "Marcar Demolição como entregue" });
+    expect(busy).toBeDisabled();
+    fireEvent.click(busy);
+    expect(onToggleDone).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Marcar Pintura como entregue" })).toBeEnabled();
+  });
+
   it("sem onToggleDone o check de entrega não aparece", () => {
     renderTable([demolicao]);
     expect(screen.queryByRole("button", { name: /como entregue/ })).not.toBeInTheDocument();

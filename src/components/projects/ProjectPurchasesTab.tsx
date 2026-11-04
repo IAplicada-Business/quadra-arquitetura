@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useProjectPurchases } from "@/hooks/useProjectPurchases";
 import { PurchaseForm } from "./PurchaseForm";
 import { InfoHint } from "@/components/visual/InfoHint";
+import { DisciplineFilter } from "./DisciplineFilter";
+import { useDisciplineFilter } from "@/hooks/useDisciplineFilter";
+import { filterByDisciplines, purchaseDiscipline } from "@/lib/disciplineAccounts";
 
 function formatCurrency(v: number | null) {
   if (v == null) return "—";
@@ -25,8 +28,20 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   instalado: { label: "Instalado", className: "bg-muted text-muted-foreground border-border" },
 };
 
-export function ProjectPurchasesTab({ projectId, titleHint }: { projectId: string; titleHint?: ReactNode }) {
-  const { items, isLoading, create, update, remove } = useProjectPurchases(projectId);
+export function ProjectPurchasesTab({
+  projectId,
+  titleHint,
+  showDisciplineFilter = true,
+}: {
+  projectId: string;
+  titleHint?: ReactNode;
+  /** Falso quando a tela pai já exibe o filtro (prestação de contas). */
+  showDisciplineFilter?: boolean;
+}) {
+  const { items: allItems, isLoading, create, update, remove } = useProjectPurchases(projectId);
+  const { selected: disciplineFilter } = useDisciplineFilter(projectId);
+  const items = useMemo(() => filterByDisciplines(allItems, disciplineFilter, purchaseDiscipline), [allItems, disciplineFilter]);
+  const allDisciplines = useMemo(() => allItems.map(purchaseDiscipline), [allItems]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
 
@@ -41,9 +56,11 @@ export function ProjectPurchasesTab({ projectId, titleHint }: { projectId: strin
             {titleHint && <InfoHint>{titleHint}</InfoHint>}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {items.length} itens • Total: {formatCurrency(total)}
+            {items.length}
+            {items.length !== allItems.length ? ` de ${allItems.length}` : ""} itens • Total: {formatCurrency(total)}
           </p>
         </div>
+        {showDisciplineFilter && <DisciplineFilter projectId={projectId} available={allDisciplines} />}
         <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
           <Plus className="h-4 w-4 mr-1" /> Nova Compra
         </Button>
@@ -55,7 +72,7 @@ export function ProjectPurchasesTab({ projectId, titleHint }: { projectId: strin
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
-          Nenhuma compra cadastrada.
+          {allItems.length === 0 ? "Nenhuma compra cadastrada." : "Nenhuma compra nas disciplinas selecionadas."}
         </div>
       ) : (
         <TooltipProvider>
