@@ -58,6 +58,8 @@ interface Props {
   onToggleDone?: (activity: ProjectActivity, done: boolean) => void;
   /** Id da atividade cujo check de entregue está salvando (desabilita só essa linha). */
   doneBusyId?: string | null;
+  /** Botão dedicado de editar na linha: abre o formulário completo da atividade. */
+  onEditActivity?: (activity: ProjectActivity) => void;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -205,6 +207,7 @@ export function ReverseScheduleTable({
   onChecklistAdd,
   onToggleDone,
   doneBusyId,
+  onEditActivity,
   checklistPhotos,
 }: Props) {
   const today = todayProp ?? todayIso();
@@ -332,7 +335,7 @@ export function ReverseScheduleTable({
     { value: "open", label: "Em aberto", count: rows.filter((r) => !r.metrics.isFinished).length },
   ];
 
-  const colCount = hasChecklist ? 9 : 8;
+  const colCount = (hasChecklist ? 9 : 8) + (onEditActivity ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -417,6 +420,7 @@ export function ReverseScheduleTable({
               <TableHead className="text-center">Folga</TableHead>
               <TableHead>Status</TableHead>
               {hasChecklist && <TableHead className="text-center">Entrega</TableHead>}
+              {onEditActivity && <TableHead className="w-12 text-center"><span className="sr-only">Editar</span></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -558,6 +562,23 @@ export function ReverseScheduleTable({
                           )}
                           <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${checklistOpen ? "rotate-180" : ""}`} />
                         </button>
+                      </TableCell>
+                    )}
+                    {onEditActivity && (
+                      <TableCell className="text-center">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          data-testid={`edit-activity-${a.id}`}
+                          aria-label={`Editar ${a.name}`}
+                          title="Editar atividade"
+                          disabled={disabled}
+                          onClick={() => onEditActivity(a)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                       </TableCell>
                     )}
                   </TableRow>

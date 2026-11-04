@@ -246,6 +246,18 @@ describe("Cronograma Reverso", () => {
     expect(screen.getByRole("button", { name: "Marcar Pintura como entregue" })).toBeEnabled();
   });
 
+  it("botão dedicado de editar abre a atividade da linha, sem depender de hover", () => {
+    const onEditActivity = vi.fn();
+    renderTable([demolicao], { onEditActivity });
+    fireEvent.click(screen.getByRole("button", { name: "Editar Demolição" }));
+    expect(onEditActivity).toHaveBeenCalledWith(expect.objectContaining({ id: "a1" }));
+  });
+
+  it("sem onEditActivity não há coluna de editar", () => {
+    renderTable([demolicao]);
+    expect(screen.queryByRole("button", { name: "Editar Demolição" })).not.toBeInTheDocument();
+  });
+
   it("sem onToggleDone o check de entrega não aparece", () => {
     renderTable([demolicao]);
     expect(screen.queryByRole("button", { name: /como entregue/ })).not.toBeInTheDocument();
