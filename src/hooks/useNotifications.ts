@@ -39,8 +39,11 @@ export function useNotifications() {
   // Realtime subscription for instant updates
   useEffect(() => {
     if (!user?.id) return;
+    // Nome único por instância: o hook é usado em mais de um componente (header
+    // e painel) e, com o mesmo nome, o Supabase devolve o canal já inscrito e
+    // `.on()` depois de `.subscribe()` lança erro, derrubando a tela inteira.
     const channel = supabase
-      .channel("notifications-realtime")
+      .channel(`notifications-realtime-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
