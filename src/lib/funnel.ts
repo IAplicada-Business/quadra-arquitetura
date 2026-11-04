@@ -49,6 +49,55 @@ export function computeFunnel(leads: { status: string }[], topLabel = "Leads"): 
   };
 }
 
+export interface PeriodFunnelLead {
+  status: string;
+  created_at: string;
+  converted_at?: string | null;
+  updated_at?: string | null;
+}
+
+/** Quando o lead fechou: `converted_at`, ou `updated_at` (contratos antigos não gravam o primeiro). */
+export function closedAt(l: PeriodFunnelLead): string {
+  return l.converted_at ?? l.updated_at ?? l.created_at;
+}
+
+export type PeriodBounds = { start: Date | null; end: Date | null };
+
+/**
+ * Funil de um período.
+ *
+ * - Topo: leads CRIADOS no período.
+ * - Fechado: leads fechados NO período, não importa quando foram criados.
+ *   Antes só entravam leads criados no período, então um lead criado em
+ *   outubro e fechado em novembro sumia do "mês atual" e a conversão
+ *   ficava em 0%.
+ * - Quem fechou no período mas foi criado antes já passou por contato,
+ *   reunião e proposta: entra nessas etapas também, para o funil não
+ *   ficar com mais fechados do que propostas.
+ */
+export function computeFunnelByPeriod<T extends PeriodFunnelLead>(
+  leads: T[],
+  bounds: PeriodBounds,
+  topLabel = "Leads",
+): FunnelResult & { created: T[]; closed: T[] } {
+  const created = leads.filter((l) => inPeriod(l.created_at, bounds));
+  const closed = leads.filter((l) => l.status === "fechado" && inPeriod(closedAt(l), bounds));
+  const createdSet = new Set(created);
+  const carryOver = closed.filter((l) => !createdSet.has(l)).length;
+
+  const base = computeFunnel(created, topLabel);
+  const stages = base.stages.map((s, i) => (i === 0 ? s : { ...s, count: s.count + carryOver }));
+  stages[4] = { ...stages[4], count: closed.length };
+  const top = stages[0].count;
+  return {
+    stages,
+    rates: stages.slice(1).map((s, i) => convRate(s.count, stages[i].count)),
+    total: convRate(stages[4].count, top),
+    created,
+    closed,
+  };
+}
+
 /** Janela [start, end) do período; null = sem limite. */
 export function periodBounds(period: DashboardPeriod, today: Date): { start: Date | null; end: Date | null } {
   switch (period) {

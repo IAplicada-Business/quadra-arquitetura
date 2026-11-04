@@ -69,6 +69,27 @@ export function nextBusinessDay(iso: string, opts: BusinessDayOptions = {}): str
   return toIso(addBusinessDays(parseIso(iso), 0, opts));
 }
 
+/**
+ * Prazo como a planilha Q153 calcula: dias de semana entre início e término,
+ * sem descontar feriados e sem contar o dia de início (equivale a
+ * NETWORKDAYS(início; término) − 1). É só exibição, para o portal bater com
+ * a planilha de referência; o resto do sistema usa countBusinessDays, que
+ * respeita feriados e recesso (uma obra não anda no Carnaval).
+ */
+export function sheetBusinessDays(from: string | null, to: string | null): number | null {
+  if (!from || !to || to < from) return null;
+  let count = 0;
+  const cur = parseIso(from);
+  const end = parseIso(to).getTime();
+  let guard = 0;
+  while (cur.getTime() <= end && guard++ < 7300) {
+    const wd = cur.getUTCDay();
+    if (wd !== 0 && wd !== 6) count++;
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return Math.max(0, count - 1);
+}
+
 export interface ReverseMetricsInput {
   start_date: string | null;
   end_date: string | null;

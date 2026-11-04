@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
         // saem das atividades do Cronograma Reverso.
         supabase
           .from("project_activities")
-          .select("id, name, discipline, status, progress_percent, start_date, end_date")
+          .select("id, name, discipline, status, progress_percent, start_date, end_date, position")
           .eq("project_id", projectId)
           .order("position", { ascending: true }),
         // Fechamento Cliente: o que depende do cliente (adoção / próximas entregas).
