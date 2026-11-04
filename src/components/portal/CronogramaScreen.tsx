@@ -74,10 +74,10 @@ function Kpi({ label, valor, detalhe }: { label: string; valor: string; detalhe?
 function LinhaEtapa({ etapa }: { etapa: EtapaCronograma }) {
   const m = etapa.metricas;
   return (
-    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3">
-      <div className="min-w-0 flex-1">
+    <li className="grid grid-cols-1 items-start gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="min-w-0 truncate text-sm font-medium text-[var(--trilha-navy)]">{etapa.nome}</p>
+          <p className="min-w-0 text-sm font-medium text-[var(--trilha-navy)]">{etapa.nome}</p>
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${CORES_ETAPA[etapa.situacao]}`}>
             {ROTULO_ETAPA[etapa.situacao]}
           </span>
@@ -93,8 +93,8 @@ function LinhaEtapa({ etapa }: { etapa: EtapaCronograma }) {
           </div>
         )}
       </div>
-      <div className="shrink-0 text-right text-xs tabular-nums text-[var(--trilha-navy)]/60">
-        {m.totalDays !== null && <p>{m.totalDays} dias úteis</p>}
+      <div className="text-xs tabular-nums text-[var(--trilha-navy)]/60 sm:text-right">
+        {etapa.prazoPlanilha !== null && <p>{etapa.prazoPlanilha} dias úteis</p>}
         {etapa.situacao === "atrasada" && (
           <p className="font-medium text-[#8c4a36]">{m.overdueDays} de atraso</p>
         )}
@@ -119,8 +119,8 @@ function LinhaCompra({ linha }: { linha: LinhaDeCompra }) {
             : `em ${linha.diasAteLimite} dias úteis`;
 
   return (
-    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3">
-      <div className="min-w-0 flex-1">
+    <li className="grid grid-cols-1 items-start gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="min-w-0 truncate text-sm font-medium text-[var(--trilha-navy)]">{linha.nome}</p>
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${CORES_URGENCIA[linha.urgencia]}`}>
@@ -154,7 +154,7 @@ function LinhaCompra({ linha }: { linha: LinhaDeCompra }) {
             .join(" · ") || linha.disciplina}
         </p>
       </div>
-      <div className="shrink-0 text-right">
+      <div className="sm:text-right">
         {linha.valor !== null && (
           <p className="text-sm font-medium tabular-nums text-[var(--trilha-navy)]">{formatCurrencyBRL(linha.valor)}</p>
         )}

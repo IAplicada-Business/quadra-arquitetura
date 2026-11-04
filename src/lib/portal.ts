@@ -82,6 +82,8 @@ export interface PortalActivity {
   progress_percent: number | null;
   start_date: string | null;
   end_date: string | null;
+  /** Posição no cronograma do projeto (desempata etapas que começam no mesmo dia). */
+  position?: number | null;
 }
 
 /** Item do Fechamento Cliente (o que o cliente precisa fechar/comprar). */

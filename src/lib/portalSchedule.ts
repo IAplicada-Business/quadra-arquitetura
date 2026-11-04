@@ -19,7 +19,7 @@
  * Puro: sem React e sem Supabase.
  */
 
-import { businessDaysUntil, computeReverseMetrics, todayIso, type ReverseMetrics } from "@/lib/reverseSchedule";
+import { businessDaysUntil, computeReverseMetrics, sheetBusinessDays, todayIso, type ReverseMetrics } from "@/lib/reverseSchedule";
 import { isBusinessDay } from "@/lib/businessCalendar";
 import { normalizaDisciplina, type Proposta } from "@/lib/portalScenarios";
 import type { PortalActivity, PortalPurchase } from "@/lib/portal";
@@ -39,6 +39,10 @@ export interface EtapaCronograma {
   progresso: number;
   situacao: SituacaoEtapa;
   metricas: ReverseMetrics;
+  /** Prazo na contagem da planilha Q153 (sem feriados, sem o dia de início). */
+  prazoPlanilha: number | null;
+  /** Posição no cronograma; só desempata etapas com o mesmo início e término. */
+  posicao: number;
 }
 
 /**
@@ -65,9 +69,11 @@ function situacaoDaEtapa(a: PortalActivity, m: ReverseMetrics): SituacaoEtapa {
 /**
  * As etapas na ordem em que acontecem.
  *
- * Ordena por data de início e usa `position` só para desempatar: o
- * banco tem várias atividades com a mesma posição (duas "position: 1",
- * duas "position: 4"), então posição sozinha embaralharia a leitura.
+ * Ordena por data de início; quando várias começam no mesmo dia (na
+ * Q153 isso é comum: toldo e luminárias em 11/11, contrapiso e assinatura
+ * do executivo em 22/10) a que termina antes vem primeiro, depois a
+ * `position`, e por último o nome. O banco tem várias atividades com a
+ * mesma posição, então posição sozinha embaralharia a leitura.
  */
 export function cronogramaReverso(
   atividades: PortalActivity[] = [],
@@ -75,6 +81,7 @@ export function cronogramaReverso(
 ): EtapaCronograma[] {
   return [...atividades]
     .map((a) => {
+      const posicao = a.position ?? Number.MAX_SAFE_INTEGER;
       const metricas = computeReverseMetrics(
         { start_date: a.start_date, end_date: a.end_date, status: etapaConcluida(a) ? "concluida" : a.status },
         hoje,
@@ -88,12 +95,16 @@ export function cronogramaReverso(
         progresso: Math.max(0, Math.min(100, a.progress_percent ?? 0)),
         situacao: situacaoDaEtapa(a, metricas),
         metricas,
+        prazoPlanilha: sheetBusinessDays(a.start_date, a.end_date ?? a.start_date),
+        posicao,
       };
     })
     .sort((a, b) => {
       if (a.inicio && b.inicio && a.inicio !== b.inicio) return a.inicio < b.inicio ? -1 : 1;
       if (a.inicio && !b.inicio) return -1;
       if (!a.inicio && b.inicio) return 1;
+      if (a.termino && b.termino && a.termino !== b.termino) return a.termino < b.termino ? -1 : 1;
+      if (a.posicao !== b.posicao) return a.posicao - b.posicao;
       return a.nome.localeCompare(b.nome, "pt-BR");
     });
 }

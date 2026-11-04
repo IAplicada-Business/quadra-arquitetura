@@ -281,3 +281,27 @@ describe("Compra e contratação", () => {
     expect(r.pendentes).toBe(1);
   });
 });
+
+describe("Cronograma reverso: ordem da Q153", () => {
+  const hoje = "2026-10-20";
+  const a = (id: string, name: string, start: string, end: string, position?: number) =>
+    ativ({ id, name, start_date: start, end_date: end, position });
+
+  it("mesmo início: termina antes vem primeiro, depois a posição, depois o nome", () => {
+    const r = cronogramaReverso(
+      [
+        a("1", "Instalação de luminárias técnicas", "2026-11-11", "2026-11-25"),
+        a("2", "Instalação toldo", "2026-11-11", "2026-11-11"),
+        a("3", "Assinatura Executivo Marcenaria", "2026-10-22", "2026-10-27", 2),
+        a("4", "Contrapiso e Impermeabilização", "2026-10-22", "2026-10-27", 1),
+      ],
+      hoje,
+    );
+    expect(r.map((e) => e.nome)).toEqual([
+      "Contrapiso e Impermeabilização",
+      "Assinatura Executivo Marcenaria",
+      "Instalação toldo",
+      "Instalação de luminárias técnicas",
+    ]);
+  });
+});

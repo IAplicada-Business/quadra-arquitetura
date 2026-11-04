@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, subMonths, differenceInDays, parseISO } from "date-fns";
-import { computeFunnel, inPeriod as inBounds, lastSixMonths, periodBounds, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
+import { differenceInDays, parseISO } from "date-fns";
+import { computeFunnelByPeriod, lastSixMonths, periodBounds, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
 
 interface LeadRow {
   id: string;
@@ -11,6 +11,7 @@ interface LeadRow {
   name: string;
   created_at: string;
   updated_at: string;
+  converted_at?: string | null;
   origin: string | null;
   project_type: string | null;
 }
@@ -96,7 +97,7 @@ export function useComercialMetrics({
       // dos leads do pipeline de parceiros (reposicionamento estratégico:
       // funis totalmente separados, mesma tabela).
       const [leadsRes0, proposalsRes] = await Promise.all([
-        supabase.from("leads").select("id, status, name, created_at, updated_at, origin, project_type").eq("lead_type", "comercial"),
+        supabase.from("leads").select("id, status, name, created_at, updated_at, converted_at, origin, project_type").eq("lead_type", "comercial"),
         supabase.from("proposals").select("id, status, price_full, final_value, sent_at, approved_at, created_at, updated_at, lead_id, notes, leads(name, phone, email, status)"),
       ]);
       // 42703 = coluna lead_type ainda não existe no banco (migration
@@ -121,34 +122,26 @@ export function useComercialMetrics({
     const { leads, proposals } = query.data;
 
     const bounds = periodBounds(period, today);
-    const inPeriod = (dateStr: string) => inBounds(dateStr, bounds);
 
-    // Filter leads by period + origin + projectType
-    const filteredLeads = leads.filter(
-      (l) =>
-        inPeriod(l.created_at) &&
-        (origin === "todos" || l.origin === origin) &&
-        (projectType === "todos" || l.project_type === projectType)
-    );
+    // Origem e tipo valem para tudo; o período é aplicado por etapa
+    // (criados no período no topo, fechados no período no fim).
+    const byFilters = (l: LeadRow) =>
+      (origin === "todos" || l.origin === origin) &&
+      (projectType === "todos" || l.project_type === projectType);
+    const scoped = leads.filter(byFilters);
 
-    // Previous period for variation (only meaningful for mes_atual)
-    const prevPeriodStr = period === "mes_atual" ? format(subMonths(today, 1), "yyyy-MM") : null;
-    const prevLeads = prevPeriodStr
-      ? leads.filter(
-          (l) =>
-            l.created_at?.startsWith(prevPeriodStr) &&
-            (origin === "todos" || l.origin === origin) &&
-            (projectType === "todos" || l.project_type === projectType)
-        )
-      : [];
-
-    // Funil
-    const { stages: funil, rates: funnelRates, total: conversaoTotal } = computeFunnel(filteredLeads);
+    // Funil: fechamento conta no mês em que aconteceu, não no mês de criação
+    const { stages: funil, rates: funnelRates, total: conversaoTotal, created: filteredLeads, closed: closedInPeriod } =
+      computeFunnelByPeriod(scoped, bounds);
     const funnelFechado = funil[funil.length - 1].count;
     const funnelPerdido = filteredLeads.filter((l) => l.status === "perdido").length;
 
+    // Período anterior, para variação (só faz sentido em mes_atual)
+    const prevFunnel = period === "mes_atual" ? computeFunnelByPeriod(scoped, periodBounds("mes_passado", today)) : null;
+    const prevLeads = prevFunnel?.created ?? [];
+
     // Receita fechada: proposals aprovadas de leads no período
-    const periodLeadIds = new Set(filteredLeads.map((l) => l.id));
+    const periodLeadIds = new Set([...filteredLeads, ...closedInPeriod].map((l) => l.id));
     const approvedFromPeriod = proposals.filter(
       (p) => p.status === "aprovada" && periodLeadIds.has(p.lead_id)
     );
@@ -162,7 +155,7 @@ export function useComercialMetrics({
     const leadsPrevCount = prevLeads.length;
     const leadsVariation = leadsPrevCount > 0 ? Math.round(((leadsThisCount - leadsPrevCount) / leadsPrevCount) * 100) : 0;
 
-    const prevFechados = prevLeads.filter((l) => l.status === "fechado").length;
+    const prevFechados = prevFunnel ? prevFunnel.stages[4].count : 0;
     const taxaConversaoThis = leadsThisCount > 0 ? Math.round((funnelFechado / leadsThisCount) * 100) : 0;
     const taxaConversaoPrev = leadsPrevCount > 0 ? Math.round((prevFechados / leadsPrevCount) * 100) : 0;
     const taxaVariation = period === "mes_atual" && taxaConversaoPrev > 0 ? taxaConversaoThis - taxaConversaoPrev : 0;

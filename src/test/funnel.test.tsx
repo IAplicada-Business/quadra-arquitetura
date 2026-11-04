@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { computeFunnel, funnelWidths, lastSixMonths, periodBounds, inPeriod } from "@/lib/funnel";
+import { computeFunnel, computeFunnelByPeriod, funnelWidths, lastSixMonths, periodBounds, inPeriod } from "@/lib/funnel";
 import { buildPartnerMetrics } from "@/hooks/usePartnerMetrics";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 
@@ -88,5 +88,44 @@ describe("FunnelChart", () => {
     expect(screen.getAllByText("da etapa anterior")).toHaveLength(4);
     expect(screen.getByText("entrada")).toBeTruthy();
     expect(screen.getAllByText("50%").length).toBeGreaterThan(0);
+  });
+});
+
+describe("computeFunnelByPeriod", () => {
+  const today = new Date(2026, 10, 4); // 04/11/2026
+  const L = (id: string, status: string, created_at: string, converted_at: string | null = null, updated_at: string | null = null) =>
+    ({ id, status, created_at, converted_at, updated_at });
+  const leads = [
+    L("paula", "fechado", "2026-10-10T10:00:00", "2026-11-03T10:00:00"), // criado mês passado, fechou este mês
+    L("novo", "novo", "2026-11-02T10:00:00"),
+    L("parado", "contato_feito", "2026-10-15T10:00:00"), // não avançou
+    L("antigo", "fechado", "2026-08-01T10:00:00", null, "2026-10-20T10:00:00"), // sem converted_at: usa updated_at
+    L("mesmo", "fechado", "2026-11-01T10:00:00", "2026-11-02T10:00:00"),
+  ];
+
+  it("mês atual: lead criado antes e fechado agora conta como fechado (não zera)", () => {
+    const f = computeFunnelByPeriod(leads, periodBounds("mes_atual", today));
+    expect(f.stages.map((s) => s.count)).toEqual([2, 2, 2, 2, 2]);
+    expect(f.total).toBe(100);
+  });
+
+  it("mês passado: fechamento por updated_at quando falta converted_at", () => {
+    const f = computeFunnelByPeriod(leads, periodBounds("mes_passado", today));
+    expect(f.closed.map((l) => l.id)).toEqual(["antigo"]);
+    expect(f.created.map((l) => l.id)).toEqual(["paula", "parado"]);
+    expect(f.stages[4].count).toBe(1);
+    expect(f.total).toBe(50);
+  });
+
+  it("todos: tudo que fechou, sobre todos os leads", () => {
+    const f = computeFunnelByPeriod(leads, periodBounds("tudo", today));
+    expect(f.stages.map((s) => s.count)).toEqual([5, 4, 3, 3, 3]);
+    expect(f.total).toBe(60);
+  });
+
+  it("lead que não avançou não vira fechado e período vazio não divide por zero", () => {
+    expect(computeFunnelByPeriod(leads, periodBounds("mes_atual", today)).closed.some((l) => l.id === "parado")).toBe(false);
+    const f = computeFunnelByPeriod([], periodBounds("mes_atual", today));
+    expect(f.total).toBe(0);
   });
 });
