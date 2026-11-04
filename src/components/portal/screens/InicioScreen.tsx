@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowRight, Check, Home } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { computeProgress, currentPhase, daysUntil, describeCountdown, extractPendings, formatCurrencyBRL, formatDateLong, formatDateShort } from "@/lib/portal";
 import { buildPortalTrail, trailActivities, type BlockState, type ConstructionBlock, type HealthLevel, type JourneyPosition } from "@/lib/portalTrail";
 import { QuadraWatermark } from "../TrilhaBrand";
+import { EtapaScreen } from "./EtapaScreen";
 import { Eyebrow, PendingActions, TrailCard, type ScreenProps } from "./shared";
 
 const HEALTH_STYLE: Record<HealthLevel, { dot: string; badge: string }> = {
@@ -97,7 +99,7 @@ function JourneyTimeline({ blocks, journey, moveIn }: { blocks: ConstructionBloc
 }
 
 /** Etapas da obra em linha do tempo vertical (mockup 1b), a atual em destaque. */
-function StageTimeline({ blocks, journey }: { blocks: ConstructionBlock[]; journey: JourneyPosition }) {
+function StageTimeline({ blocks, journey, onSelect }: { blocks: ConstructionBlock[]; journey: JourneyPosition; onSelect?: (index: number) => void }) {
   return (
     <ol className="relative">
       <span className="absolute bottom-3 left-[7px] top-3 w-0.5 bg-[var(--trilha-areia)]" aria-hidden />
@@ -111,7 +113,19 @@ function StageTimeline({ blocks, journey }: { blocks: ConstructionBlock[]; journ
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <p className={`text-sm ${kind === "next" ? "text-[var(--trilha-navy)]/60" : "font-medium text-[var(--trilha-navy)]"}`}>{b.name}</p>
+                {onSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(i)}
+                    data-testid={`trail-block-open-${b.name}`}
+                    aria-label={`Ver detalhes da etapa ${b.name}`}
+                    className={`text-left text-sm underline-offset-4 hover:underline ${kind === "next" ? "text-[var(--trilha-navy)]/60" : "font-medium text-[var(--trilha-navy)]"}`}
+                  >
+                    {b.name}
+                  </button>
+                ) : (
+                  <p className={`text-sm ${kind === "next" ? "text-[var(--trilha-navy)]/60" : "font-medium text-[var(--trilha-navy)]"}`}>{b.name}</p>
+                )}
                 <p className={`text-xs ${b.late ? "text-amber-700" : "text-[var(--trilha-navy)]/60"}`}>
                   {status}
                   {blockRange(b) && ` · ${blockRange(b)}`}
@@ -155,6 +169,7 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
   const { project, tasks, weekly_reports, pending_responses, payments } = data;
   const trail = buildPortalTrail(data);
   const { blocks, journey } = trail;
+  const [etapaIdx, setEtapaIdx] = useState<number | null>(null);
   const progress = computeProgress(
     weekly_reports,
     tasks.length
@@ -184,6 +199,22 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
   const currentStatus = current
     ? `${current.late ? "Além do prazo" : BLOCK_STATE_LABEL[current.state]}${blockRange(current) ? ` · ${blockRange(current)}` : ""}`
     : null;
+
+  if (etapaIdx != null && blocks[etapaIdx]) {
+    return (
+      <EtapaScreen
+        block={blocks[etapaIdx]}
+        index={etapaIdx}
+        total={blocks.length}
+        activities={trailActivities(data)}
+        data={data}
+        onBack={() => setEtapaIdx(null)}
+        onApprove={onApprove}
+        onRespond={onRespond}
+        submitting={submitting}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8" data-testid="screen-inicio">
@@ -275,7 +306,7 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
             {blocks.length === 0 ? (
               <p className="text-sm text-[var(--trilha-navy)]/60">O cronograma da obra está sendo montado pela equipe.</p>
             ) : (
-              <StageTimeline blocks={blocks} journey={journey} />
+              <StageTimeline blocks={blocks} journey={journey} onSelect={setEtapaIdx} />
             )}
           </TrailCard>
 

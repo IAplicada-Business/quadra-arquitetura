@@ -332,3 +332,10 @@ export function buildPortalTrail(data: PortalData, today: Date = new Date()): Po
     journey: journeyPosition(blocks),
   };
 }
+
+/** Atividades de uma etapa: mesmo critério de agrupamento de `constructionBlocks`. */
+export function activitiesOfBlock(blockName: string, activities: PortalActivity[]): PortalActivity[] {
+  return activities
+    .filter((a) => (a.discipline?.trim() || a.name.trim() || "Outros") === blockName)
+    .sort((a, b) => (a.start_date ?? "9999").localeCompare(b.start_date ?? "9999") || (a.position ?? 0) - (b.position ?? 0));
+}

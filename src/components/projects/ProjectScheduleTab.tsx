@@ -396,6 +396,7 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
             onChecklistRemove={(id) => checklist.remove.mutate(id)}
             onChecklistAdd={(activityId) => setChecklistDialog({ open: true, activityId })}
             onToggleDone={handleToggleDone}
+            onEditActivity={openActivityForm}
             doneBusyId={markDone.isPending ? markDone.variables?.activity.id ?? null : null}
             checklistPhotos={checklistPhotos}
           />
