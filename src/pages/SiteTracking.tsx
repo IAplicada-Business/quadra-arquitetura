@@ -103,6 +103,8 @@ export default function SiteTracking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active_projects_tracking"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects_kanban"] });
       queryClient.invalidateQueries({ queryKey: PROJECT_NUMBERS_QUERY_KEY });
       toast.success("Obra criada com sucesso!");
       setFormOpen(false);
@@ -119,6 +121,8 @@ export default function SiteTracking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active_projects_tracking"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects_kanban"] });
       queryClient.invalidateQueries({ queryKey: PROJECT_NUMBERS_QUERY_KEY });
       toast.success("Obra atualizada!");
       setFormOpen(false);
@@ -134,6 +138,8 @@ export default function SiteTracking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active_projects_tracking"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects_kanban"] });
       toast.success("Obra excluída!");
       setDeleteId(null);
     },

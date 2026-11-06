@@ -129,8 +129,17 @@ export default function AdminUsersPage() {
   const saveEdit = async () => {
     if (!editUser) return;
     setSavingEdit(true);
-    await supabase.from("profiles").update({ full_name: editForm.full_name }).eq("user_id", editUser.id);
-    await supabase.from("user_roles").update({ role: editForm.role as any }).eq("user_id", editUser.id);
+    const { error: profileError } = await supabase.from("profiles").update({ full_name: editForm.full_name }).eq("user_id", editUser.id);
+    const { error: roleError } = profileError
+      ? { error: null }
+      : await supabase.from("user_roles").update({ role: editForm.role as any }).eq("user_id", editUser.id);
+    const saveError = profileError ?? roleError;
+    if (saveError) {
+      toast.error("Erro ao atualizar usuário", { description: saveError.message });
+      setSavingEdit(false);
+      fetchUsers();
+      return;
+    }
     toast.success("Usuário atualizado");
     setSavingEdit(false);
     setEditUser(null);

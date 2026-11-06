@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { subMonths, startOfMonth, startOfYear } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -103,6 +104,7 @@ const CLIENTS_LIMIT = 5;
 export default function Clients() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -127,10 +129,11 @@ export default function Clients() {
     const clientIds = (clientsData || []).map((c: any) => c.id);
     let projectsByClient: Record<string, ClientProject[]> = {};
     if (clientIds.length > 0) {
-      const { data: projectsData } = await supabase
+      const { data: projectsData, error: projectsError } = await supabase
         .from("projects")
         .select("id, project_number, name, client_id")
         .in("client_id", clientIds);
+      if (projectsError) toast.error("Erro ao carregar os projetos dos clientes");
       if (projectsData) {
         for (const p of projectsData) {
           const cid = (p as any).client_id;
@@ -151,6 +154,11 @@ export default function Clients() {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  const refreshClients = () => {
+    fetchClients();
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
+  };
 
   const handleSave = async () => {
     if (!form.name.trim()) {
@@ -179,24 +187,20 @@ export default function Clients() {
       user_id: user.id,
     };
 
-    if (editingId) {
-      const { error } = await supabase
-        .from("clients")
-        .update(payload)
-        .eq("id", editingId);
-      if (error) toast.error("Erro ao atualizar cliente");
-      else toast.success("Cliente atualizado!");
-    } else {
-      const { error } = await supabase.from("clients").insert([payload]);
-      if (error) toast.error("Erro ao criar cliente");
-      else toast.success("Cliente criado!");
-    }
+    const { error } = editingId
+      ? await supabase.from("clients").update(payload).eq("id", editingId)
+      : await supabase.from("clients").insert([payload]);
 
     setLoading(false);
+    if (error) {
+      toast.error(editingId ? "Erro ao atualizar cliente" : "Erro ao criar cliente", { description: error.message });
+      return;
+    }
+    toast.success(editingId ? "Cliente atualizado!" : "Cliente criado!");
     setDialogOpen(false);
     setEditingId(null);
     setForm(emptyForm);
-    fetchClients();
+    refreshClients();
   };
 
   const handleEdit = (client: Client) => {
@@ -227,7 +231,7 @@ export default function Clients() {
     if (error) toast.error("Erro ao excluir cliente");
     else {
       toast.success("Cliente excluído");
-      fetchClients();
+      refreshClients();
     }
   };
 

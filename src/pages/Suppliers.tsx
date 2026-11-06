@@ -101,6 +101,7 @@ export default function Suppliers() {
       setFormOpen(false);
       toast({ title: "Fornecedor criado" });
     },
+    onError: (error: Error) => toast({ title: "Erro ao criar fornecedor", description: error.message, variant: "destructive" }),
   });
 
   const update = useMutation({
@@ -113,6 +114,7 @@ export default function Suppliers() {
       setFormOpen(false);
       toast({ title: "Fornecedor atualizado" });
     },
+    onError: (error: Error) => toast({ title: "Erro ao atualizar fornecedor", description: error.message, variant: "destructive" }),
   });
 
   const remove = useMutation({

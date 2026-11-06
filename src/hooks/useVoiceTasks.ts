@@ -197,6 +197,8 @@ export function useVoiceTasks(projectId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voice_tasks"] });
     },
+    onError: (e: Error) =>
+      toast({ title: "Erro ao atualizar tarefa", description: e.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -210,6 +212,8 @@ export function useVoiceTasks(projectId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voice_tasks"] });
     },
+    onError: (e: Error) =>
+      toast({ title: "Erro ao excluir tarefa", description: e.message, variant: "destructive" }),
   });
 
   return {
