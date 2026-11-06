@@ -80,7 +80,7 @@ export function PendingItemForm({ open, onOpenChange, onSubmit, initialData, isL
               <Input value={responsible} onChange={(e) => setResponsible(e.target.value)} placeholder="Quem vai resolver" />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label>Status</Label>
               <Select value={status} onValueChange={setStatus}>

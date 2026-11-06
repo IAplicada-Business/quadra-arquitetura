@@ -285,7 +285,7 @@ export function InvoiceNFForm({ open, onOpenChange, onSubmit, initialData, isLoa
               <Input value={form.service_description} onChange={(e) => setForm((f) => ({ ...f, service_description: e.target.value }))} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label>Valor *</Label>
               <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />

@@ -15,7 +15,7 @@ const SectionTabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-9 max-w-full items-end gap-4 overflow-x-auto border-b text-muted-foreground",
+      "inline-flex h-9 max-w-full items-end gap-4 overflow-x-auto overflow-y-hidden scrollbar-elegant border-b text-muted-foreground",
       className,
     )}
     {...props}

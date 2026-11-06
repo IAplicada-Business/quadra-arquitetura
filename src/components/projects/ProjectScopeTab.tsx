@@ -109,7 +109,7 @@ function ActivityRow({
       )}
       {activity.progress_percent === 0 && <span className="w-16 shrink-0" />}
 
-      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      <div className="flex gap-0.5 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
         <button onClick={() => onEdit(activity)} className="p-1 rounded hover:bg-muted">
           <Pencil className="h-3 w-3 text-muted-foreground" />
         </button>

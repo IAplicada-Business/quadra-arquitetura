@@ -237,11 +237,11 @@ export default function ProposalBrandingTab() {
                     <h4 className="font-semibold">{projName}</h4>
                     <Badge variant="secondary">{items[0]?.project_category || "—"}</Badge>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {items.map(img => (
                       <div key={img.id} className="relative group">
                         <img src={img.file_url || ""} alt={img.name} className="h-24 w-full object-cover rounded" />
-                        <Button size="sm" variant="destructive" className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100" onClick={() => remove.mutate(img.id)}>
+                        <Button size="sm" variant="destructive" className="absolute top-1 right-1 h-6 w-6 p-0 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100" onClick={() => remove.mutate(img.id)}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -265,7 +265,7 @@ export default function ProposalBrandingTab() {
                 <div key={f.id} className="relative group border rounded-lg overflow-hidden">
                   {f.file_url && <img src={f.file_url} alt={f.name} className="w-full h-40 object-cover" />}
                   <p className="p-2 text-xs truncate">{f.name}</p>
-                  <Button size="sm" variant="destructive" className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100" onClick={() => remove.mutate(f.id)}>
+                  <Button size="sm" variant="destructive" className="absolute top-1 right-1 h-6 w-6 p-0 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100" onClick={() => remove.mutate(f.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>

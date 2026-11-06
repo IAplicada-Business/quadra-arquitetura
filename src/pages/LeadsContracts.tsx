@@ -545,7 +545,7 @@ export default function LeadsContracts() {
                   </div>
 
                   <h4 className="text-xs font-semibold border-b pb-1">Endereco do Contratante</h4>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div className="col-span-2 space-y-1.5"><Label className="text-xs">Logradouro</Label><Input value={formData.client_logradouro} onChange={(e) => set("client_logradouro", e.target.value)} /></div>
                     <div className="space-y-1.5"><Label className="text-xs">Numero</Label><Input value={formData.client_numero} onChange={(e) => set("client_numero", e.target.value)} /></div>
                     <div className="space-y-1.5"><Label className="text-xs">Complemento</Label><Input value={formData.client_complemento} onChange={(e) => set("client_complemento", e.target.value)} /></div>

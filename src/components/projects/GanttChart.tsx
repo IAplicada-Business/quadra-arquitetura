@@ -365,7 +365,7 @@ export function GanttChart({ tasks, allTasks, onEdit, viewMode, showSummary = tr
                       </Tooltip>
                     </TooltipProvider>
                     {onEdit && (
-                      <Button size="icon" variant="ghost" className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0" onClick={() => onEdit(task)}>
+                      <Button size="icon" variant="ghost" className="h-5 w-5 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0" onClick={() => onEdit(task)}>
                         <Pencil className="h-2.5 w-2.5" />
                       </Button>
                     )}

@@ -232,18 +232,18 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardContent className="p-4 text-center">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Card><CardContent className="p-3 sm:p-4 text-center">
           <p className="text-2xl font-bold text-display">{totalEntries}</p>
           <p className="text-xs text-muted-foreground">Total de Registros</p>
         </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
+        <Card><CardContent className="p-3 sm:p-4 text-center">
           <p className="text-2xl font-bold text-primary">
             {lastEntry ? format(new Date(lastEntry.entry_date), "dd/MM", { locale: ptBR }) : "—"}
           </p>
           <p className="text-xs text-muted-foreground">Último Registro</p>
         </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
+        <Card><CardContent className="p-3 sm:p-4 text-center">
           <p className="text-2xl font-bold">{avgWorkers}</p>
           <p className="text-xs text-muted-foreground">Média Trabalhadores</p>
         </CardContent></Card>
@@ -262,7 +262,7 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
             <SelectItem value="month">Este mês</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={() => setMsgOpen(true)} disabled={!clientPhone}>
             <MessageSquare className="h-4 w-4 mr-1" /> Enviar Mensagem
           </Button>

@@ -351,7 +351,7 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
           <DisciplinePieChart planned={plannedSlices} executed={executedSlices} />
 
           {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Total Pago</CardTitle></CardHeader>
               <CardContent><p className="text-lg font-bold text-success">{formatCurrency(paymentTotals.paid)}</p></CardContent>
@@ -366,9 +366,9 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
             </Card>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <h3 className="text-lg font-semibold text-display">Fluxo de Pagamentos</h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button size="sm" variant="outline" onClick={() => setMsgOpen(true)} disabled={!clientPhone}>
                 <MessageSquare className="h-4 w-4 mr-1" /> Enviar Mensagem
               </Button>

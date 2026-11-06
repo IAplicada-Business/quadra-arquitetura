@@ -235,7 +235,7 @@ export function AIChatBox() {
                         </span>
                         <button
                           onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-all"
+                          className="[@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:text-destructive transition-all"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>

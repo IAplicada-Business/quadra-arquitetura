@@ -186,7 +186,7 @@ export default function SettingsPage() {
       <PageTitle title="Configurações" description="Personalize o sistema" className="mb-4" />
 
       <Tabs defaultValue="geral" className="w-full">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="geral">Geral</TabsTrigger>
           <TabsTrigger value="regras">Regras de Cálculo</TabsTrigger>
           <TabsTrigger value="canais">Canais de Aquisição</TabsTrigger>

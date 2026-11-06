@@ -367,7 +367,7 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                 <InfoHint>Compare cotações e aprove fornecedores para cada disciplina.</InfoHint>
               </h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Select value={String(currentRev)} onValueChange={(v) => setSelectedRevision(Number(v))}>
                 <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>

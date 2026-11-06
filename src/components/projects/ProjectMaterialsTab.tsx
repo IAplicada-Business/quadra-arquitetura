@@ -452,14 +452,14 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
 
           {/* ===== SEÇÃO 2: MANUAIS ===== */}
           <div className="space-y-3 pt-4 border-t">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <h3 className="text-base font-semibold text-foreground flex items-center gap-1.5">
                   Adicionados Manualmente
                   <InfoHint>Materiais adicionados fora do cálculo automático.</InfoHint>
                 </h3>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button size="sm" variant="outline" onClick={() => tracking.importFromBudget.mutate()} disabled={tracking.importFromBudget.isPending}>
                   <Download className="h-4 w-4 mr-1" /> Importar do Orçamento
                 </Button>

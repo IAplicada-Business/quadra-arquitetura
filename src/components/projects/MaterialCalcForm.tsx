@@ -81,7 +81,7 @@ export function MaterialCalcForm({ open, onOpenChange, onSubmit, initialData, is
             <Label>Nome do Item</Label>
             <Input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Ex: Tijolo 14cm, Porcelanato 60x60..." required />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label>Unidade</Label>
               <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="m², un, m³, saco" />

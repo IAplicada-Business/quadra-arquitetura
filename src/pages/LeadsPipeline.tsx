@@ -208,7 +208,7 @@ export default function LeadsPipeline() {
             meta={filtered.length < leads.length ? `${filtered.length} de ${leads.length}` : undefined}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "tabela")}>
             <TabsList className="h-9">
               <TabsTrigger value="kanban" className="px-3" aria-label="Kanban"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
@@ -218,7 +218,9 @@ export default function LeadsPipeline() {
           {canViewPath("/dashboard/escritorio") && (
             <Button variant="outline" size="sm" asChild>
               <Link to="/dashboard/escritorio">
-                <BarChart3 className="h-4 w-4 mr-1" /> Ver análise no Dashboard Comercial
+                <BarChart3 className="h-4 w-4 mr-1" />
+                <span className="sm:hidden">Análise</span>
+                <span className="hidden sm:inline">Ver análise no Dashboard Comercial</span>
               </Link>
             </Button>
           )}
