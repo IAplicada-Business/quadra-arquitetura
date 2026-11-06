@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, FileSpreadsheet, FlaskConical, Loader2, MoreHorizontal, Plus, RefreshCw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InfoHint } from "@/components/visual/InfoHint";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabsList, SectionTabsTrigger } from "@/components/ui/section-tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
@@ -317,12 +318,12 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-4 animate-fade-in">
       <Tabs defaultValue="reverso">
-        <TabsList>
-          <TabsTrigger value="reverso">Cronograma Reverso</TabsTrigger>
-          <TabsTrigger value="fechamento">Fechamento Cliente</TabsTrigger>
-          <TabsTrigger value="contagem">Contagem Regressiva</TabsTrigger>
-          <TabsTrigger value="gantt">Gantt</TabsTrigger>
-        </TabsList>
+        <SectionTabsList>
+          <SectionTabsTrigger value="reverso">Cronograma Reverso</SectionTabsTrigger>
+          <SectionTabsTrigger value="fechamento">Fechamento Cliente</SectionTabsTrigger>
+          <SectionTabsTrigger value="contagem">Contagem Regressiva</SectionTabsTrigger>
+          <SectionTabsTrigger value="gantt">Gantt</SectionTabsTrigger>
+        </SectionTabsList>
 
         {/* ===== CRONOGRAMA REVERSO (principal, editável) ===== */}
         <TabsContent value="reverso" className="space-y-4 mt-4">

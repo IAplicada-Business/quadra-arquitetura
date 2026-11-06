@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabsList, SectionTabsTrigger } from "@/components/ui/section-tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProjectPayments } from "@/hooks/useProjectPayments";
 import { useInvoices } from "@/hooks/useInvoices";
@@ -335,12 +336,12 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
       </div>
 
       <Tabs defaultValue="pagamentos">
-        <TabsList>
-          <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
-          <TabsTrigger value="compras">Compras</TabsTrigger>
-          <TabsTrigger value="notas">NF Compras</TabsTrigger>
-          <TabsTrigger value="dre">Resultado do Projeto</TabsTrigger>
-        </TabsList>
+        <SectionTabsList>
+          <SectionTabsTrigger value="pagamentos">Pagamentos</SectionTabsTrigger>
+          <SectionTabsTrigger value="compras">Compras</SectionTabsTrigger>
+          <SectionTabsTrigger value="notas">NF Compras</SectionTabsTrigger>
+          <SectionTabsTrigger value="dre">Resultado do Projeto</SectionTabsTrigger>
+        </SectionTabsList>
 
         <TabsContent value="compras" className="mt-4">
           <ProjectPurchasesTab projectId={projectId} showDisciplineFilter={false} />

@@ -3,7 +3,8 @@ import { Plus, RefreshCw, Search, Eye, FileDown, Sparkles, Loader2 } from "lucid
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabsList, SectionTabsTrigger } from "@/components/ui/section-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -353,10 +354,10 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs defaultValue="cotacoes">
-        <TabsList>
-          <TabsTrigger value="cotacoes">Cotações por Disciplina</TabsTrigger>
-          <TabsTrigger value="compras">Lista de Compras</TabsTrigger>
-        </TabsList>
+        <SectionTabsList>
+          <SectionTabsTrigger value="cotacoes">Cotações por Disciplina</SectionTabsTrigger>
+          <SectionTabsTrigger value="compras">Lista de Compras</SectionTabsTrigger>
+        </SectionTabsList>
 
         <TabsContent value="cotacoes" className="space-y-6 mt-4">
           <div className="flex items-center justify-between flex-wrap gap-4">

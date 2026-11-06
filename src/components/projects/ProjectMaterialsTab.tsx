@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabsList, SectionTabsTrigger } from "@/components/ui/section-tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMaterialTracking } from "@/hooks/useMaterialTracking";
@@ -184,12 +185,12 @@ export function ProjectMaterialsTab({ projectId, projectName = "" }: { projectId
   return (
     <div className="space-y-4 animate-fade-in">
       <Tabs defaultValue="rastreamento">
-        <TabsList>
-          <TabsTrigger value="rastreamento">Materiais de Obra</TabsTrigger>
-          <TabsTrigger value="inventario">Inventário</TabsTrigger>
-          <TabsTrigger value="atividades">Cronograma</TabsTrigger>
-          <TabsTrigger value="compras">Lista da Casa</TabsTrigger>
-        </TabsList>
+        <SectionTabsList>
+          <SectionTabsTrigger value="rastreamento">Materiais de Obra</SectionTabsTrigger>
+          <SectionTabsTrigger value="inventario">Inventário</SectionTabsTrigger>
+          <SectionTabsTrigger value="atividades">Cronograma</SectionTabsTrigger>
+          <SectionTabsTrigger value="compras">Lista da Casa</SectionTabsTrigger>
+        </SectionTabsList>
 
         {/* ===== INVENTÁRIO (3 colunas) ===== */}
         <TabsContent value="inventario" className="mt-4">
