@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -127,9 +128,11 @@ export function ProjectPurchasesTab({
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditing(item as Record<string, unknown>); setFormOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove.mutate(item.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <ConfirmDeleteDialog title="Excluir esta compra?" onConfirm={() => remove.mutate(item.id)}>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Excluir compra">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>

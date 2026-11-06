@@ -6,6 +6,7 @@ import { PageSkeleton } from "@/components/visual/PageSkeleton";
 import { ShowMoreButton, useShowMore } from "@/components/visual/ShowMore";
 import { SupplierDetailSheet } from "@/components/construction/SupplierDetailSheet";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -54,9 +55,11 @@ function SupplierActions({ onEdit, onRemove }: { onEdit: () => void; onRemove: (
       <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar" onClick={onEdit}>
         <Pencil className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Excluir" onClick={onRemove}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <ConfirmDeleteDialog title="Excluir este fornecedor?" onConfirm={onRemove}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Excluir">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </ConfirmDeleteDialog>
     </div>
   );
 }

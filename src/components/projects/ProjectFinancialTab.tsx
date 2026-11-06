@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Plus, Pencil, Trash2, Download, ChevronDown, ChevronRight, CheckCheck, MessageSquare, Sparkles, Loader2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -311,9 +312,11 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingPayment(p as Record<string, unknown>); setPaymentFormOpen(true); }}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => payments.remove.mutate(p.id)}>
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <ConfirmDeleteDialog title="Excluir este pagamento?" onConfirm={() => payments.remove.mutate(p.id)}>
+              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Excluir pagamento">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </ConfirmDeleteDialog>
           </div>
         </TableCell>
       </TableRow>
@@ -458,9 +461,11 @@ export function ProjectFinancialTab({ projectId, projectName, clientName, client
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingInvoice(inv as Record<string, unknown>); setInvoiceFormOpen(true); }}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => invoices.remove.mutate(inv.id)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            <ConfirmDeleteDialog title="Excluir esta nota fiscal?" onConfirm={() => invoices.remove.mutate(inv.id)}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Excluir nota fiscal">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </ConfirmDeleteDialog>
                           </div>
                         </TableCell>
                       </TableRow>

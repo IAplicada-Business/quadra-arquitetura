@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Sparkles, GripVertical, Pencil, Trash2, Link2, Users, ChevronDown, ChevronRight, Wand2, Check, X, Loader2, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -112,9 +113,11 @@ function ActivityRow({
         <button onClick={() => onEdit(activity)} className="p-1 rounded hover:bg-muted">
           <Pencil className="h-3 w-3 text-muted-foreground" />
         </button>
-        <button onClick={() => onRemove(activity.id)} className="p-1 rounded hover:bg-destructive/10">
-          <Trash2 className="h-3 w-3 text-destructive" />
-        </button>
+        <ConfirmDeleteDialog title="Excluir esta atividade do escopo?" onConfirm={() => onRemove(activity.id)}>
+          <button className="p-1 rounded hover:bg-destructive/10" aria-label="Excluir atividade">
+            <Trash2 className="h-3 w-3 text-destructive" />
+          </button>
+        </ConfirmDeleteDialog>
       </div>
     </div>
   );

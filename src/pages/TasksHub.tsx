@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVoiceTasks, type VoiceTask } from "@/hooks/useVoiceTasks";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { KanbanBoard, KanbanColumn, kanbanListClass, kanbanCardClass } from "@/components/visual/KanbanLayout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -293,14 +294,16 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                                   )}
                                 </div>
                                 <div className="flex items-center justify-end gap-1 mt-2">
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-6 w-6 text-destructive"
-                                    onClick={() => remove(task.id)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
+                                  <ConfirmDeleteDialog title="Excluir esta tarefa?" onConfirm={() => remove(task.id)}>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-6 w-6 text-destructive"
+                                      aria-label="Excluir tarefa"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </ConfirmDeleteDialog>
                                 </div>
                               </div>
                             )}
@@ -355,9 +358,11 @@ export default function TasksHub({ mode = "all", title }: TasksHubProps) {
                       )}
                     </div>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove(task.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <ConfirmDeleteDialog title="Excluir esta tarefa?" onConfirm={() => remove(task.id)}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Excluir tarefa">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </ConfirmDeleteDialog>
                 </div>
               ))
             )}

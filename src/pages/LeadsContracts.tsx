@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, Trash2, Pencil, FileSignature, Send, X, Settings2, MessageSquare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -439,7 +440,9 @@ export default function LeadsContracts() {
                               )}
                               <Button size="icon" variant="ghost" className="h-7 w-7" title="Editar" onClick={() => openEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
                               <Button size="icon" variant="ghost" className="h-7 w-7" title="Enviar mensagem" onClick={() => setMsgContract(c)}><MessageSquare className="h-3.5 w-3.5" /></Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Excluir" onClick={() => remove.mutate(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                              <ConfirmDeleteDialog title="Excluir este contrato?" onConfirm={() => remove.mutate(c.id)}>
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
+                              </ConfirmDeleteDialog>
                             </div>
                           </TableCell>
                         </TableRow>

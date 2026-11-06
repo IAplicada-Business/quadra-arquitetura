@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { monthRange } from "@/lib/monthRange";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -423,9 +424,11 @@ export default function Lancamentos() {
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(item)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove.mutate(item.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <ConfirmDeleteDialog title="Excluir este lançamento?" onConfirm={() => remove.mutate(item.id)}>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Excluir lançamento">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </ConfirmDeleteDialog>
                     </div>
                   </TableCell>
                 </TableRow>

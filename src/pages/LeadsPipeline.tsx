@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLeads, LEAD_STATUSES, leadStatusLabels, Lead } from "@/hooks/useLeads";
 import { useAcquisitionChannels } from "@/hooks/useAcquisitionChannels";
 import { usePermissions } from "@/hooks/usePermissions";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { subMonths, startOfMonth, startOfYear } from "date-fns";
 import { SendMessageModal } from "@/components/messages/SendMessageModal";
 import { ChannelBadge } from "@/components/leads/ChannelBadge";
@@ -406,9 +407,11 @@ export default function LeadsPipeline() {
                             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(lead)}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => remove.mutate(lead.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            <ConfirmDeleteDialog title={`Excluir o lead ${lead.name}?`} onConfirm={() => remove.mutate(lead.id)}>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" aria-label="Excluir lead">
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </ConfirmDeleteDialog>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
@@ -511,9 +514,11 @@ export default function LeadsPipeline() {
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(lead)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove.mutate(lead.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ConfirmDeleteDialog title={`Excluir o lead ${lead.name}?`} onConfirm={() => remove.mutate(lead.id)}>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label="Excluir lead">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>

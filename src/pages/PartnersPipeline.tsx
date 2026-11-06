@@ -11,6 +11,7 @@ import { PartnerDetailSheet } from "@/components/leads/PartnerDetailSheet";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { PageTitle } from "@/components/layout/PageTitle";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 
 const stageColors: Record<string, string> = {
   novo: "bg-blue-500/10 text-blue-700 border-blue-200",
@@ -192,9 +193,11 @@ export default function PartnersPipeline() {
                             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(partner)}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => remove.mutate(partner.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            <ConfirmDeleteDialog title={`Excluir o parceiro ${partner.name}?`} onConfirm={() => remove.mutate(partner.id)}>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" aria-label="Excluir parceiro">
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </ConfirmDeleteDialog>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
