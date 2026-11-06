@@ -150,6 +150,53 @@ export function pipelineByMonth(leads: PeriodFunnelLead[], today: Date): Pipelin
   }));
 }
 
+export interface ConversionRow {
+  key: string;
+  total: number;
+  fechados: number;
+  rate: number;
+}
+
+/**
+ * Conversão por grupo (origem, tipo de projeto…) com a mesma régua do
+ * funil: total = leads criados no período; fechados = fechados no
+ * período (por `closedAt`). Ordena pela taxa, depois pelo volume.
+ */
+export function conversionBy<T extends PeriodFunnelLead>(
+  leads: T[],
+  keyOf: (l: T) => string | null | undefined,
+  bounds: PeriodBounds,
+): ConversionRow[] {
+  const rows = new Map<string, ConversionRow>();
+  const row = (k: string) => rows.get(k) ?? rows.set(k, { key: k, total: 0, fechados: 0, rate: 0 }).get(k)!;
+  for (const l of leads) {
+    const k = keyOf(l) || "outro";
+    if (inPeriod(l.created_at, bounds)) row(k).total++;
+    if (l.status === "fechado" && inPeriod(closedAt(l), bounds)) row(k).fechados++;
+  }
+  return [...rows.values()]
+    .map((r) => ({ ...r, rate: convRate(r.fechados, r.total) }))
+    .sort((a, b) => b.rate - a.rate || b.total - a.total);
+}
+
+const LOST_STATUSES = new Set(["perdido", "perdido_definitivo"]);
+
+/** Motivos de perda dos leads perdidos criados no período (só os que têm motivo). */
+export function lostReasons<T extends PeriodFunnelLead & { lost_reason?: string | null }>(
+  leads: T[],
+  bounds: PeriodBounds,
+): { reason: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const l of leads) {
+    const reason = l.lost_reason?.trim();
+    if (!reason || !LOST_STATUSES.has(l.status) || !inPeriod(l.created_at, bounds)) continue;
+    counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([reason, count]) => ({ reason, count }))
+    .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason, "pt-BR"));
+}
+
 /** Largura mínima da fatia, em % — etapa com 0 ainda aparece como bico. */
 const FUNNEL_MIN_WIDTH = 24;
 

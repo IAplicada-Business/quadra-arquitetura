@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { computeFunnel, computeFunnelByPeriod, funnelWidths, lastSixMonths, periodBounds, inPeriod, pipelineByMonth } from "@/lib/funnel";
+import { computeFunnel, computeFunnelByPeriod, conversionBy, funnelWidths, lastSixMonths, lostReasons, periodBounds, inPeriod, pipelineByMonth } from "@/lib/funnel";
 import { buildPartnerMetrics } from "@/hooks/usePartnerMetrics";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 
@@ -144,5 +144,48 @@ describe("computeFunnelByPeriod", () => {
     expect(out.em_andamento).toBe(1); // parado
     expect(out.fechados).toBe(computeFunnelByPeriod(comEdicaoDepois, periodBounds("mes_passado", today)).closed.length);
     expect(nov.fechados).toBe(computeFunnelByPeriod(comEdicaoDepois, periodBounds("mes_atual", today)).closed.length);
+  });
+});
+
+describe("conversionBy e lostReasons", () => {
+  const today = new Date(2026, 10, 4);
+  const L = (id: string, status: string, origin: string, created_at: string, converted_at: string | null = null, lost_reason: string | null = null) =>
+    ({ id, status, origin, created_at, converted_at, updated_at: null, lost_reason });
+  const leads = [
+    L("paula", "fechado", "indicacao", "2026-10-10T10:00:00", "2026-11-03T10:00:00"),
+    L("ana", "novo", "indicacao", "2026-11-02T10:00:00"),
+    L("bia", "fechado", "instagram", "2026-11-01T10:00:00", "2026-11-02T10:00:00"),
+    L("caio", "perdido", "instagram", "2026-11-03T10:00:00", null, "Preço"),
+    L("davi", "perdido_definitivo", "google", "2026-11-03T10:00:00", null, "Preço"),
+    L("eva", "perdido", "google", "2026-11-03T10:00:00", null, "Prazo"),
+    L("velho", "perdido", "google", "2026-09-01T10:00:00", null, "Prazo"),
+    L("sem", "perdido", "site", "2026-11-03T10:00:00"),
+  ];
+
+  it("conversão por origem usa a régua do funil: criados no período e fechados no período", () => {
+    const rows = conversionBy(leads, (l) => l.origin, periodBounds("mes_atual", today));
+    const by = Object.fromEntries(rows.map((r) => [r.key, r]));
+    // Paula foi criada em outubro e fechou em novembro: conta como fechado, não como lead do mês.
+    expect(by.indicacao).toMatchObject({ total: 1, fechados: 1, rate: 100 });
+    expect(by.instagram).toMatchObject({ total: 2, fechados: 1, rate: 50 });
+    expect(by.google).toMatchObject({ total: 2, fechados: 0, rate: 0 });
+    expect(rows.map((r) => r.key).slice(0, 2)).toEqual(["indicacao", "instagram"]);
+  });
+
+  it("em todo o período bate com a conta simples fechados / total por origem", () => {
+    const by = Object.fromEntries(conversionBy(leads, (l) => l.origin, periodBounds("tudo", today)).map((r) => [r.key, r]));
+    expect(by.indicacao).toMatchObject({ total: 2, fechados: 1, rate: 50 });
+    expect(by.google).toMatchObject({ total: 3, fechados: 0 });
+  });
+
+  it("motivos de perda: só perdidos criados no período e com motivo", () => {
+    expect(lostReasons(leads, periodBounds("mes_atual", today))).toEqual([
+      { reason: "Preço", count: 2 },
+      { reason: "Prazo", count: 1 },
+    ]);
+    expect(lostReasons(leads, periodBounds("tudo", today))).toEqual([
+      { reason: "Prazo", count: 2 },
+      { reason: "Preço", count: 2 },
+    ]);
   });
 });

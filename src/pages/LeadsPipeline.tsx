@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Plus, Phone, Mail, ArrowRight, Trash2, Pencil, UserCheck,
-  LayoutGrid, List, Search, Filter, Users, CalendarCheck, TrendingUp, XCircle,
+  LayoutGrid, List, Search, Filter, Users, CalendarCheck, XCircle,
   BarChart3, GripVertical, MessageSquare, ChevronsLeft, ChevronsRight,
 } from "lucide-react";
-import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { useLeads, LEAD_STATUSES, leadStatusLabels, Lead } from "@/hooks/useLeads";
 import { useAcquisitionChannels } from "@/hooks/useAcquisitionChannels";
-import { differenceInDays, subMonths, format, startOfMonth, startOfYear } from "date-fns";
-import { pt } from "date-fns/locale";
+import { usePermissions } from "@/hooks/usePermissions";
+import { subMonths, startOfMonth, startOfYear } from "date-fns";
 import { SendMessageModal } from "@/components/messages/SendMessageModal";
 import { ChannelBadge } from "@/components/leads/ChannelBadge";
 import { ChannelMultiSelectFilter, NO_CHANNEL_VALUE } from "@/components/leads/ChannelMultiSelectFilter";
@@ -62,7 +60,8 @@ export default function LeadsPipeline() {
   const { leads, isLoading, update, remove, convertToClient } = leadsHook;
   const { channels: allChannels } = useAcquisitionChannels();
 
-  const [view, setView] = useState<"kanban" | "tabela" | "analise">("kanban");
+  const { canViewPath } = usePermissions();
+  const [view, setView] = useState<"kanban" | "tabela">("kanban");
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterOrigin, setFilterOrigin] = useState("todos");
@@ -209,13 +208,19 @@ export default function LeadsPipeline() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Tabs value={view} onValueChange={(v) => setView(v as any)}>
+          <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "tabela")}>
             <TabsList className="h-9">
-              <TabsTrigger value="kanban" className="px-3"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
-              <TabsTrigger value="tabela" className="px-3"><List className="h-4 w-4" /></TabsTrigger>
-              <TabsTrigger value="analise" className="px-3"><BarChart3 className="h-4 w-4" /></TabsTrigger>
+              <TabsTrigger value="kanban" className="px-3" aria-label="Kanban"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
+              <TabsTrigger value="tabela" className="px-3" aria-label="Tabela"><List className="h-4 w-4" /></TabsTrigger>
             </TabsList>
           </Tabs>
+          {canViewPath("/dashboard/escritorio") && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dashboard/escritorio">
+                <BarChart3 className="h-4 w-4 mr-1" /> Ver análise no Dashboard Comercial
+              </Link>
+            </Button>
+          )}
           <Button onClick={openNew} size="sm">
             <Plus className="h-4 w-4 mr-1" /> Novo Lead
           </Button>
@@ -223,8 +228,7 @@ export default function LeadsPipeline() {
       </div>
 
       {/* Filters */}
-      {view !== "analise" && (
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar por nome, telefone ou email…" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -266,19 +270,16 @@ export default function LeadsPipeline() {
             </SelectContent>
           </Select>
         </div>
-      )}
 
       {/* Metrics Cards */}
-      {view !== "analise" && (() => {
+      {(() => {
         const total = leads.length;
         const novos = leads.filter((l) => l.status === "novo").length;
         const reunioes = leads.filter((l) => l.status === "reuniao_agendada").length;
-        const fechados = leads.filter((l) => l.status === "fechado").length;
         const perdidos = leads.filter((l) => LOST_STATUSES.has(l.status)).length;
         const backlog = leads.filter((l) => l.status === "backlog_recontato").length;
-        const conversionRate = total > 0 ? Math.round((fechados / total) * 100) : 0;
         return (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <Card className="bg-blue-50/50 border-blue-100">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2.5 bg-blue-100 rounded-full text-blue-600"><Users className="h-5 w-5" /></div>
@@ -303,15 +304,6 @@ export default function LeadsPipeline() {
                 <div>
                   <p className="text-xs text-muted-foreground font-medium">Reuniões</p>
                   <p className="text-xl font-bold text-purple-700">{reunioes}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-green-50/50 border-green-100">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2.5 bg-green-100 rounded-full text-green-600"><TrendingUp className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Conversão</p>
-                  <p className="text-xl font-bold text-green-700">{conversionRate}%</p>
                 </div>
               </CardContent>
             </Card>
@@ -532,9 +524,6 @@ export default function LeadsPipeline() {
         </Card>
       )}
 
-      {/* Analytics View */}
-      {view === "analise" && <LeadAnalytics leads={leads} />}
-
       {/* Lead Form Dialog */}
       {formOpen && (
         <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} editingLead={editingLead} leadsHook={leadsHook} />
@@ -553,272 +542,6 @@ export default function LeadsPipeline() {
           }}
         />
       )}
-    </div>
-  );
-}
-
-/* ─── Analytics Component ─── */
-
-function LeadAnalytics({ leads }: { leads: Lead[] }) {
-  const analytics = useMemo(() => {
-    const total = leads.length;
-    const byStatus: Record<string, number> = {};
-    LEAD_STATUSES.forEach((s) => { byStatus[s] = leads.filter((l) => l.status === s).length; });
-
-    const fechados = byStatus["fechado"] || 0;
-    const perdidos = (byStatus["perdido_definitivo"] || 0) + (byStatus["perdido"] || 0);
-    const backlog = byStatus["backlog_recontato"] || 0;
-    const conversionRate = total > 0 ? ((fechados / total) * 100) : 0;
-
-    // Funnel conversion rates between stages (exclui status terminais não-fechado)
-    const stages = LEAD_STATUSES.filter((s) => !LOST_STATUSES.has(s) && s !== "backlog_recontato");
-    const funnelRates: { from: string; to: string; rate: number }[] = [];
-    for (let i = 0; i < stages.length - 1; i++) {
-      const fromCount = stages.slice(i).reduce((sum, s) => sum + (byStatus[s] || 0), 0);
-      const toCount = stages.slice(i + 1).reduce((sum, s) => sum + (byStatus[s] || 0), 0);
-      funnelRates.push({
-        from: stages[i],
-        to: stages[i + 1],
-        rate: fromCount > 0 ? (toCount / fromCount) * 100 : 0,
-      });
-    }
-
-    // Avg days in pipeline for closed leads
-    const closedLeads = leads.filter((l) => l.status === "fechado");
-    const avgDays = closedLeads.length > 0
-      ? Math.round(closedLeads.reduce((sum, l) => sum + differenceInDays(new Date(l.updated_at), new Date(l.created_at)), 0) / closedLeads.length)
-      : 0;
-
-    // By origin
-    const origins = [...new Set(leads.map((l) => l.origin))];
-    const byOrigin = origins.map((o) => {
-      const oLeads = leads.filter((l) => l.origin === o);
-      const oFechados = oLeads.filter((l) => l.status === "fechado").length;
-      return { origin: o, total: oLeads.length, fechados: oFechados, rate: oLeads.length > 0 ? (oFechados / oLeads.length) * 100 : 0 };
-    }).sort((a, b) => b.rate - a.rate);
-
-    // By type
-    const types = [...new Set(leads.map((l) => l.project_type))];
-    const byType = types.map((t) => {
-      const tLeads = leads.filter((l) => l.project_type === t);
-      const tFechados = tLeads.filter((l) => l.status === "fechado").length;
-      return { type: t, total: tLeads.length, fechados: tFechados, rate: tLeads.length > 0 ? (tFechados / tLeads.length) * 100 : 0 };
-    }).sort((a, b) => b.rate - a.rate);
-
-    // Monthly leads (last 6 months)
-    const now = new Date();
-    const monthly: { month: string; count: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const monthStart = startOfMonth(subMonths(now, i));
-      const monthEnd = startOfMonth(subMonths(now, i - 1));
-      const count = leads.filter((l) => {
-        const d = new Date(l.created_at);
-        return d >= monthStart && d < monthEnd;
-      }).length;
-      monthly.push({ month: format(monthStart, "MMM yy", { locale: pt }), count });
-    }
-    const maxMonthly = Math.max(...monthly.map((m) => m.count), 1);
-
-    // Lost reasons (inclui status "perdido" legado + "perdido_definitivo")
-    const lostLeads = leads.filter((l) => LOST_STATUSES.has(l.status) && l.lost_reason);
-    const lostReasons: Record<string, number> = {};
-    lostLeads.forEach((l) => {
-      const reason = l.lost_reason || "Não informado";
-      lostReasons[reason] = (lostReasons[reason] || 0) + 1;
-    });
-
-    return { total, byStatus, fechados, perdidos, backlog, conversionRate, funnelRates, avgDays, byOrigin, byType, monthly, maxMonthly, lostReasons, stages };
-  }, [leads]);
-
-  const funnelColors = ["bg-blue-500", "bg-amber-500", "bg-purple-500", "bg-cyan-500", "bg-green-500"];
-
-  if (leads.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          Nenhum lead cadastrado para análise.
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Conversion Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Conversão Geral</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600">{analytics.conversionRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground mt-1">{analytics.fechados} de {analytics.total} leads convertidos</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tempo Médio no Pipeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{analytics.avgDays} <span className="text-lg text-muted-foreground font-normal">dias</span></p>
-            <p className="text-xs text-muted-foreground mt-1">Para leads fechados</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Leads Perdidos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-red-600">{analytics.perdidos}</p>
-            <p className="text-xs text-muted-foreground mt-1">{analytics.total > 0 ? ((analytics.perdidos / analytics.total) * 100).toFixed(1) : 0}% do total</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Funnel */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Funil de Conversão</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {analytics.stages.map((status, i) => {
-            const count = analytics.byStatus[status] || 0;
-            const pct = analytics.total > 0 ? (count / analytics.total) * 100 : 0;
-            return (
-              <div key={status} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{leadStatusLabels[status]}</span>
-                  <span className="text-muted-foreground">{count} ({pct.toFixed(0)}%)</span>
-                </div>
-                <div className="h-6 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${funnelColors[i] || "bg-primary"} rounded-full transition-all duration-500`}
-                    style={{ width: `${Math.max(pct, 2)}%` }}
-                  />
-                </div>
-                {i < analytics.funnelRates.length && (
-                  <p className="text-[11px] text-muted-foreground pl-1">
-                    → {leadStatusLabels[analytics.funnelRates[i].to]}: {analytics.funnelRates[i].rate.toFixed(0)}% de conversão
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* By Origin */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Conversão por Origem</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Origem</TableHead>
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-center">Fechados</TableHead>
-                  <TableHead className="text-right">Taxa</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analytics.byOrigin.map((row, i) => (
-                  <TableRow key={row.origin} className={i === 0 && row.rate > 0 ? "bg-green-50/50" : ""}>
-                    <TableCell className="font-medium">{originLabels[row.origin] || row.origin}</TableCell>
-                    <TableCell className="text-center">{row.total}</TableCell>
-                    <TableCell className="text-center">{row.fechados}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={row.rate > 0 ? "default" : "outline"} className="text-xs">
-                        {row.rate.toFixed(0)}%
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* By Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Conversão por Tipo de Projeto</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-center">Fechados</TableHead>
-                  <TableHead className="text-right">Taxa</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analytics.byType.map((row, i) => (
-                  <TableRow key={row.type} className={i === 0 && row.rate > 0 ? "bg-green-50/50" : ""}>
-                    <TableCell className="font-medium">{typeLabels[row.type] || row.type}</TableCell>
-                    <TableCell className="text-center">{row.total}</TableCell>
-                    <TableCell className="text-center">{row.fechados}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={row.rate > 0 ? "default" : "outline"} className="text-xs">
-                        {row.rate.toFixed(0)}%
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Monthly + Lost Reasons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Leads por Mês (últimos 6 meses)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-2 h-32">
-              {analytics.monthly.map((m) => (
-                <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs font-medium">{m.count}</span>
-                  <div
-                    className="w-full bg-primary/80 rounded-t transition-all duration-500"
-                    style={{ height: `${(m.count / analytics.maxMonthly) * 100}%`, minHeight: m.count > 0 ? "4px" : "0px" }}
-                  />
-                  <span className="text-[10px] text-muted-foreground capitalize">{m.month}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Motivos de Perda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.keys(analytics.lostReasons).length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum motivo de perda registrado</p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(analytics.lostReasons)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([reason, count]) => (
-                    <div key={reason} className="flex items-center justify-between">
-                      <span className="text-sm truncate flex-1">{reason}</span>
-                      <Badge variant="destructive" className="text-xs ml-2">{count}</Badge>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

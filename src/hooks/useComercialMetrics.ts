@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { differenceInDays, parseISO } from "date-fns";
-import { computeFunnelByPeriod, periodBounds, pipelineByMonth, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
+import { computeFunnelByPeriod, conversionBy, lostReasons, periodBounds, pipelineByMonth, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
 
 interface LeadRow {
   id: string;
@@ -12,6 +12,7 @@ interface LeadRow {
   created_at: string;
   updated_at: string;
   converted_at?: string | null;
+  lost_reason?: string | null;
   origin: string | null;
   project_type: string | null;
 }
@@ -97,14 +98,14 @@ export function useComercialMetrics({
       // dos leads do pipeline de parceiros (reposicionamento estratégico:
       // funis totalmente separados, mesma tabela).
       const [leadsRes0, proposalsRes] = await Promise.all([
-        supabase.from("leads").select("id, status, name, created_at, updated_at, converted_at, origin, project_type").eq("lead_type", "comercial"),
+        supabase.from("leads").select("id, status, name, created_at, updated_at, converted_at, lost_reason, origin, project_type").eq("lead_type", "comercial"),
         supabase.from("proposals").select("id, status, price_full, final_value, sent_at, approved_at, created_at, updated_at, lead_id, notes, leads(name, phone, email, status)"),
       ]);
       // 42703 = coluna lead_type ainda não existe no banco (migration
       // pendente) — sem o filtro, volta ao comportamento anterior à
       // feature de parceiros em vez de zerar o dashboard inteiro.
       const leadsRes = leadsRes0.error?.code === "42703"
-        ? await supabase.from("leads").select("id, status, name, created_at, updated_at, origin, project_type")
+        ? await supabase.from("leads").select("id, status, name, created_at, updated_at, lost_reason, origin, project_type")
         : leadsRes0;
       return {
         leads: (leadsRes.data ?? []) as LeadRow[],
@@ -202,7 +203,14 @@ export function useComercialMetrics({
     // Pipeline 6 meses (sempre últimos 6, independe do filtro de período para manter histórico)
     const pipeline6m: PipelineMonth[] = pipelineByMonth(scoped, today);
 
+    const conversaoPorOrigem = conversionBy(scoped, (l) => l.origin, bounds);
+    const conversaoPorTipo = conversionBy(scoped, (l) => l.project_type, bounds);
+    const motivosDePerda = lostReasons(scoped, bounds);
+
     return {
+      conversaoPorOrigem,
+      conversaoPorTipo,
+      motivosDePerda,
       funil,
       funnelRates,
       conversaoTotal,

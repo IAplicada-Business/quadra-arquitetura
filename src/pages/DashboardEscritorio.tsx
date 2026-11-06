@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { ConversionRow } from "@/lib/funnel";
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -198,6 +200,23 @@ export default function DashboardEscritorio() {
                   </p>
                 )}
               </SectionCard>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <SectionCard title={`Conversão por origem — ${PERIOD_LABELS[cmPeriod]}`} subtitle="Leads criados no período e fechamentos no período, pela mesma régua do funil">
+                  <ConversionTable rows={cm.conversaoPorOrigem} labelOf={(k) => labelFrom(ORIGIN_OPTIONS, k)} firstHeader="Origem" />
+                </SectionCard>
+                <SectionCard title={`Conversão por tipo de projeto — ${PERIOD_LABELS[cmPeriod]}`} subtitle="Leads criados no período e fechamentos no período, pela mesma régua do funil">
+                  <ConversionTable rows={cm.conversaoPorTipo} labelOf={(k) => labelFrom(PROJECT_TYPE_OPTIONS, k)} firstHeader="Tipo" />
+                </SectionCard>
+              </div>
+
+              <SectionCard title={`Motivos de perda — ${PERIOD_LABELS[cmPeriod]}`} subtitle="Leads perdidos criados no período que têm motivo registrado">
+                {cm.motivosDePerda.length > 0 ? (
+                  <RankBars items={cm.motivosDePerda.map((m) => ({ key: m.reason, label: m.reason, value: m.count }))} />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhum motivo de perda registrado no período.</p>
+                )}
+              </SectionCard>
             </>
           ) : isParceiros && pm ? (
             <>
@@ -272,6 +291,39 @@ function EmptyPartners({ text }: { text: string }) {
 }
 
 /* ── helpers ── */
+
+const labelFrom = (options: { value: string; label: string }[], key: string) =>
+  options.find((o) => o.value === key)?.label ?? key.charAt(0).toUpperCase() + key.slice(1);
+
+function ConversionTable({ rows, labelOf, firstHeader }: { rows: ConversionRow[]; labelOf: (key: string) => string; firstHeader: string }) {
+  if (rows.length === 0) {
+    return <p className="text-sm text-muted-foreground py-8 text-center">Nenhum lead no período.</p>;
+  }
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{firstHeader}</TableHead>
+          <TableHead className="text-center">Leads</TableHead>
+          <TableHead className="text-center">Fechados</TableHead>
+          <TableHead className="text-right">Conversão</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((r) => (
+          <TableRow key={r.key}>
+            <TableCell className="font-medium">{labelOf(r.key)}</TableCell>
+            <TableCell className="text-center tabular-nums">{r.total}</TableCell>
+            <TableCell className="text-center tabular-nums">{r.fechados}</TableCell>
+            <TableCell className="text-right">
+              <Badge variant={r.rate > 0 ? "default" : "outline"} className="text-xs tabular-nums">{r.rate}%</Badge>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
 
 function ChannelBars({
   metrics,
