@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { describeUploadError } from "@/lib/mediaUpload";
 import { resizeImage } from "@/lib/imageResize";
 import {
   SITE_TEAM_ID,
@@ -120,11 +121,31 @@ export function useSiteContentAdmin() {
 }
 
 /** Redimensiona e sobe a imagem para o bucket público do site. Retorna a URL pública. */
+export const SITE_MEDIA_MAX_BYTES = 10 * 1024 * 1024;
+
+export { describeUploadError };
+
+/** Sobe um PDF (ex.: checklist) para o bucket do site. Retorna a URL pública. */
+export async function uploadSitePdf(file: File, folder = "leadmagnet"): Promise<string> {
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  if (!isPdf) throw new Error("O arquivo precisa ser um PDF.");
+  if (file.size > SITE_MEDIA_MAX_BYTES) throw new Error("PDF grande demais (máx. 10 MB).");
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData?.session) throw new Error("Sua sessão expirou. Entre de novo para enviar o arquivo.");
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+  const { error } = await supabase.storage.from("site-media").upload(path, file, { contentType: "application/pdf" });
+  if (error) throw describeUploadError(error);
+  return supabase.storage.from("site-media").getPublicUrl(path).data.publicUrl;
+}
+
 export async function uploadSiteImage(file: File, folder: string, maxWidth = 1600): Promise<string> {
-  const { blob, contentType, ext } = await resizeImage(file, maxWidth);
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData?.session) throw new Error("Sua sessão expirou. Entre de novo para enviar a imagem.");
+  const { blob, contentType, ext } = await resizeImage(file, maxWidth, 0.85, SITE_MEDIA_MAX_BYTES);
+  if (blob.size > SITE_MEDIA_MAX_BYTES) throw new Error("Arquivo grande demais (máx. 10 MB). Reduza a foto e tente de novo.");
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const { error } = await supabase.storage.from("site-media").upload(path, blob, { contentType });
-  if (error) throw error;
+  if (error) throw describeUploadError(error);
   const { data } = supabase.storage.from("site-media").getPublicUrl(path);
   return data.publicUrl;
 }

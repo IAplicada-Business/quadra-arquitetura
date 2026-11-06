@@ -39,7 +39,7 @@ function Section({ section, content }: { section: SiteSectionKey; content: SiteC
     case "testimonials":
       return <TestimonialsSection content={content.testimonials} />;
     case "leadMagnet":
-      return <LeadMagnetSection content={content.leadMagnet} />;
+      return <LeadMagnetSection content={content.leadMagnet} preview />;
     case "faq":
       return <FaqSection content={content.faq} />;
     case "blog":

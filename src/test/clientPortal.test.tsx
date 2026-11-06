@@ -178,7 +178,16 @@ describe("Trilha do Cliente (/client/:token)", () => {
     expect(screen.getByAltText("Foto da obra 1")).toBeInTheDocument();
 
     fireEvent.click(within(nav).getByRole("button", { name: /Orçamento/ }));
-    expect(screen.getByTestId("screen-orcamento")).toHaveTextContent("R$ 60.000,00");
+    expect(screen.getByTestId("screen-orcamento")).toHaveTextContent("R$ 100.000,00");
+    expect(window.location.hash).toBe("#orcamento");
+
+    fireEvent.click(within(nav).getByRole("button", { name: /Análise/ }));
+    expect(screen.getByTestId("screen-analise")).toBeInTheDocument();
+    expect(window.location.hash).toBe("#analise");
+
+    fireEvent.click(within(nav).getByRole("button", { name: /Prestação de contas/ }));
+    expect(screen.getByTestId("screen-prestacao")).toHaveTextContent("R$ 60.000,00");
+    expect(window.location.hash).toBe("#prestacao");
 
     fireEvent.click(within(nav).getByRole("button", { name: /Resumo semanal/ }));
     expect(screen.getByTestId("screen-resumos")).toHaveTextContent("Forro de gesso concluído");

@@ -2,11 +2,11 @@ import logoAzul from "@/assets/logo-azul.png";
 import logoBege from "@/assets/logo-bege.png";
 
 /**
- * Marca da Quadra na Trilha do Cliente: o logo empilhado (QUA/DRA/
- * ARQUITETURA) em azul sobre fundo claro e em bege sobre o azul-marinho.
+ * Marca da Quadra na Trilha do Cliente: o logo empilhado (QUA/DRA,
+ * sem o nome por extenso) em azul sobre fundo claro e em bege sobre o azul-marinho.
  */
 export function QuadraLogo({ tone = "navy", className = "" }: { tone?: "navy" | "light"; className?: string }) {
-  return <img src={tone === "light" ? logoBege : logoAzul} alt="Quadra Arquitetura" className={`h-auto select-none ${className}`} draggable={false} />;
+  return <img src={tone === "light" ? logoBege : logoAzul} alt="Quadra" className={`h-auto select-none ${className}`} draggable={false} />;
 }
 
 /**

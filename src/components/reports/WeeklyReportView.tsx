@@ -119,7 +119,7 @@ export default function WeeklyReportView({ projectId, projectName, projectAddres
     lines.push(`*RELATÓRIO SEMANAL DE OBRA*`);
     lines.push(`*${projectName}*${projectAddress ? ` — ${projectAddress}` : ""}`);
     lines.push(`Semana: ${fmtBR(weekStart)} a ${fmtBRFull(weekEnd)}`);
-    lines.push(`Quadra Arquitetura`);
+    lines.push(`Quadra`);
     lines.push(`═══════════════════════════════`);
     lines.push("");
     lines.push(`*RESUMO DA SEMANA*`);
@@ -247,7 +247,7 @@ export default function WeeklyReportView({ projectId, projectName, projectAddres
           <h2 className="text-2xl font-bold uppercase tracking-wide">Relatório Semanal de Obra</h2>
           <p className="text-lg font-semibold mt-1">{projectName}{projectAddress ? ` — ${projectAddress}` : ""}</p>
           <p className="text-sm text-gray-500 mt-1">Semana: {fmtBR(weekStart)} a {fmtBRFull(weekEnd)}</p>
-          <p className="text-sm font-medium text-gray-600 mt-1">Quadra Arquitetura</p>
+          <p className="text-sm font-medium text-gray-600 mt-1">Quadra</p>
           <p className="text-xs tracking-[0.3em] text-gray-400 uppercase mt-1">═══════════════════════════════════════</p>
         </div>
 

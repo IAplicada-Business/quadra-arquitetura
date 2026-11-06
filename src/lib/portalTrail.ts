@@ -2,6 +2,7 @@
 // portal — escopos entregues, blocos de construção, saúde do projeto,
 // adoção e próximas entregas. Puro (sem React/Supabase) para testar.
 import {
+  closingPendings,
   extractPendings,
   type PortalActivity,
   type PortalData,
@@ -143,14 +144,19 @@ export function projectHealth(data: PortalData, blocks: ConstructionBlock[], tod
   const overdueClosing = (data.closing_items ?? []).filter(
     (c) => c.closing_date && day(c.closing_date)! < today && (c.status === "em_cotacao" || c.status === "aprovado"),
   );
+  const closingOpen = closingPendings(data.closing_items).length;
   const decisions = openPendings.length + overdueClosing.length;
   const decisoesLevel: HealthLevel = decisions >= 3 ? "risco" : decisions > 0 ? "atencao" : "ok";
   const decisoesDetail =
-    decisions === 0
+    decisions === 0 && closingOpen === 0
       ? "Nada aguardando vocês."
       : [
           openPendings.length ? `${plural(openPendings.length, "decisão aguardando", "decisões aguardando")} resposta` : null,
-          overdueClosing.length ? `${plural(overdueClosing.length, "item", "itens")} de fechamento com data limite vencida` : null,
+          overdueClosing.length
+            ? `${plural(overdueClosing.length, "item", "itens")} de fechamento com data limite vencida`
+            : closingOpen > 0
+              ? `${plural(closingOpen, "item", "itens")} de fechamento aguardando vocês`
+              : null,
         ].filter(Boolean).join(" · ") + ".";
 
   // Pagamentos em atraso.

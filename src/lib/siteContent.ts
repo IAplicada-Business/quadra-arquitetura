@@ -146,6 +146,17 @@ export interface LeadMagnetContent {
   body: string;
   ctaLabel: string;
   image: string;
+  /** Link (https) ou caminho (/arquivo.pdf) do checklist que o visitante baixa depois de deixar o contato. */
+  fileUrl: string;
+}
+
+/** Só aceita https:// ou caminho relativo "/…". Qualquer outra coisa (javascript:, data:, http:) é descartada. */
+export function safeFileUrl(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const v = value.trim();
+  if (/^https:\/\/[^\s]+$/i.test(v)) return v;
+  if (/^\/(?!\/)[^\s]*$/.test(v)) return v;
+  return "";
 }
 
 export interface FaqContent {
@@ -481,6 +492,7 @@ export const SITE_DEFAULTS: SiteContent = {
     body: "O que resolver antes do primeiro quebra-quebra, na ordem certa. Baixe e use, mesmo que você não contrate a Quadra.",
     ctaLabel: "Receber checklist",
     image: "",
+    fileUrl: "",
   },
   faq: {
     eyebrow: "PERGUNTAS FREQUENTES",
@@ -579,6 +591,8 @@ export interface SiteFieldDef {
   maxWidth?: number;
   /** Para select: as opções válidas, na ordem em que aparecem. */
   options?: { value: string; label: string; hint?: string }[];
+  /** Para text: mostra o botão "Enviar PDF", que sobe o arquivo e preenche o campo com a URL. */
+  upload?: "pdf";
 }
 
 export interface SiteSectionDef {
@@ -806,6 +820,13 @@ export const SITE_SECTION_DEFINITIONS: SiteSectionDef[] = [
       { name: "title", type: "richtext", label: "Título", hint: RICH_HINT },
       { name: "body", type: "richtext", label: "Texto" },
       { name: "ctaLabel", type: "text", label: "Botão" },
+      {
+        name: "fileUrl",
+        type: "text",
+        label: "Link do checklist",
+        hint: "Só https:// ou um caminho do site. O visitante recebe este link depois de deixar nome, e-mail e WhatsApp. Pode enviar um PDF abaixo.",
+        upload: "pdf",
+      },
     ],
   },
   {
@@ -950,6 +971,7 @@ export function semTravessao(texto: string): string {
 function parseValue(def: SiteFieldDef, value: unknown): unknown {
   if (def.type === "list") return cleanList(value, def);
   if (typeof value !== "string") return null;
+  if (def.name === "fileUrl") return safeFileUrl(value);
   if (def.type === "text" || def.type === "richtext") return semTravessao(value);
   /* Modelo que não existe mais (renomeado, removido numa versão nova do
      site) volta ao padrão em vez de deixar a dobra sem nada para

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { buildQuoteInserts, type ScopeActivityPick } from "@/lib/supplierScopeQuotes";
 
 export interface SupplierScope {
   id: string;
@@ -77,6 +78,89 @@ export function useSupplierScopes(projectId: string | undefined) {
     onError: (e: Error) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
+  /**
+   * Grava o escopo marcado e cria, na revisão atual de Orçamentos, a
+   * cotação pendente de cada atividade que esse fornecedor ainda não tem.
+   * Regravar substitui o rascunho ("gerado") daquelas disciplinas e não
+   * duplica cotação que já existe.
+   */
+  const saveSelection = useMutation({
+    mutationFn: async (payload: {
+      supplierId: string;
+      supplierName: string;
+      groups: { discipline: string; activities: (ScopeActivityPick & { area_m2: number | null; duration_days: number | null })[] }[];
+    }) => {
+      if (!user) throw new Error("Sessão expirada. Entre de novo para salvar.");
+      const groups = payload.groups.filter((g) => g.activities.length > 0);
+      if (groups.length === 0) throw new Error("Marque ao menos uma atividade.");
+
+      const disciplines = groups.map((g) => g.discipline);
+      const { error: clearError } = await supabase
+        .from("supplier_scopes")
+        .delete()
+        .eq("project_id", projectId!)
+        .eq("supplier_id", payload.supplierId)
+        .eq("status", "gerado")
+        .in("discipline", disciplines);
+      if (clearError) throw clearError;
+
+      const { error: scopeError } = await supabase.from("supplier_scopes").insert(
+        groups.map((g) => ({
+          supplier_id: payload.supplierId,
+          discipline: g.discipline,
+          activities: g.activities.map((a) => ({
+            id: a.id,
+            name: a.name,
+            area_m2: a.area_m2,
+            duration_days: a.duration_days,
+          })),
+          status: "gerado",
+          project_id: projectId!,
+          user_id: user.id,
+        })),
+      );
+      if (scopeError) throw scopeError;
+
+      const [quotesRes, scopeRes] = await Promise.all([
+        supabase
+          .from("budget_quotes")
+          .select("activity_id, supplier_id, revision_number, services_description")
+          .eq("project_id", projectId!),
+        supabase.from("scope_items").select("id, discipline, scope_type").eq("project_id", projectId!),
+      ]);
+      if (quotesRes.error) throw quotesRes.error;
+      if (scopeRes.error) throw scopeRes.error;
+
+      const inserts = buildQuoteInserts({
+        activities: groups.flatMap((g) => g.activities.map((a) => ({ id: a.id, name: a.name, discipline: g.discipline }))),
+        supplierId: payload.supplierId,
+        supplierName: payload.supplierName,
+        existingQuotes: quotesRes.data ?? [],
+        scopeItems: scopeRes.data ?? [],
+      });
+
+      if (inserts.length > 0) {
+        const { error: quoteError } = await supabase.from("budget_quotes").insert(
+          inserts.map((row) => ({ ...row, project_id: projectId!, user_id: user.id })),
+        );
+        if (quoteError) throw quoteError;
+      }
+
+      return { quotes: inserts.length, selected: groups.reduce((sum, g) => sum + g.activities.length, 0) };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["supplier_scopes", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["budget_quotes", projectId] });
+      toast({
+        title: "Escopo salvo no orçamento",
+        description: result.quotes > 0
+          ? `${result.quotes} ${result.quotes === 1 ? "atividade entrou" : "atividades entraram"} em Orçamentos, como cotação pendente.`
+          : "Essas atividades já estavam no orçamento deste fornecedor.",
+      });
+    },
+    onError: (e: Error) => toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" }),
+  });
+
   const update = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<SupplierScope>) => {
       const { error } = await supabase
@@ -107,5 +191,5 @@ export function useSupplierScopes(projectId: string | undefined) {
     onError: (e: Error) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
-  return { scopes: query.data ?? [], isLoading: query.isLoading, create, createMany, update, remove };
+  return { scopes: query.data ?? [], isLoading: query.isLoading, create, createMany, saveSelection, update, remove };
 }

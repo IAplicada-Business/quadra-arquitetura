@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { BookOpen, CalendarRange, CheckSquare, Images, MessageCircle, Milestone, Newspaper, ShoppingBag, Wallet } from "lucide-react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { BookOpen, CalendarRange, CheckSquare, ChartPie, Images, Receipt, MessageCircle, Milestone, Newspaper, ShoppingBag, Wallet } from "lucide-react";
 import { PORTAL_TABS, WHATSAPP_URL, type PortalTab } from "@/lib/portal";
 import { QuadraLogo, QuadraWatermark } from "./TrilhaBrand";
 
@@ -8,6 +8,8 @@ const TAB_ICONS: Record<PortalTab, typeof Milestone> = {
   pendencias: CheckSquare,
   galeria: Images,
   orcamento: Wallet,
+  analise: ChartPie,
+  prestacao: Receipt,
   cronograma: CalendarRange,
   compras: ShoppingBag,
   resumos: Newspaper,
@@ -48,6 +50,16 @@ function LiveStatus({ updatedAt, tone }: { updatedAt?: Date | null; tone: "light
  * Quadra fica ao fundo, grande e quase transparente.
  */
 export function TrilhaShell({ clientName, projectName, active, onChange, onShowWelcome, badges, updatedAt, children }: Props) {
+  const mobileNav = useRef<HTMLUListElement>(null);
+  // Mantém a aba ativa visível na barra do celular (só rola a barra, não a página).
+  useEffect(() => {
+    const ul = mobileNav.current;
+    const btn = ul?.querySelector('[aria-current="page"]') as HTMLElement | null;
+    if (!ul || !btn) return;
+    const li = btn.parentElement as HTMLElement;
+    ul.scrollLeft = Math.max(0, li.offsetLeft + li.offsetWidth / 2 - ul.clientWidth / 2);
+  }, [active]);
+
   const activeDef = PORTAL_TABS.find((t) => t.key === active) ?? PORTAL_TABS[0];
 
   return (
@@ -139,7 +151,7 @@ export function TrilhaShell({ clientName, projectName, active, onChange, onShowW
           {children}
 
           <footer className="mt-12 border-t border-[var(--trilha-areia)] pt-6 text-center md:hidden">
-            <p className="text-sm text-[var(--trilha-navy)]/70">Dúvidas? Fale com a Quadra Arquitetura.</p>
+            <p className="text-sm text-[var(--trilha-navy)]/70">Dúvidas? Fale com a Quadra.</p>
             <a
               href={WHATSAPP_URL}
               target="_blank"
@@ -164,16 +176,15 @@ export function TrilhaShell({ clientName, projectName, active, onChange, onShowW
 
       {/* Barra inferior no celular */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--trilha-areia)] bg-[var(--trilha-creme)]/95 backdrop-blur md:hidden" aria-label="Telas da trilha (celular)">
-        {/* A grade segue o número de abas em vez de uma contagem fixa:
-            com grid-cols-5 travado, a sexta aba caía numa segunda linha
-            e a barra cobria o conteúdo. */}
-        <ul className="grid" style={{ gridTemplateColumns: `repeat(${PORTAL_TABS.length}, minmax(0, 1fr))` }}>
+        {/* Com 9 abas a largura de cada uma não cabe em 390px: a barra rola na
+            horizontal (cada aba com largura mínima legível) e a ativa fica visível. */}
+        <ul ref={mobileNav} className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PORTAL_TABS.map((t) => {
             const Icon = TAB_ICONS[t.key];
             const isActive = t.key === active;
             const count = badges?.[t.key];
             return (
-              <li key={t.key}>
+              <li key={t.key} className="min-w-[4.75rem] flex-1">
                 <button
                   type="button"
                   onClick={() => onChange(t.key)}

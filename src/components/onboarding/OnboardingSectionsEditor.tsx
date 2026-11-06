@@ -234,7 +234,7 @@ function SectionFields({
           <label className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border px-2 text-xs hover:bg-muted">
             {uploading === "image" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
             Upload
-            <input type="file" accept="image/*" multiple className="hidden" disabled={disabled || uploading !== null} aria-label={`Enviar imagens da seção ${index + 1}`} onChange={(e) => upload(e.target.files, "image")} />
+            <input type="file" accept="image/*,.heic,.heif" multiple className="hidden" disabled={disabled || uploading !== null} aria-label={`Enviar imagens da seção ${index + 1}`} onChange={(e) => upload(e.target.files, "image")} />
           </label>
         </div>
       </div>

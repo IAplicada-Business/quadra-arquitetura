@@ -16,6 +16,7 @@ import {
   type UrgenciaLinha,
 } from "@/lib/portalSchedule";
 import { todayIso } from "@/lib/reverseSchedule";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
  * Cronograma: o reverso da obra e o de compra e contratação.
@@ -71,55 +72,102 @@ function Kpi({ label, valor, detalhe }: { label: string; valor: string; detalhe?
 }
 
 /**
- * O cronograma reverso no formato da planilha Q153: faixa cinza com o
- * título, cabeçalho COMEÇO / TÉRMINO / SERVIÇO EXECUTADO / PRAZO (DIAS
- * ÚTEIS), linhas zebradas com tudo centralizado e o último marco no topo
- * (é "reverso": lê-se de trás para frente, a partir da entrega).
- * As cores de destaque seguem a planilha: verde para o que foi
- * concluído, vermelho para o que está atrasado, rosa para o que está
- * em andamento.
+ * O cronograma reverso: mesmas colunas, ordem e prazos da planilha Q153
+ * (COMEÇO, TÉRMINO, SERVIÇO EXECUTADO, PRAZO EM DIAS ÚTEIS; último marco
+ * no topo, porque se lê de trás para frente a partir da entrega), no
+ * visual da Trilha. A situação vira selo e marcador lateral, em vez de
+ * pintar a linha inteira. No celular cada etapa vira um cartão.
  */
-const DESTAQUE_LINHA: Partial<Record<SituacaoEtapa, string>> = {
-  concluida: "bg-[#6fcf7f] font-bold",
-  atrasada: "bg-[#ff4d4d]",
-  em_andamento: "bg-[#ffc7ce]",
+const SELO_SITUACAO: Partial<Record<SituacaoEtapa, { rotulo: string; selo: string; marcador: string }>> = {
+  concluida: { rotulo: "Concluída", selo: "bg-[var(--trilha-salvia)]/25 text-[#245844]", marcador: "bg-[var(--trilha-salvia)]" },
+  em_andamento: { rotulo: "Em andamento", selo: "bg-[var(--trilha-navy)]/10 text-[var(--trilha-navy)]", marcador: "bg-[var(--trilha-navy)]" },
+  atrasada: { rotulo: "Atrasada", selo: "bg-[var(--trilha-terracota)] text-white", marcador: "bg-[var(--trilha-terracota)]" },
 };
+
+function Selo({ texto, classe }: { texto: string; classe: string }) {
+  return <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${classe}`}>{texto}</span>;
+}
+
+function Legenda({ itens }: { itens: { cor: string; texto: string }[] }) {
+  return (
+    <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--trilha-navy)]/70">
+      {itens.map((i) => (
+        <span key={i.texto}><span className={`mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle ${i.cor}`} />{i.texto}</span>
+      ))}
+    </p>
+  );
+}
+
+const MOLDURA = "overflow-hidden rounded-xl border border-[var(--trilha-areia)] bg-white/95";
+const CABECALHO = "bg-[var(--trilha-navy)] text-[11px] font-semibold uppercase tracking-wide text-white";
 
 export function TabelaReversa({ etapas }: { etapas: EtapaCronograma[] }) {
   const linhas = [...etapas].reverse();
-  const celula = "border border-[#7f7f7f] px-2 py-[3px] text-center";
+  const celular = useIsMobile();
   return (
-    <div className="overflow-x-auto" data-testid="tabela-reversa">
-      <table className="w-full min-w-[640px] border-collapse border border-[#7f7f7f] font-sans text-[12px] leading-tight text-black">
-        <thead>
-          <tr className="bg-[#bfbfbf]">
-            <th colSpan={4} className="border border-[#7f7f7f] px-2 py-5 text-center text-[12px] font-bold">
-              CRONOGRAMA REVERSO
-            </th>
-          </tr>
-          <tr className="bg-white font-bold">
-            <th className={`${celula} w-[18%]`}>COMEÇO</th>
-            <th className={`${celula} w-[18%]`}>TÉRMINO</th>
-            <th className={celula}>SERVIÇO EXECUTADO</th>
-            <th className={`${celula} w-[20%]`}>PRAZO (DIAS ÚTEIS)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {linhas.map((e, i) => (
-            <tr key={e.id} className={DESTAQUE_LINHA[e.situacao] ?? (i % 2 === 1 ? "bg-[#d9d9d9]" : "bg-white")}>
-              <td className={celula}>{formatDateBR(e.inicio)}</td>
-              <td className={celula}>{formatDateBR(e.termino)}</td>
-              <td className={celula}>{e.nome}</td>
-              <td className={celula}>{e.prazoPlanilha ?? ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--trilha-navy)]/60">
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#6fcf7f] align-middle" />concluída</span>
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#ffc7ce] align-middle" />em andamento</span>
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#ff4d4d] align-middle" />atrasada</span>
-      </p>
+    <div data-testid="tabela-reversa">
+      <div className={MOLDURA}>
+        <p className="border-b border-[var(--trilha-areia)] px-4 py-3 font-display text-base text-[var(--trilha-navy)]">Cronograma reverso</p>
+        {celular ? (
+          <ul className="divide-y divide-[var(--trilha-areia)]">
+            {linhas.map((e) => {
+              const sit = SELO_SITUACAO[e.situacao];
+              return (
+                <li key={e.id} className="relative space-y-1 py-3 pl-5 pr-4">
+                  <span className={`absolute inset-y-2 left-2 w-1 rounded-full ${sit?.marcador ?? "bg-[var(--trilha-areia)]"}`} aria-hidden />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-[var(--trilha-navy)]">{e.nome}</p>
+                    {sit && <Selo texto={sit.rotulo} classe={sit.selo} />}
+                  </div>
+                  <p className="text-xs tabular-nums text-[var(--trilha-navy)]/70">
+                    {formatDateBR(e.inicio)} → {formatDateBR(e.termino)}
+                    {e.prazoPlanilha != null ? ` · ${e.prazoPlanilha} dias úteis` : ""}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm text-[var(--trilha-navy)]">
+              <thead>
+                <tr className={CABECALHO}>
+                  <th scope="col" className="w-[16%] px-4 py-2.5 text-left">COMEÇO</th>
+                  <th scope="col" className="w-[16%] px-4 py-2.5 text-left">TÉRMINO</th>
+                  <th scope="col" className="px-4 py-2.5 text-left">SERVIÇO EXECUTADO</th>
+                  <th scope="col" className="w-[18%] px-4 py-2.5 text-right">PRAZO (DIAS ÚTEIS)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhas.map((e, i) => {
+                  const sit = SELO_SITUACAO[e.situacao];
+                  return (
+                    <tr key={e.id} className={i % 2 === 1 ? "bg-[var(--trilha-creme)]" : "bg-white"}>
+                      <td className="relative whitespace-nowrap px-4 py-2 tabular-nums">
+                        <span className={`absolute inset-y-1 left-0 w-1 rounded-r ${sit?.marcador ?? "bg-transparent"}`} aria-hidden />
+                        {formatDateBR(e.inicio)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-2 tabular-nums">{formatDateBR(e.termino)}</td>
+                      <td className="px-4 py-2 text-left">
+                        {e.nome}
+                        {sit && <span className="ml-2 align-middle"><Selo texto={sit.rotulo} classe={sit.selo} /></span>}
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums">{e.prazoPlanilha ?? ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      <Legenda
+        itens={[
+          { cor: "bg-[var(--trilha-salvia)]", texto: "concluída" },
+          { cor: "bg-[var(--trilha-navy)]", texto: "em andamento" },
+          { cor: "bg-[var(--trilha-terracota)]", texto: "atrasada" },
+        ]}
+      />
     </div>
   );
 }
@@ -133,20 +181,36 @@ function mesAno(iso: string | null): string {
   return `${MESES[Number(mes) - 1] ?? ""}/${ano}`;
 }
 
-/** Cor da DATA LIMITE DE FECHAMENTO: vermelho vencida, salmão se é esta semana, verde se já fechou. */
-const DESTAQUE_LIMITE: Partial<Record<UrgenciaLinha, string>> = {
-  atrasado: "bg-[#ff0000] font-bold",
-  esta_semana: "bg-[#f8cbad]",
-  fechado: "bg-[#6fcf7f]",
+/** Selo da DATA LIMITE DE FECHAMENTO: vencida, esta semana ou já fechado. */
+const SELO_LIMITE: Partial<Record<UrgenciaLinha, { rotulo: string; selo: string }>> = {
+  atrasado: { rotulo: "Vencida", selo: "bg-[var(--trilha-terracota)] text-white" },
+  esta_semana: { rotulo: "Esta semana", selo: "bg-[var(--trilha-terracota)]/15 text-[#8c4a36]" },
+  fechado: { rotulo: "Fechado", selo: "bg-[var(--trilha-salvia)]/25 text-[#245844]" },
 };
 
+function LinkProduto({ l }: { l: LinhaDeCompra }) {
+  if (!l.link) return null;
+  return (
+    <a
+      href={l.link}
+      target="_blank"
+      rel="noreferrer"
+      className="ml-1.5 inline-block align-middle text-[var(--trilha-terracota)]"
+      aria-label={`Abrir o produto ${l.nome}`}
+    >
+      <ExternalLink className="h-3 w-3" />
+    </a>
+  );
+}
+
 /**
- * O cronograma de compra e contratação no formato do "Cronograma de
- * fechamento" da Q153: MÊS/ANO, DATA DE ENTREGA (quando a obra precisa),
- * DATA LIMITE DE FECHAMENTO, DESCRIÇÃO e PRAZO DE ENTREGA, com uma faixa
- * por mês (o mês da data limite) e a data mais próxima primeiro.
+ * O cronograma de compra e contratação (Cronograma de fechamento da Q153):
+ * MÊS/ANO, DATA DE ENTREGA (quando a obra precisa), DATA LIMITE DE
+ * FECHAMENTO, DESCRIÇÃO e PRAZO DE ENTREGA, com uma faixa por mês (o mês da
+ * data limite) e a data mais próxima primeiro. Mesmo visual do reverso.
  */
 export function TabelaFechamento({ linhas }: { linhas: LinhaDeCompra[] }) {
+  const celular = useIsMobile();
   const ordenadas = [...linhas].sort((a, b) => {
     if (a.fecharAte && b.fecharAte && a.fecharAte !== b.fecharAte) return a.fecharAte < b.fecharAte ? -1 : 1;
     if (a.fecharAte && !b.fecharAte) return -1;
@@ -160,61 +224,82 @@ export function TabelaFechamento({ linhas }: { linhas: LinhaDeCompra[] }) {
     if (ultimo && ultimo.mes === mes) ultimo.linhas.push(l);
     else grupos.push({ mes, linhas: [l] });
   }
-  const celula = "border border-[#7f7f7f] px-2 py-[3px] text-center";
   return (
-    <div className="overflow-x-auto" data-testid="tabela-fechamento">
-      <table className="w-full min-w-[720px] border-collapse border border-[#7f7f7f] font-sans text-[12px] leading-tight text-black">
-        <thead>
-          <tr className="bg-[#bfbfbf]">
-            <th colSpan={5} className="border border-[#7f7f7f] px-2 py-5 text-center text-[12px] font-bold">
-              CRONOGRAMA DE FECHAMENTO
-            </th>
-          </tr>
-          <tr className="bg-[#d9d9d9] font-bold">
-            <th className={`${celula} w-[13%]`}>MÊS / ANO</th>
-            <th className={`${celula} w-[16%]`}>DATA DE ENTREGA</th>
-            <th className={`${celula} w-[20%]`}>DATA LIMITE DE FECHAMENTO</th>
-            <th className={celula}>DESCRIÇÃO</th>
-            <th className={`${celula} w-[16%]`}>PRAZO DE ENTREGA</th>
-          </tr>
-        </thead>
-        <tbody>
-          {grupos.map((g) => (
-            <Fragment key={g.mes}>
-              <tr className="bg-[#d9d9d9] font-bold">
-                <td colSpan={5} className={celula}>{g.mes}</td>
-              </tr>
-              {g.linhas.map((l) => (
-                <tr key={l.id} className="bg-white">
-                  <td className={celula}>{g.mes}</td>
-                  <td className={celula}>{formatDateBR(l.precisaEm)}</td>
-                  <td className={`${celula} ${DESTAQUE_LIMITE[l.urgencia] ?? ""}`}>{formatDateBR(l.fecharAte)}</td>
-                  <td className={celula}>
-                    {l.nome}
-                    {l.link && (
-                      <a
-                        href={l.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="ml-1.5 inline-block align-middle text-[var(--trilha-terracota)]"
-                        aria-label={`Abrir o produto ${l.nome}`}
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                  </td>
-                  <td className={celula}>{l.entregaDias ? `${l.entregaDias} dias úteis` : ""}</td>
+    <div data-testid="tabela-fechamento">
+      <div className={MOLDURA}>
+        <p className="border-b border-[var(--trilha-areia)] px-4 py-3 font-display text-base text-[var(--trilha-navy)]">Cronograma de fechamento</p>
+        {celular ? (
+          <div>
+            {grupos.map((g) => (
+              <section key={g.mes} aria-label={g.mes}>
+                <p className="bg-[var(--trilha-areia)] px-4 py-1.5 text-[11px] font-semibold tracking-wide text-[var(--trilha-navy)]">{g.mes}</p>
+                <ul className="divide-y divide-[var(--trilha-areia)]">
+                  {g.linhas.map((l) => {
+                    const lim = SELO_LIMITE[l.urgencia];
+                    return (
+                      <li key={l.id} className="space-y-1 px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-medium text-[var(--trilha-navy)]">{l.nome}<LinkProduto l={l} /></p>
+                          {lim && <Selo texto={lim.rotulo} classe={lim.selo} />}
+                        </div>
+                        <p className="text-xs tabular-nums text-[var(--trilha-navy)]/70">
+                          Fechar até {formatDateBR(l.fecharAte)} · Entrega {formatDateBR(l.precisaEm)}
+                          {l.entregaDias ? ` · ${l.entregaDias} dias úteis` : ""}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm text-[var(--trilha-navy)]">
+              <thead>
+                <tr className={CABECALHO}>
+                  <th scope="col" className="w-[13%] px-4 py-2.5 text-left">MÊS / ANO</th>
+                  <th scope="col" className="w-[15%] px-4 py-2.5 text-left">DATA DE ENTREGA</th>
+                  <th scope="col" className="w-[22%] px-4 py-2.5 text-left">DATA LIMITE DE FECHAMENTO</th>
+                  <th scope="col" className="px-4 py-2.5 text-left">DESCRIÇÃO</th>
+                  <th scope="col" className="w-[15%] px-4 py-2.5 text-right">PRAZO DE ENTREGA</th>
                 </tr>
-              ))}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--trilha-navy)]/60">
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#ff0000] align-middle" />data limite vencida</span>
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#f8cbad] align-middle" />fechar esta semana</span>
-        <span><span className="mr-1 inline-block h-2.5 w-2.5 bg-[#6fcf7f] align-middle" />já fechado</span>
-      </p>
+              </thead>
+              <tbody>
+                {grupos.map((g) => (
+                  <Fragment key={g.mes}>
+                    <tr className="bg-[var(--trilha-areia)] text-[11px] font-semibold tracking-wide">
+                      <td colSpan={5} className="px-4 py-1.5">{g.mes}</td>
+                    </tr>
+                    {g.linhas.map((l, i) => {
+                      const lim = SELO_LIMITE[l.urgencia];
+                      return (
+                        <tr key={l.id} className={i % 2 === 1 ? "bg-[var(--trilha-creme)]" : "bg-white"}>
+                          <td className="px-4 py-2 text-[var(--trilha-navy)]/60">{g.mes}</td>
+                          <td className="whitespace-nowrap px-4 py-2 tabular-nums">{formatDateBR(l.precisaEm)}</td>
+                          <td className="whitespace-nowrap px-4 py-2 tabular-nums">
+                            {formatDateBR(l.fecharAte)}
+                            {lim && <span className="ml-2 align-middle"><Selo texto={lim.rotulo} classe={lim.selo} /></span>}
+                          </td>
+                          <td className="px-4 py-2 text-left">{l.nome}<LinkProduto l={l} /></td>
+                          <td className="px-4 py-2 text-right tabular-nums">{l.entregaDias ? `${l.entregaDias} dias úteis` : ""}</td>
+                        </tr>
+                      );
+                    })}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      <Legenda
+        itens={[
+          { cor: "bg-[var(--trilha-terracota)]", texto: "data limite vencida" },
+          { cor: "bg-[var(--trilha-terracota)]/30", texto: "fechar esta semana" },
+          { cor: "bg-[var(--trilha-salvia)]", texto: "já fechado" },
+        ]}
+      />
     </div>
   );
 }

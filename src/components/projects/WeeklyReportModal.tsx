@@ -138,7 +138,7 @@ export function WeeklyReportModal({ open, onOpenChange, avgProgress, onSubmit, i
                 ))}
               </div>
             )}
-            {maxNew > 0 && <Input type="file" accept="image/*" multiple onChange={handlePhotos} className="mt-2" aria-label="Adicionar fotos" />}
+            {maxNew > 0 && <Input type="file" accept="image/*,.heic,.heif" multiple onChange={handlePhotos} className="mt-2" aria-label="Adicionar fotos" />}
             {photos.length > 0 && <p className="text-xs text-muted-foreground mt-1">{photos.length} foto(s) nova(s) selecionada(s)</p>}
           </div>
 

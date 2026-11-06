@@ -9,14 +9,12 @@ import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { ptBR } from "date-fns/locale";
 import { statusLabels } from "@/lib/projectConstants";
 import { Button } from "@/components/ui/button";
-import { Wallet, Hammer, FileText, HardHat, Link2, Copy, Check, XCircle, RefreshCw, ExternalLink } from "lucide-react";
+import { Wallet, Hammer, FileText, HardHat, Link2 } from "lucide-react";
 import { useScheduleTasks } from "@/hooks/useScheduleTasks";
 import { useProjectPayments } from "@/hooks/useProjectPayments";
 import { useProjectDetail } from "@/hooks/useProjectDetail";
-import { useClientPortalToken } from "@/hooks/useClientPortalToken";
+import { PortalLinkDialog } from "./PortalLinkDialog";
 import { BudgetEstimator } from "./BudgetEstimator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast";
 function formatCurrency(value: number | null | undefined) {
   if (value == null) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -40,9 +38,7 @@ export function ProjectSummaryTab({ project, onTabChange }: ProjectSummaryTabPro
   const { items: tasks } = useScheduleTasks(projectId);
   const { items: payments } = useProjectPayments(projectId);
   const { activities } = useProjectActivities(projectId);
-  const { activeToken, isLoading: tokenLoading, createToken, deactivateToken, isCreating } = useClientPortalToken(projectId);
   const [portalDialogOpen, setPortalDialogOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Onboarding guide criteria
   const isNewProject =
@@ -219,77 +215,7 @@ export function ProjectSummaryTab({ project, onTabChange }: ProjectSummaryTabPro
       <BudgetEstimator project={project} updateProject={updateProject} onTabChange={onTabChange} />
 
       {/* Portal do Cliente Dialog */}
-      <Dialog open={portalDialogOpen} onOpenChange={setPortalDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Portal do Cliente</DialogTitle>
-            <DialogDescription>
-              Gere um link público para seu cliente acompanhar a obra.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {tokenLoading ? (
-              <p className="text-sm text-muted-foreground">Carregando...</p>
-            ) : activeToken ? (
-              <>
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <code className="text-xs flex-1 truncate">
-                    {window.location.origin}/client/{activeToken.token}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/client/${activeToken.token}`);
-                      setCopied(true);
-                      toast({ title: "Link copiado!" });
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => window.open(`/client/${activeToken.token}`, "_blank")}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive"
-                    onClick={async () => {
-                      await deactivateToken(activeToken.id);
-                    }}
-                  >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    Desativar link
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      await deactivateToken(activeToken.id);
-                      await createToken();
-                    }}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-1" />
-                    Regenerar
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <Button onClick={() => createToken()} disabled={isCreating}>
-                <Link2 className="h-4 w-4 mr-2" />
-                {isCreating ? "Gerando..." : "Gerar Link do Cliente"}
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PortalLinkDialog projectId={projectId} open={portalDialogOpen} onOpenChange={setPortalDialogOpen} />
     </div>
   );
 }

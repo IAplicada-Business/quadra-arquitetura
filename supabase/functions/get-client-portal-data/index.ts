@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
         // Fechamento Cliente: o que depende do cliente (adoção / próximas entregas).
         supabase
           .from("client_closing_schedule")
-          .select("id, description, closing_date, delivery_date, status")
+          .select("id, description, closing_date, delivery_date, status, delivery_time, estimated_value")
           .eq("project_id", projectId)
           .order("closing_date", { ascending: true }),
         // Visitas futuras: só data e tipo (as notas são internas).

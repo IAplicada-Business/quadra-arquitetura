@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ImageUp, Loader2, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, FileUp, ImageUp, Loader2, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { uploadSiteImage } from "@/hooks/useSiteContent";
+import { uploadSiteImage, uploadSitePdf } from "@/hooks/useSiteContent";
 import { RichTextField } from "@/components/settings/proposal-blocks/RichTextField";
-import type { SiteFieldDef, SiteListItem } from "@/lib/siteContent";
+import { safeFileUrl, type SiteFieldDef, type SiteListItem } from "@/lib/siteContent";
 
 /* ------------------------------------------------------------------ */
 /* Imagem                                                              */
@@ -58,7 +58,7 @@ export function SiteImageField({ id, label, value, defaultSrc, folder, maxWidth,
             id={id}
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             className="hidden"
             aria-label={`Enviar ${label}`}
             onChange={(e) => handleFile(e.target.files?.[0])}
@@ -217,6 +217,41 @@ interface SiteFieldProps {
   onChange: (value: unknown) => void;
 }
 
+function SitePdfField({ id, field, text, onChange }: { id: string; field: SiteFieldDef; text: string; onChange: (v: unknown) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const invalid = text.trim() !== "" && safeFileUrl(text) === "";
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      onChange(await uploadSitePdf(file));
+    } catch (e) {
+      toast({ title: "Erro ao enviar o PDF", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs font-semibold">{field.label}</Label>
+      <div className="flex gap-2">
+        <Input id={id} value={text} placeholder="https://..." onChange={(e) => onChange(e.target.value)} className="h-9 text-sm" aria-invalid={invalid} />
+        <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" aria-label={`Enviar PDF: ${field.label}`} onChange={(e) => handleFile(e.target.files?.[0])} />
+        <Button type="button" size="sm" variant="outline" className="h-9 shrink-0 text-xs" disabled={uploading} onClick={() => inputRef.current?.click()}>
+          {uploading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <FileUp className="h-3.5 w-3.5 mr-1" />}
+          {uploading ? "Enviando..." : "Enviar PDF"}
+        </Button>
+      </div>
+      {invalid && <p className="text-[11px] text-destructive" role="alert">Link não aceito: use https:// ou um caminho que comece com /. Ele não será usado no site.</p>}
+      {field.hint && <p className="text-[11px] text-muted-foreground">{field.hint}</p>}
+    </div>
+  );
+}
+
 export function SiteField({ id, field, value, folder, defaultImageFor, onChange }: SiteFieldProps) {
   if (field.type === "list") {
     return (
@@ -268,6 +303,8 @@ export function SiteField({ id, field, value, folder, defaultImageFor, onChange 
       </div>
     );
   }
+
+  if (field.upload === "pdf") return <SitePdfField id={id} field={field} text={text} onChange={onChange} />;
 
   return (
     <div className="space-y-1.5">

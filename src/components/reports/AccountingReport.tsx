@@ -113,7 +113,7 @@ export function AccountingReport() {
           Relatório Fiscal para Contabilidade
         </h2>
         <p className="text-muted-foreground mt-1">
-          Quadra Arquitetura · Competência: {monthLabel || "—"}
+          Quadra · Competência: {monthLabel || "—"}
         </p>
         <p className="text-xs text-muted-foreground mt-2">
           Gerado em {new Date().toLocaleDateString("pt-BR")} às{" "}

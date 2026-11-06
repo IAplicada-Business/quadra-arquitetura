@@ -98,7 +98,7 @@ export function buildWeeklyReportMessage(
     lines.push(`Fotos e detalhes no seu portal: ${opts.portalUrl}`);
   }
   lines.push("");
-  lines.push("Equipe Quadra Arquitetura");
+  lines.push("Equipe Quadra");
   return lines.join("\n");
 }
 

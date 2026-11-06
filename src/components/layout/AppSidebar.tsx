@@ -329,7 +329,7 @@ export function AppSidebar({ onNavigate, collapsed = false }: AppSidebarProps) {
   return (
     <aside className="flex flex-col h-full w-[260px] border-r border-sidebar-border bg-sidebar bg-sidebar-gradient transition-all duration-200">
       <div className="flex items-center px-5 h-16 border-b border-sidebar-border">
-        <img src={logoBege} alt="Quadra Arquitetura" className="h-10 w-auto object-contain object-left animate-fade-in" />
+        <img src={logoBege} alt="Quadra" className="h-10 w-auto object-contain object-left animate-fade-in" />
       </div>
 
       <nav className="flex-1 py-3 px-2 overflow-y-auto scrollbar-sidebar min-h-0">

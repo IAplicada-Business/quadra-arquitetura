@@ -133,7 +133,7 @@ export function AppHeader({ onMenuClick, showMenuButton, sidebarCollapsed, onTog
           <div className="h-12 overflow-hidden">
             <img
               src={logoAzul}
-              alt="Quadra Arquitetura"
+              alt="Quadra"
               className="h-12 w-auto object-contain object-left animate-fade-in"
             />
           </div>

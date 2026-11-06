@@ -143,7 +143,7 @@ function Painel() {
       <header className="bg-deep text-deep-foreground">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 md:px-8">
           <div className="flex items-center gap-4">
-            <img src={logoBege} alt="Quadra Arquitetura" className="h-10 w-auto" />
+            <img src={logoBege} alt="Quadra" className="h-10 w-auto" />
             <span className="hidden text-[11px] font-medium uppercase tracking-[0.3em] text-deep-foreground/60 sm:block">
               Publicação do site
             </span>

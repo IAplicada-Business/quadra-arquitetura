@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { uploadImage, uploadRawFile } from "@/lib/mediaUpload";
 import {
   newSectionId,
   sectionsFromRows,
@@ -241,10 +242,7 @@ export function useOnboardingTemplate(templateId?: string | null) {
 
 /** Upload de vídeo/imagem para o bucket público do onboarding. */
 export async function uploadOnboardingMedia(file: File, folder: string): Promise<string> {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabase.storage.from("onboarding-media").upload(path, file, { contentType: file.type || undefined });
-  if (error) throw error;
-  const { data } = supabase.storage.from("onboarding-media").getPublicUrl(path);
-  return data.publicUrl;
+  // Vídeo sobe como está; imagem é redimensionada (HEIC vira JPEG) e validada.
+  if (file.type.startsWith("video/")) return uploadRawFile(file, { bucket: "onboarding-media", folder });
+  return uploadImage(file, { bucket: "onboarding-media", folder, maxWidth: 1600 });
 }

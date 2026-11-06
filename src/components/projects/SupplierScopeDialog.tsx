@@ -1,5 +1,5 @@
-import { Fragment, useState, useEffect, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Fragment, useState, useEffect, useMemo, useRef } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,10 +23,14 @@ interface SupplierScopeDialogProps {
 export function SupplierScopeDialog({ open, onOpenChange, projectId, activities }: SupplierScopeDialogProps) {
   const [supplierId, setSupplierId] = useState("");
   // Um fornecedor pode cobrir várias disciplinas de uma vez (ex.: a
-  // construtora que faz alvenaria + hidráulica + cobertura). O escopo é
-  // gerado somando todas as selecionadas.
+  // construtora que faz alvenaria + hidráulica + cobertura). Dentro de
+  // cada disciplina, cada atividade é marcada à parte: só a marcada
+  // entra no PDF, no WhatsApp e no orçamento.
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
-  const { createMany } = useSupplierScopes(projectId);
+  const [excludedActivityIds, setExcludedActivityIds] = useState<Set<string>>(new Set());
+  const restoredFor = useRef<string | null>(null);
+  const selectionTouched = useRef(false);
+  const { scopes, isLoading: scopesLoading, saveSelection } = useSupplierScopes(projectId);
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers_list"],
@@ -60,6 +64,38 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
     return counts;
   }, [activities]);
 
+  const isPicked = (id: string) => !excludedActivityIds.has(id);
+
+  const setDisciplineSelected = (d: string, on: boolean) => {
+    selectionTouched.current = true;
+    const ids = activities.filter(a => a.discipline === d).map(a => a.id);
+    setSelectedDisciplines(prev => on ? (prev.includes(d) ? prev : [...prev, d]) : prev.filter(x => x !== d));
+    setExcludedActivityIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.delete(id));
+      return next;
+    });
+  };
+
+  const setActivitySelected = (id: string, on: boolean) => {
+    selectionTouched.current = true;
+    setExcludedActivityIds(prev => {
+      const next = new Set(prev);
+      if (on) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const disciplineCheck = (d: string): boolean | "indeterminate" => {
+    if (!selectedDisciplines.includes(d)) return false;
+    const ids = activities.filter(a => a.discipline === d).map(a => a.id);
+    const picked = ids.filter(isPicked).length;
+    if (picked === 0) return false;
+    if (picked === ids.length) return true;
+    return "indeterminate";
+  };
+
   // Atividades das disciplinas escolhidas, agrupadas — a ordem das disciplinas
   // segue a seleção pra lista, PDF e WhatsApp saírem iguais.
   const groups = useMemo(() => {
@@ -69,16 +105,16 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
     })).filter(g => g.items.length > 0);
   }, [activities, selectedDisciplines]);
 
-  const totalActivities = groups.reduce((sum, g) => sum + g.items.length, 0);
+  const pickedGroups = useMemo(() => {
+    return groups
+      .map(g => ({ ...g, items: g.items.filter(a => !excludedActivityIds.has(a.id)) }))
+      .filter(g => g.items.length > 0);
+  }, [groups, excludedActivityIds]);
 
-  const toggleDiscipline = (d: string) => {
-    setSelectedDisciplines(prev =>
-      prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]
-    );
-  };
+  const totalActivities = pickedGroups.reduce((sum, g) => sum + g.items.length, 0);
 
   const selectedSupplier = suppliers.find(s => s.id === supplierId);
-  const disciplinesLabel = selectedDisciplines.join(", ");
+  const disciplinesLabel = pickedGroups.map(g => g.discipline).join(", ");
 
   const generatePDF = () => {
     const doc = new jsPDF();
@@ -86,7 +122,7 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
     let y = margin;
 
     doc.setFontSize(16);
-    doc.text("QUADRA Arquitetura", margin, y);
+    doc.text("QUADRA", margin, y);
     y += 10;
 
     doc.setFontSize(10);
@@ -98,7 +134,7 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
     doc.setFontSize(12);
     doc.text("Escopo para Orçamento", margin, y); y += 8;
 
-    groups.forEach(group => {
+    pickedGroups.forEach(group => {
       if (y > 260) { doc.addPage(); y = margin; }
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
@@ -123,14 +159,14 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
       y += 4;
     });
 
-    const fileSuffix = selectedDisciplines.length === 1 ? selectedDisciplines[0] : `${selectedDisciplines.length}_disciplinas`;
+    const fileSuffix = pickedGroups.length === 1 ? pickedGroups[0].discipline : `${pickedGroups.length}_disciplinas`;
     doc.save(`escopo_${fileSuffix}_${selectedSupplier?.name || "fornecedor"}.pdf`);
   };
 
   const sendWhatsApp = () => {
     if (!selectedSupplier?.phone) return;
     const phone = selectedSupplier.phone.replace(/\D/g, "");
-    const listText = groups.map(group =>
+    const listText = pickedGroups.map(group =>
       `*${group.discipline}*\n` + group.items.map((a, i) =>
         `${i + 1}. ${a.name}${a.area_m2 ? ` - ${a.area_m2}m²` : ""}${a.duration_days ? ` - ${a.duration_days}d` : ""}`
       ).join("\n")
@@ -140,32 +176,90 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
   };
 
   const handleSave = () => {
-    createMany.mutate(
-      groups.map(group => ({
-        supplier_id: supplierId,
-        discipline: group.discipline,
-        activities: group.items.map(a => ({ id: a.id, name: a.name, area_m2: a.area_m2, duration_days: a.duration_days })),
-        status: "gerado",
-      })),
-      { onSuccess: () => onOpenChange(false) }
+    if (!supplierId || !selectedSupplier || totalActivities === 0) return;
+    saveSelection.mutate(
+      {
+        supplierId,
+        supplierName: selectedSupplier.name,
+        groups: pickedGroups.map(group => ({
+          discipline: group.discipline,
+          activities: group.items.map(a => ({
+            id: a.id,
+            name: a.name,
+            discipline: a.discipline,
+            area_m2: a.area_m2,
+            duration_days: a.duration_days,
+          })),
+        })),
+      },
+      { onSuccess: () => onOpenChange(false) },
     );
   };
 
   useEffect(() => {
-    if (!open) { setSupplierId(""); setSelectedDisciplines([]); }
+    if (!open) {
+      setSupplierId("");
+      setSelectedDisciplines([]);
+      setExcludedActivityIds(new Set());
+      restoredFor.current = null;
+      selectionTouched.current = false;
+    }
   }, [open]);
+
+  // Reabre a marcação já gravada para esse fornecedor, senão parece que
+  // a seleção anterior não salvou.
+  useEffect(() => {
+    if (!open || !supplierId || scopesLoading) return;
+    if (restoredFor.current === supplierId) return;
+    restoredFor.current = supplierId;
+    if (selectionTouched.current) return;
+
+    const latestByDiscipline = new Map<string, { id: string }[]>();
+    for (const scope of scopes) {
+      if (scope.supplier_id !== supplierId || !scope.discipline || latestByDiscipline.has(scope.discipline)) continue;
+      const saved = Array.isArray(scope.activities) ? scope.activities : [];
+      latestByDiscipline.set(
+        scope.discipline,
+        saved.filter((a: { id?: string }) => typeof a?.id === "string"),
+      );
+    }
+    if (latestByDiscipline.size === 0) {
+      setSelectedDisciplines([]);
+      setExcludedActivityIds(new Set());
+      return;
+    }
+
+    const discs = [...latestByDiscipline.keys()];
+    const savedIds = new Set(discs.flatMap(d => latestByDiscipline.get(d)!.map(a => a.id)));
+    setSelectedDisciplines(discs);
+    setExcludedActivityIds(new Set(
+      activities.filter(a => a.discipline && discs.includes(a.discipline) && !savedIds.has(a.id)).map(a => a.id),
+    ));
+  }, [open, supplierId, scopesLoading, scopes, activities]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gerar Escopo do Fornecedor</DialogTitle>
+          <DialogDescription>
+            Marque as atividades. Ao salvar, elas entram em Orçamentos como cotação pendente deste fornecedor.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5 max-w-sm">
             <label className="text-sm font-medium">Fornecedor</label>
-            <Select value={supplierId} onValueChange={setSupplierId}>
+            <Select value={supplierId} onValueChange={(id) => {
+              if (id === supplierId) return;
+              if (supplierId) {
+                selectionTouched.current = false;
+                restoredFor.current = null;
+                setSelectedDisciplines([]);
+                setExcludedActivityIds(new Set());
+              }
+              setSupplierId(id);
+            }}>
               <SelectTrigger><SelectValue placeholder="Selecionar fornecedor" /></SelectTrigger>
               <SelectContent>
                 {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -184,7 +278,7 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
                 )}
               </label>
               {selectedDisciplines.length > 0 && (
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedDisciplines([])}>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setSelectedDisciplines([]); setExcludedActivityIds(new Set()); }}>
                   Limpar
                 </Button>
               )}
@@ -195,24 +289,30 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
               </p>
             ) : (
               <div className="border rounded-lg p-2 grid grid-cols-2 sm:grid-cols-3 gap-1 max-h-44 overflow-y-auto">
-                {disciplines.map(d => (
-                  <label
-                    key={d}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent cursor-pointer text-sm"
-                  >
-                    <Checkbox
-                      checked={selectedDisciplines.includes(d)}
-                      onCheckedChange={() => toggleDiscipline(d)}
-                    />
-                    <span
-                      className="truncate flex-1"
-                      style={{ color: getDisciplineColor(d) }}
+                {disciplines.map(d => {
+                  const checked = disciplineCheck(d);
+                  return (
+                    <div
+                      key={d}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent cursor-pointer text-sm"
+                      onClick={() => setDisciplineSelected(d, checked !== true)}
                     >
-                      {d}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{countByDiscipline[d]}</span>
-                  </label>
-                ))}
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(value) => setDisciplineSelected(d, value === true)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Selecionar ${d}`}
+                      />
+                      <span
+                        className="truncate flex-1"
+                        style={{ color: getDisciplineColor(d) }}
+                      >
+                        {d}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{countByDiscipline[d]}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -223,6 +323,7 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10" />
                   <TableHead className="w-10">#</TableHead>
                   <TableHead>Atividade</TableHead>
                   <TableHead className="w-24">Área m²</TableHead>
@@ -233,7 +334,7 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
                 {groups.map(group => (
                   <Fragment key={group.discipline}>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableCell colSpan={4} className="py-1.5">
+                      <TableCell colSpan={5} className="py-1.5">
                         <Badge
                           variant="outline"
                           className="text-[10px] border-0"
@@ -245,12 +346,20 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
                           {group.discipline}
                         </Badge>
                         <span className="text-xs text-muted-foreground ml-2">
-                          {group.items.length} atividade{group.items.length > 1 ? "s" : ""}
+                          {group.items.filter(a => isPicked(a.id)).length} de {group.items.length} selecionada{group.items.length > 1 ? "s" : ""}
                         </span>
                       </TableCell>
                     </TableRow>
                     {group.items.map((a, i) => (
-                      <TableRow key={a.id}>
+                      <TableRow key={a.id} className="cursor-pointer" onClick={() => setActivitySelected(a.id, !isPicked(a.id))}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isPicked(a.id)}
+                            onCheckedChange={(value) => setActivitySelected(a.id, value === true)}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Selecionar ${a.name}`}
+                          />
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{i + 1}</TableCell>
                         <TableCell className="font-medium">{a.name}</TableCell>
                         <TableCell>{a.area_m2 ?? "-"}</TableCell>
@@ -264,21 +373,29 @@ export function SupplierScopeDialog({ open, onOpenChange, projectId, activities 
           </div>
         )}
 
-        {selectedDisciplines.length > 0 && totalActivities === 0 && (
+        {selectedDisciplines.length > 0 && groups.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">
             Nenhuma atividade encontrada para {selectedDisciplines.length > 1 ? "estas disciplinas" : "esta disciplina"}.
           </p>
         )}
 
+        <p className="text-xs text-muted-foreground">
+          {!supplierId
+            ? "Escolha o fornecedor e marque as atividades. Salvar grava a seleção e cria a cotação em Orçamentos."
+            : totalActivities === 0
+              ? "Marque ao menos uma atividade para salvar no orçamento."
+              : `${totalActivities} atividade${totalActivities > 1 ? "s" : ""} marcada${totalActivities > 1 ? "s" : ""} de ${selectedSupplier?.name ?? "este fornecedor"} ${totalActivities > 1 ? "entram" : "entra"} em Orçamentos ao salvar.`}
+        </p>
+
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" size="sm" onClick={generatePDF} disabled={!supplierId || !totalActivities}>
+          <Button type="button" variant="outline" size="sm" onClick={generatePDF} disabled={!supplierId || !totalActivities}>
             <FileText className="h-4 w-4 mr-1" /> Gerar PDF
           </Button>
-          <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={!selectedSupplier?.phone || !totalActivities}>
+          <Button type="button" variant="outline" size="sm" onClick={sendWhatsApp} disabled={!selectedSupplier?.phone || !totalActivities}>
             <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!supplierId || !totalActivities || createMany.isPending}>
-            {createMany.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+          <Button type="button" size="sm" onClick={handleSave} disabled={!supplierId || !totalActivities || saveSelection.isPending}>
+            {saveSelection.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
             Salvar
           </Button>
         </DialogFooter>

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const TITULO_PADRAO = "Quadra Arquitetura";
+const TITULO_PADRAO = "Quadra";
 
 /** Título e descrição da aba. Volta ao que estava quando a página sai. */
 export function useDocumentMeta(title: string, description?: string, noindex = false) {

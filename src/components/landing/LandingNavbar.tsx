@@ -94,11 +94,11 @@ export function LandingNavbar() {
         <button
           onClick={() => (naHome ? window.scrollTo({ top: 0, behavior: "smooth" }) : navigate("/"))}
           className="flex items-center justify-self-start"
-          aria-label="Quadra Arquitetura"
+          aria-label="Quadra"
         >
           <img
             src={logoAzul}
-            alt="Quadra Arquitetura"
+            alt="Quadra"
             className="h-11 md:h-12 w-auto"
           />
         </button>

@@ -82,7 +82,7 @@ type DREData = {
 function exportDREPdf(dre: DREData, projectName?: string) {
   const doc = new jsPDF();
   doc.setFontSize(18);
-  doc.text("Quadra Arquitetura", 20, 20);
+  doc.text("Quadra", 20, 20);
   doc.setFontSize(12);
   doc.text(`Demonstrativo de Resultado do Projeto — ${projectName || "Projeto"}`, 20, 30);
   doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")}`, 20, 38);

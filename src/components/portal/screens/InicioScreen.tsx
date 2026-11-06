@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { ArrowRight, Check, Home } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { computeProgress, currentPhase, daysUntil, describeCountdown, extractPendings, formatCurrencyBRL, formatDateLong, formatDateShort } from "@/lib/portal";
+import { computeProgress, currentPhase, daysUntil, describeCountdown, clientOpenCount, extractPendings, formatCurrencyBRL, formatDateLong, formatDateShort } from "@/lib/portal";
 import { buildPortalTrail, trailActivities, type BlockState, type ConstructionBlock, type HealthLevel, type JourneyPosition } from "@/lib/portalTrail";
 import { QuadraWatermark } from "../TrilhaBrand";
 import { EtapaScreen } from "./EtapaScreen";
@@ -64,20 +64,75 @@ function dotKind(i: number, b: ConstructionBlock, journey: JourneyPosition): Dot
  */
 function JourneyTimeline({ blocks, journey, moveIn }: { blocks: ConstructionBlock[]; journey: JourneyPosition; moveIn: string | null | undefined }) {
   const steps = blocks.length + (moveIn ? 1 : 0);
-  if (blocks.length === 0) return null;
   const edge = 50 / steps; // centro do primeiro e do último ponto, em %
   const reached = journey.finished ? blocks.length - 1 : journey.currentIndex;
   const fill = steps > 1 ? (reached / (steps - 1)) * (100 - 2 * edge) : 0;
 
+  const scroller = useRef<HTMLElement>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+  const updateEdges = useCallback(() => {
+    const el = scroller.current;
+    if (!el) return;
+    setEdges({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+  }, []);
+
+  // Abre com a etapa atual no centro, só na horizontal (não rola a página).
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const idx = journey.finished ? blocks.length - 1 : Math.max(0, journey.currentIndex);
+    const item = el.querySelectorAll("li")[idx] as HTMLElement | undefined;
+    if (item && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft = Math.max(0, item.offsetLeft + item.offsetWidth / 2 - el.clientWidth / 2);
+    }
+    updateEdges();
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(updateEdges);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+  }, [blocks.length, journey.currentIndex, journey.finished, updateEdges]);
+
+  if (blocks.length === 0) return null;
+
+  const scrollBy = (dir: -1 | 1) => {
+    const el = scroller.current;
+    if (!el) return;
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const left = el.scrollLeft + dir * el.clientWidth * 0.7;
+    if (typeof el.scrollTo === "function") el.scrollTo({ left, behavior: reduce ? "auto" : "smooth" });
+    else el.scrollLeft = left;
+  };
+
   return (
-    <section aria-label="Linha do tempo da obra" data-testid="trail-journey" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+    <div className="relative">
+      {edges.left && <span aria-hidden data-testid="trail-fade-left" className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-8 bg-gradient-to-r from-[var(--trilha-creme)] to-transparent" />}
+      {edges.right && <span aria-hidden data-testid="trail-fade-right" className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-8 bg-gradient-to-l from-[var(--trilha-creme)] to-transparent" />}
+      {edges.left && (
+        <button type="button" onClick={() => scrollBy(-1)} aria-label="Etapas anteriores" className="absolute left-0 top-0 z-[3] hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--trilha-areia)] bg-white shadow-sm sm:flex">
+          <ChevronLeft className="h-4 w-4 text-[var(--trilha-navy)]" />
+        </button>
+      )}
+      {edges.right && (
+        <button type="button" onClick={() => scrollBy(1)} aria-label="Próximas etapas" className="absolute right-0 top-0 z-[3] hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--trilha-areia)] bg-white shadow-sm sm:flex">
+          <ChevronRight className="h-4 w-4 text-[var(--trilha-navy)]" />
+        </button>
+      )}
+    <section
+      ref={scroller}
+      onScroll={updateEdges}
+      tabIndex={0}
+      aria-label="Linha do tempo da obra"
+      data-testid="trail-journey"
+      className="-mx-4 snap-x snap-proximity overflow-x-auto px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--trilha-terracota)] sm:mx-0 sm:px-0"
+    >
       <ol className="relative flex pb-1 pt-1" style={{ minWidth: `${steps * 112}px` }}>
         <span className="absolute top-[13px] h-0.5 bg-[var(--trilha-areia)]" style={{ left: `${edge}%`, right: `${edge}%` }} aria-hidden />
         <span className="absolute top-[13px] h-0.5 bg-[var(--trilha-terracota)] transition-all" style={{ left: `${edge}%`, width: `${fill}%` }} aria-hidden />
         {blocks.map((b, i) => {
           const kind = dotKind(i, b, journey);
           return (
-            <li key={b.name} className="relative flex flex-1 flex-col items-center px-1 text-center" aria-current={kind === "current" ? "step" : undefined}>
+            <li key={b.name} className="relative flex flex-1 snap-center flex-col items-center px-1 text-center" aria-current={kind === "current" ? "step" : undefined}>
               <TimelineDot kind={kind} />
               <span className={`mt-2 text-xs leading-tight ${kind === "current" ? "font-semibold text-[var(--trilha-navy)]" : kind === "done" ? "text-[var(--trilha-navy)]/80" : "text-[var(--trilha-navy)]/55"}`}>{b.name}</span>
               {b.start && <span className="mt-0.5 text-[10px] text-[var(--trilha-navy)]/50">{formatDateShort(b.start)}</span>}
@@ -85,7 +140,7 @@ function JourneyTimeline({ blocks, journey, moveIn }: { blocks: ConstructionBloc
           );
         })}
         {moveIn && (
-          <li className="relative flex flex-1 flex-col items-center px-1 text-center">
+          <li className="relative flex flex-1 snap-center flex-col items-center px-1 text-center">
             <span className="relative z-[1] flex h-6 w-6 rotate-45 items-center justify-center rounded-[4px] bg-[var(--trilha-navy)]">
               <Home className="h-3 w-3 -rotate-45 text-[var(--trilha-areia)]" />
             </span>
@@ -95,15 +150,34 @@ function JourneyTimeline({ blocks, journey, moveIn }: { blocks: ConstructionBloc
         )}
       </ol>
     </section>
+    </div>
   );
 }
 
 /** Etapas da obra em linha do tempo vertical (mockup 1b), a atual em destaque. */
+const VISIBLE_AHEAD = 4; // a atual + as próximas 3
+
 function StageTimeline({ blocks, journey, onSelect }: { blocks: ConstructionBlock[]; journey: JourneyPosition; onSelect?: (index: number) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const firstOpen = blocks.findIndex((b, i) => dotKind(i, b, journey) !== "done");
+  // Obra concluída ou sem etapa em aberto: mostra tudo, não há o que recolher.
+  const start = firstOpen < 0 ? 0 : firstOpen;
+  const end = firstOpen < 0 ? blocks.length : Math.min(blocks.length, start + VISIBLE_AHEAD);
+  const hiddenBefore = expanded ? 0 : start;
+  const hiddenAfter = expanded ? 0 : blocks.length - end;
+  const from = expanded ? 0 : start;
+  const to = expanded ? blocks.length : end;
   return (
+    <div>
+      {hiddenBefore > 0 && (
+        <button type="button" onClick={() => setExpanded(true)} data-testid="trail-expand-done" className="mb-3 text-xs font-medium text-[var(--trilha-navy)]/70 underline underline-offset-4">
+          {hiddenBefore} {hiddenBefore === 1 ? "concluída" : "concluídas"} · mostrar
+        </button>
+      )}
     <ol className="relative">
       <span className="absolute bottom-3 left-[7px] top-3 w-0.5 bg-[var(--trilha-areia)]" aria-hidden />
       {blocks.map((b, i) => {
+        if (i < from || i >= to) return null;
         const kind = dotKind(i, b, journey);
         const status = b.late ? "Além do prazo" : BLOCK_STATE_LABEL[b.state];
         return (
@@ -150,6 +224,17 @@ function StageTimeline({ blocks, journey, onSelect }: { blocks: ConstructionBloc
         );
       })}
     </ol>
+      {hiddenAfter > 0 && (
+        <button type="button" onClick={() => setExpanded(true)} data-testid="trail-expand-all" className="mt-3 text-xs font-medium text-[var(--trilha-navy)]/70 underline underline-offset-4">
+          Ver todas as etapas ({blocks.length})
+        </button>
+      )}
+      {expanded && blocks.length > VISIBLE_AHEAD && (
+        <button type="button" onClick={() => setExpanded(false)} className="mt-3 block text-xs font-medium text-[var(--trilha-navy)]/70 underline underline-offset-4">
+          Recolher
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -183,6 +268,7 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
   const current = journey.currentIndex >= 0 ? blocks[journey.currentIndex] : null;
   const moveDays = daysUntil(project.client_move_in_date);
   const open = extractPendings(weekly_reports, pending_responses).filter((p) => p.isOpen);
+  const openCount = clientOpenCount(data);
   const nextPayment = [...(payments ?? [])]
     .filter((p) => p.status !== "pago")
     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))[0];
@@ -257,17 +343,17 @@ export function InicioScreen({ data, onApprove, onRespond, onGoTab, submitting }
           </CardContent>
         </Card>
         <button type="button" onClick={() => onGoTab("pendencias")} className="text-left">
-          <Card className={`h-full border-[var(--trilha-terracota)]/40 ${open.length ? "bg-[var(--trilha-terracota)]/10" : "bg-white/95"}`}>
+          <Card className={`h-full border-[var(--trilha-terracota)]/40 ${openCount ? "bg-[var(--trilha-terracota)]/10" : "bg-white/95"}`}>
             <CardContent className="p-5">
               <p className="trilha-eyebrow">Depende de você</p>
               <p className="mt-2 font-display text-2xl text-[var(--trilha-navy)]" data-testid="open-pendings">
-                {open.length} {open.length === 1 ? "decisão" : "decisões"}
+                {openCount} {openCount === 1 ? "decisão" : "decisões"}
               </p>
-              <p className="text-xs text-[var(--trilha-navy)]/70">{open.length ? "toque para ver" : "nada pendente agora"}</p>
+              <p className="text-xs text-[var(--trilha-navy)]/70">{openCount ? "toque para ver" : "nada pendente agora"}</p>
             </CardContent>
           </Card>
         </button>
-        <button type="button" onClick={() => onGoTab("orcamento")} className="text-left">
+        <button type="button" onClick={() => onGoTab("prestacao")} className="text-left">
           <Card className="h-full border-[var(--trilha-areia)] bg-white/95">
             <CardContent className="p-5" data-testid="next-payment">
               <p className="trilha-eyebrow">Próximo pagamento</p>

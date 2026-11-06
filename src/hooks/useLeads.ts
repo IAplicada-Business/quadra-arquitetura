@@ -70,6 +70,8 @@ export interface Lead {
   phone_secondary: string | null;
   project_type: string;
   origin: string;
+  /** Detalhe da origem (ex.: "landing_page", "checklist"). */
+  source_detail?: string | null;
   channel_id: string | null;
   lead_type: LeadType;
   partner_stage: PartnerStage | null;

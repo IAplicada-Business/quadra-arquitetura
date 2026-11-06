@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { uploadImage } from "@/lib/mediaUpload";
 import type { WeeklyReportRecord } from "@/lib/weeklyReport";
 
 export interface WeeklyReportInput {
@@ -38,12 +39,7 @@ export function useWeeklyReports(projectId: string | undefined) {
   const uploadPhotos = async (weekStart: string, files?: File[]) => {
     const urls: string[] = [];
     for (const file of files ?? []) {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `reports/${projectId}/${weekStart}/${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("project-files").upload(path, file);
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(path);
-      urls.push(urlData.publicUrl);
+      urls.push(await uploadImage(file, { bucket: "project-files", folder: `reports/${projectId}/${weekStart}`, maxWidth: 2000 }));
     }
     return urls;
   };

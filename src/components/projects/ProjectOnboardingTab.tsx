@@ -1,3 +1,4 @@
+import { buildPortalUrl } from "@/lib/portalUrl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,7 +89,7 @@ export function ProjectOnboardingTab({ projectId, projectName, clientName, addre
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseline, isFetched]);
 
-  const portalUrl = activeToken?.token ? `${window.location.origin}/client/${activeToken.token}` : null;
+  const portalUrl = activeToken?.token ? buildPortalUrl(activeToken.token) : null;
 
   if (isLoading || !draft) {
     return (

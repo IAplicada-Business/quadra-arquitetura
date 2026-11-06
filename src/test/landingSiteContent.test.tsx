@@ -61,7 +61,7 @@ describe("site público lendo site_content", () => {
 
     expect(await screen.findByText("Texto publicado pela Camilla.")).toBeInTheDocument();
     expect(screen.queryByText(/A Quadra nasceu de uma dúvida/)).not.toBeInTheDocument();
-    const srcs = screen.getAllByAltText(/Quadra Arquitetura/).map((img) => img.getAttribute("src"));
+    const srcs = screen.getAllByAltText(/sócias da Quadra Arquitetura/).map((img) => img.getAttribute("src"));
     expect(srcs).toContain("https://cdn.test/site-media/hero/nova.jpg");
     expect(mocks.rpc).toHaveBeenCalledWith("get_public_site_content", { p_team_id: "00000000-0000-0000-0000-000000000001" });
   });

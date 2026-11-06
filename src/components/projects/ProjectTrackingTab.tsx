@@ -1,3 +1,4 @@
+import { buildPortalUrl } from "@/lib/portalUrl";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Plus, Trash2, Cloud, Sun, CloudRain, Snowflake, CalendarDays, Users, FileText, BarChart3, Sparkles, Loader2, MessageSquareText, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export function ProjectTrackingTab({ projectId, projectName, clientName, clientP
   const { items: scheduleTasks } = useScheduleTasks(projectId);
   const { reports, isLoading: reportsLoading, create: createReport, update: updateReport, remove: removeReport } = useWeeklyReports(projectId);
   const { activeToken } = useClientPortalToken(projectId);
-  const portalUrl = activeToken?.token ? `${window.location.origin}/client/${activeToken.token}` : null;
+  const portalUrl = activeToken?.token ? buildPortalUrl(activeToken.token) : null;
   const [editingReport, setEditingReport] = useState<WeeklyReportRecord | null>(null);
   const [reportModalKey, setReportModalKey] = useState(0);
   const [highlightReportId, setHighlightReportId] = useState<string | null>(null);

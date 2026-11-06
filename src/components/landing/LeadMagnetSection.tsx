@@ -1,25 +1,26 @@
+import { useRef, useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
+import { LeadCaptureDialog } from "@/components/landing/LeadCaptureDialog";
 import logoAzul from "@/assets/logo-azul.png";
 import { RichText } from "@/components/leads/proposal-pages/RichText";
-import { SITE_DEFAULTS, type LeadMagnetContent } from "@/lib/siteContent";
+import { SITE_DEFAULTS, safeFileUrl, type LeadMagnetContent } from "@/lib/siteContent";
 import { Revelar } from "@/components/landing/Motion";
 
 /**
  * O checklist gratuito.
  *
- * O botão leva ao formulário de contato em vez de baixar um arquivo: a
- * troca é "seu contato pelo material", e é lá que o lead é registrado.
- * Quando houver um PDF hospedado, basta trocar o destino — mas enquanto
- * não houver, mandar para o formulário é honesto e não promete um
- * download que não existe.
+ * O botão abre um cartão (nome, e-mail, WhatsApp): a troca é "seu contato
+ * pelo material". O lead entra no pipeline com a etiqueta "Checklist" e, em
+ * seguida, o visitante vê o botão de baixar o arquivo (link configurado no
+ * editor do site). Sem link, o lead é criado do mesmo jeito e a tela avisa
+ * que a equipe envia o material.
  *
  * A imagem é opcional. Sem ela, entra um bloco com ícone no lugar, para
  * a dobra não ficar com metade vazia antes de alguém subir o mockup.
  */
-export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { content?: LeadMagnetContent }) {
-  const smoothTo = (href: string) => {
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
-  };
+export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet, preview = false }: { content?: LeadMagnetContent; preview?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
 
   return (
     <section id="material" className="bg-brand-rosa py-16 md:py-20">
@@ -52,7 +53,9 @@ export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { cont
             </p>
             {content.ctaLabel && (
               <button
-                onClick={() => smoothTo("#contato")}
+                ref={trigger}
+                type="button"
+                onClick={() => setOpen(true)}
                 className="group inline-flex items-center gap-3 bg-brand-navy text-brand-areia px-8 py-4 text-sm transition-colors hover:bg-brand-vinho focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-vinho focus-visible:ring-offset-2 focus-visible:ring-offset-brand-rosa"
                 style={{ fontFamily: "'Jost', sans-serif", fontWeight: 500 }}
               >
@@ -66,7 +69,7 @@ export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { cont
             {content.image ? (
               <img
                 src={content.image}
-                alt="Checklist da Quadra Arquitetura"
+                alt="Checklist da Quadra"
                 className="w-full aspect-square object-cover"
                 loading="lazy"
               />
@@ -103,6 +106,16 @@ export function LeadMagnetSection({ content = SITE_DEFAULTS.leadMagnet }: { cont
           </div>
         </Revelar>
       </div>
+      <LeadCaptureDialog
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          // Radix devolve o foco ao botão que abriu; reforça quando o botão está fora do gatilho padrão.
+          if (!o) trigger.current?.focus();
+        }}
+        fileUrl={safeFileUrl(content.fileUrl)}
+        preview={preview}
+      />
     </section>
   );
 }

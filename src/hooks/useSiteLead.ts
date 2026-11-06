@@ -8,6 +8,8 @@ export interface SiteLeadPayload {
   phone: string;
   projectType: "residencial" | "comercial" | "saude" | "outro";
   message?: string;
+  /** De onde veio o lead. Padrão: landing_page (formulário de contato). */
+  sourceDetail?: string;
 }
 
 export function useSiteLead() {
@@ -23,7 +25,7 @@ export function useSiteLead() {
         origin: "site" as const,
         lead_type: "comercial" as const,
         status: "novo",
-        source_detail: "landing_page",
+        source_detail: data.sourceDetail ?? "landing_page",
         // user_id is intentionally null for public leads — adjust per RLS policy
       } as any);
       if (error) throw error;

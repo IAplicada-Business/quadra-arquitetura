@@ -425,6 +425,9 @@ export default function LeadsPipeline() {
                         <div className="flex flex-wrap gap-1">
                           <Badge variant="outline" className="text-[10px]">{typeLabels[lead.project_type] || lead.project_type}</Badge>
                           <ChannelBadge channel={allChannels.find((c) => c.id === lead.channel_id)} />
+                          {lead.source_detail === "checklist" && (
+                            <Badge variant="secondary" className="text-[10px]">Checklist</Badge>
+                          )}
                           {lead.status === "fechado" && lead.converted_client_id && (
                             <Badge variant="secondary" className="text-[10px]">
                               <UserCheck className="h-3 w-3 mr-1" /> Cliente criado
@@ -502,6 +505,7 @@ export default function LeadsPipeline() {
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <Badge variant="outline" className="text-xs">{typeLabels[lead.project_type] || lead.project_type}</Badge>
+                      {lead.source_detail === "checklist" && <Badge variant="secondary" className="ml-1 text-xs">Checklist</Badge>}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                       {originLabels[lead.origin] || lead.origin}

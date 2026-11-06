@@ -26,7 +26,7 @@ export function AuthShell({ title, subtitle, blobs = false, showEyebrow = true, 
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <img src={logoBege} alt="Quadra Arquitetura" className="h-24 w-auto object-contain" />
+          <img src={logoBege} alt="Quadra" className="h-24 w-auto object-contain" />
           {showEyebrow && <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.35em] text-deep-foreground/60">Quadra · Gestão</p>}
           <h1 className={`${showEyebrow ? "mt-3" : "mt-6"} font-display text-3xl font-light leading-tight sm:text-4xl`}>{title}</h1>
           {subtitle && <p className="mt-3 text-sm leading-relaxed text-deep-foreground/70">{subtitle}</p>}

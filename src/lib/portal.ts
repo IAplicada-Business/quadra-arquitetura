@@ -93,6 +93,9 @@ export interface PortalClosingItem {
   closing_date: string | null;
   delivery_date: string | null;
   status: string;
+  /** Opcionais: só vêm quando a edge function já foi atualizada. */
+  delivery_time?: string | null;
+  estimated_value?: number | null;
 }
 
 /** Visita técnica agendada (só tipo e data). */
@@ -177,7 +180,7 @@ export interface PortalData {
 /* Navegação                                                           */
 /* ------------------------------------------------------------------ */
 
-export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "cronograma" | "compras" | "resumos";
+export type PortalTab = "inicio" | "pendencias" | "galeria" | "orcamento" | "analise" | "prestacao" | "cronograma" | "compras" | "resumos";
 
 export interface PortalTabDef {
   key: PortalTab;
@@ -191,6 +194,8 @@ export const PORTAL_TABS: PortalTabDef[] = [
   { key: "pendencias", label: "Minhas pendências", short: "Pendências" },
   { key: "galeria", label: "Galeria", short: "Galeria" },
   { key: "orcamento", label: "Orçamento", short: "Orçamento" },
+  { key: "analise", label: "Análise orçamentária", short: "Análise" },
+  { key: "prestacao", label: "Prestação de contas", short: "Contas" },
   { key: "cronograma", label: "Cronograma", short: "Cronograma" },
   { key: "compras", label: "Compras", short: "Compras" },
   { key: "resumos", label: "Resumo semanal", short: "Resumos" },
@@ -358,6 +363,55 @@ export function extractPendings(reports: PortalWeeklyReport[], responses: Portal
     if (a.isOpen !== b.isOpen) return a.isOpen ? -1 : 1;
     return b.weekStart.localeCompare(a.weekStart);
   });
+}
+
+export type ClosingUrgency = "vencida" | "esta_semana" | "no_prazo" | "sem_data";
+
+export interface ClosingPending {
+  item: PortalClosingItem;
+  urgency: ClosingUrgency;
+}
+
+const CLOSING_OPEN = ["em_cotacao", "aprovado"];
+const CLOSING_DONE = ["comprado", "entregue"];
+
+function isoDay(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Itens de fechamento que dependem do cliente (em cotação / aprovado), por data limite; sem data por último. */
+export function closingPendings(items: PortalClosingItem[] | undefined, today: Date = new Date()): ClosingPending[] {
+  const todayIso = isoDay(today);
+  const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
+  const weekEndIso = isoDay(weekEnd);
+  return (items ?? [])
+    .filter((c) => CLOSING_OPEN.includes(c.status))
+    .map((item): ClosingPending => {
+      const d = item.closing_date?.slice(0, 10) ?? null;
+      const urgency: ClosingUrgency = !d ? "sem_data" : d < todayIso ? "vencida" : d <= weekEndIso ? "esta_semana" : "no_prazo";
+      return { item, urgency };
+    })
+    .sort((a, b) => {
+      const da = a.item.closing_date?.slice(0, 10) ?? "9999-12-31";
+      const db = b.item.closing_date?.slice(0, 10) ?? "9999-12-31";
+      return da.localeCompare(db) || a.item.description.localeCompare(b.item.description);
+    });
+}
+
+/** Itens de fechamento já resolvidos (comprado / entregue). */
+export function closingResolved(items: PortalClosingItem[] | undefined): PortalClosingItem[] {
+  return (items ?? []).filter((c) => CLOSING_DONE.includes(c.status));
+}
+
+/** Fonte única do número de coisas que dependem do cliente: pendências de relatório + itens de fechamento. */
+export function clientOpenCount(
+  data: Pick<PortalData, "weekly_reports" | "pending_responses" | "closing_items">,
+  today: Date = new Date(),
+): number {
+  return (
+    extractPendings(data.weekly_reports ?? [], data.pending_responses ?? []).filter((p) => p.isOpen).length +
+    closingPendings(data.closing_items, today).length
+  );
 }
 
 export interface PhotoGroup {

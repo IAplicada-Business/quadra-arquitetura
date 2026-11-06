@@ -153,7 +153,7 @@ export async function generateWeeklyReportPdf(
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(...GRAY);
-    pdf.text(`Quadra Arquitetura · página ${i} de ${pages}`, pageW / 2, pageH - 8, { align: "center" });
+    pdf.text(`Quadra · página ${i} de ${pages}`, pageW / 2, pageH - 8, { align: "center" });
   }
 
   return pdf.output("blob");

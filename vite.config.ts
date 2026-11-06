@@ -23,10 +23,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {
-        name: "Quadra Arquitetura",
+        name: "Quadra",
         short_name: "Quadra",
         description:
-          "Plataforma de gestão de obras e operação da Quadra Arquitetura.",
+          "Plataforma de gestão de obras e operação da Quadra.",
         theme_color: "#1B2A4A",
         background_color: "#FAF7F2",
         display: "standalone",

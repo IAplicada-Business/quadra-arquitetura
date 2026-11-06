@@ -9,13 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TrilhaShell } from "@/components/portal/TrilhaShell";
-import { GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, ResumosScreen } from "@/components/portal/PortalScreens";
+import { AnaliseScreen, GaleriaScreen, InicioScreen, OrcamentoScreen, PendenciasScreen, PrestacaoScreen, ResumosScreen } from "@/components/portal/PortalScreens";
 import { ComprasScreen } from "@/components/portal/screens/ComprasScreen";
 import { CronogramaScreen } from "@/components/portal/CronogramaScreen";
 import { AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { buildOnboardingPlaceholders, sectionsFromJson, visibleSections } from "@/lib/onboarding";
-import { extractPendings, onboardingSeenKey, tabFromHash, type PortalTab } from "@/lib/portal";
+import { clientOpenCount, onboardingSeenKey, tabFromHash, type PortalTab } from "@/lib/portal";
 import { useLivePortalData } from "@/hooks/useLivePortalData";
 import { QuadraWatermark } from "@/components/portal/TrilhaBrand";
 
@@ -216,7 +216,7 @@ export default function ClientPortal() {
     );
   }
 
-  const openPendings = extractPendings(data.weekly_reports, data.pending_responses).filter((p) => p.isOpen).length;
+  const openPendings = clientOpenCount(data);
   const screenProps = {
     data,
     submitting,
@@ -240,6 +240,8 @@ export default function ClientPortal() {
       {tab === "pendencias" && <PendenciasScreen {...screenProps} />}
       {tab === "galeria" && <GaleriaScreen {...screenProps} />}
       {tab === "orcamento" && <OrcamentoScreen {...screenProps} />}
+      {tab === "analise" && <AnaliseScreen {...screenProps} />}
+      {tab === "prestacao" && <PrestacaoScreen {...screenProps} />}
       {tab === "cronograma" && <CronogramaScreen data={data} />}
       {tab === "compras" && <ComprasScreen {...screenProps} />}
       {tab === "resumos" && <ResumosScreen {...screenProps} />}

@@ -98,7 +98,7 @@ describe("Login", () => {
 
   it("mostra só o logo e o título, sem 'Quadra · Gestão' nem subtítulo", () => {
     renderAt("/login");
-    expect(screen.getByAltText("Quadra Arquitetura")).toBeInTheDocument();
+    expect(screen.getByAltText("Quadra")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bem-vindo(a) de volta" })).toBeInTheDocument();
     expect(screen.queryByText("Quadra · Gestão")).not.toBeInTheDocument();
     expect(screen.queryByText("Acesse o sistema de gestão Quadra")).not.toBeInTheDocument();

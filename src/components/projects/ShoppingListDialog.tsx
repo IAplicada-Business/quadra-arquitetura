@@ -88,7 +88,7 @@ export function ShoppingListDialog({ open, onOpenChange, projectId, projectName 
     for (const m of group.materials) {
       text += `• ${m.name} — ${m.quantity ?? "—"} ${m.unit || "un"}\n`;
     }
-    text += `\nTotal estimado: ${formatCurrency(group.totalEstimate)}\nQuadra Arquitetura`;
+    text += `\nTotal estimado: ${formatCurrency(group.totalEstimate)}\nQuadra`;
     return text;
   };
 

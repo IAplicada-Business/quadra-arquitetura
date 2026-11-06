@@ -38,7 +38,7 @@ export function LandingFooter({
       <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
           <div className="flex items-center gap-4 min-w-0">
-            <img src={content.logo || logoBege} alt="Quadra Arquitetura" className="h-9 w-auto shrink-0" />
+            <img src={content.logo || logoBege} alt="Quadra" className="h-9 w-auto shrink-0" />
             <p className="text-brand-areia/50 min-w-0" style={{ fontSize: "0.8125rem", fontWeight: 300 }}>
               {content.tagline}
             </p>
