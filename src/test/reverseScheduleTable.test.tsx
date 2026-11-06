@@ -233,6 +233,25 @@ describe("Cronograma Reverso", () => {
     expect(onToggleDone).toHaveBeenCalledWith(expect.objectContaining({ id: "a5" }), false);
   });
 
+  it("pendente, em andamento e atrasada: cada linha marca entregue direto, sem modal", () => {
+    const onToggleDone = vi.fn();
+    const onEditActivity = vi.fn();
+    renderTable([pintura, demolicao, atrasada], { onToggleDone, onEditActivity });
+
+    const linha = (nome: string) => screen.getByRole("button", { name: `Marcar ${nome} como entregue` }).closest("tr")!;
+    expect(within(linha("Pintura")).getByText("Pendente")).toBeInTheDocument();
+    expect(within(linha("Demolição")).getByText("Em andamento")).toBeInTheDocument();
+    expect(within(linha("Marcenaria")).getByText("Atrasada")).toBeInTheDocument();
+
+    for (const [nome, id] of [["Pintura", "a3"], ["Demolição", "a1"], ["Marcenaria", "a4"]]) {
+      fireEvent.click(screen.getByRole("button", { name: `Marcar ${nome} como entregue` }));
+      expect(onToggleDone).toHaveBeenLastCalledWith(expect.objectContaining({ id }), true);
+    }
+    expect(onToggleDone).toHaveBeenCalledTimes(3);
+    expect(onEditActivity).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("desabilita só o check da linha que está salvando", () => {
     const onToggleDone = vi.fn();
     renderTable([demolicao, act({ id: "a9", name: "Pintura", start_date: "2026-10-01", end_date: "2026-10-05", duration_days: 5, position: 5 })], {

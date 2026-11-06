@@ -70,8 +70,8 @@ function situacaoDaEtapa(a: PortalActivity, m: ReverseMetrics): SituacaoEtapa {
  * As etapas na ordem em que acontecem.
  *
  * Ordena por data de início; quando várias começam no mesmo dia (na
- * Q153 isso é comum: toldo e luminárias em 11/11, contrapiso e assinatura
- * do executivo em 22/10) a que termina antes vem primeiro, depois a
+ * Q153 isso é comum: forro e piso em 28/10, medição de toldo e
+ * revestimentos em 11/11) a que termina antes vem primeiro, depois a
  * `position`, e por último o nome. O banco tem várias atividades com a
  * mesma posição, então posição sozinha embaralharia a leitura.
  */

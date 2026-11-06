@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveDonePatch } from "@/hooks/useProjectActivities";
+import { doneToastMessage, resolveDonePatch } from "@/hooks/useProjectActivities";
 
 const HOJE = "2026-09-29";
 
@@ -23,5 +23,21 @@ describe("resolveDonePatch", () => {
 
   it("reabrir atividade futura volta para pendente", () => {
     expect(resolveDonePatch({ start_date: "2026-10-15" }, false, HOJE)).toEqual({ status: "pendente", progress_percent: 0 });
+  });
+});
+
+describe("doneToastMessage", () => {
+  it("confirma a entrega com o nome da atividade", () => {
+    expect(doneToastMessage({ name: "Demolição" }, true)).toEqual({
+      title: "Atividade entregue",
+      description: '"Demolição" foi marcada como entregue (100%).',
+    });
+  });
+
+  it("confirma a reabertura com o nome da atividade", () => {
+    expect(doneToastMessage({ name: "Demolição" }, false)).toEqual({
+      title: "Atividade reaberta",
+      description: '"Demolição" voltou a ficar em aberto.',
+    });
   });
 });

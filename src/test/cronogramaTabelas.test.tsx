@@ -49,4 +49,20 @@ describe("Cronograma reverso (formato Q153)", () => {
     const corpo = within(t).getAllByRole("row").slice(2).map((r) => r.textContent);
     expect(corpo).toEqual(["19/02/202723/02/2027Arremates2", "29/09/202615/10/2026Demolição12"]);
   });
+
+  it("cabeçalho e linhas têm as mesmas quatro colunas, todas centralizadas", () => {
+    const etapas = cronogramaReverso([
+      { id: "a", name: "Demolição", discipline: "Obra", status: "pendente", progress_percent: 0, start_date: "2026-09-29", end_date: "2026-10-15" },
+      { id: "b", name: "Medição", discipline: "Obra", status: "pendente", progress_percent: 0, start_date: "2026-10-08", end_date: null },
+    ], "2026-11-04");
+    render(<TabelaReversa etapas={etapas} />);
+    const linhas = within(screen.getByTestId("tabela-reversa")).getAllByRole("row");
+    expect(within(linhas[1]).getAllByRole("columnheader").map((c) => c.textContent))
+      .toEqual(["COMEÇO", "TÉRMINO", "SERVIÇO EXECUTADO", "PRAZO (DIAS ÚTEIS)"]);
+    for (const l of linhas.slice(2)) {
+      const celulas = within(l).getAllByRole("cell");
+      expect(celulas).toHaveLength(4);
+      celulas.forEach((c) => expect(c.className).toContain("text-center"));
+    }
+  });
 });

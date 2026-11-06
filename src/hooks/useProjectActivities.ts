@@ -47,6 +47,13 @@ export function resolveDonePatch(
   return { status: started ? "em_andamento" : "pendente", progress_percent: 0 };
 }
 
+/** Toast de confirmação depois de marcar/reabrir uma atividade na linha. */
+export function doneToastMessage(activity: Pick<ProjectActivity, "name">, done: boolean): { title: string; description: string } {
+  return done
+    ? { title: "Atividade entregue", description: `"${activity.name}" foi marcada como entregue (100%).` }
+    : { title: "Atividade reaberta", description: `"${activity.name}" voltou a ficar em aberto.` };
+}
+
 export interface CascadeChange {
   id: string;
   name: string;
@@ -379,12 +386,7 @@ export function useProjectActivities(projectId: string | undefined) {
       return { previous };
     },
     onSuccess: ({ activity, done }) => {
-      toast({
-        title: done ? "Atividade entregue" : "Atividade reaberta",
-        description: done
-          ? `"${activity.name}" foi marcada como entregue (100%).`
-          : `"${activity.name}" voltou a ficar em aberto.`,
-      });
+      toast(doneToastMessage(activity, done));
     },
     onError: (e: Error, { activity, done }, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(["project_activities", projectId], ctx.previous);

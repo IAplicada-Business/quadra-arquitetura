@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import { C } from "@/lib/chartColors";
-import type { DisciplineSlice } from "@/lib/disciplineAccounts";
+import { sliceLabel, type DisciplineSlice } from "@/lib/disciplineAccounts";
 
 const PALETTE = [C.navy, C.terra, C.navyMid, C.muted, C.success, C.warning, C.navyFaint, C.danger];
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -21,7 +21,6 @@ export function DisciplinePieChart({ planned, executed }: Props) {
   const [mode, setMode] = useState<Mode>("executado");
   const slices = mode === "executado" ? executed : planned;
   const total = useMemo(() => slices.reduce((s, x) => s + x.value, 0), [slices]);
-  const pct = (v: number) => (total > 0 ? ((v / total) * 100).toFixed(1) : "0.0");
   const config = useMemo<ChartConfig>(
     () => Object.fromEntries(slices.map((s, i) => [s.discipline, { label: s.discipline, color: PALETTE[i % PALETTE.length] }])),
     [slices],
@@ -60,9 +59,7 @@ export function DisciplinePieChart({ planned, executed }: Props) {
                     return (
                       <div className="rounded-md border bg-background px-3 py-2 text-xs shadow-md">
                         <p className="font-medium">{String(p.name)}</p>
-                        <p className="tabular-nums">
-                          {brl(value)} · {pct(value)}%
-                        </p>
+                        <p className="tabular-nums">{sliceLabel(value, total)}</p>
                       </div>
                     );
                   }}
@@ -81,9 +78,7 @@ export function DisciplinePieChart({ planned, executed }: Props) {
                     <span className="h-2.5 w-2.5 rounded-sm" style={{ background: PALETTE[i % PALETTE.length] }} />
                     {s.discipline}
                   </span>
-                  <span className="tabular-nums text-muted-foreground">
-                    {brl(s.value)} · {pct(s.value)}%
-                  </span>
+                  <span className="tabular-nums text-muted-foreground">{sliceLabel(s.value, total)}</span>
                 </li>
               ))}
               <li className="flex justify-between border-t pt-1.5 font-semibold">

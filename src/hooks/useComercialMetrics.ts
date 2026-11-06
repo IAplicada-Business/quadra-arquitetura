@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { differenceInDays, parseISO } from "date-fns";
-import { computeFunnelByPeriod, lastSixMonths, periodBounds, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
+import { computeFunnelByPeriod, periodBounds, pipelineByMonth, type DashboardPeriod, type FunnelStageCount } from "@/lib/funnel";
 
 interface LeadRow {
   id: string;
@@ -200,17 +200,7 @@ export function useComercialMetrics({
     const totalEmNegociacao = propostasAbertas.reduce((s, p) => s + p.value, 0);
 
     // Pipeline 6 meses (sempre últimos 6, independe do filtro de período para manter histórico)
-    const mLeads = leads.filter(
-      (l) =>
-        (origin === "todos" || l.origin === origin) &&
-        (projectType === "todos" || l.project_type === projectType)
-    );
-    const pipeline6m: PipelineMonth[] = lastSixMonths(today).map(({ key, label }) => ({
-      month: label,
-      fechados: mLeads.filter((l) => l.status === "fechado" && l.updated_at?.startsWith(key)).length,
-      propostas: mLeads.filter((l) => l.status === "proposta_enviada" && l.created_at?.startsWith(key)).length,
-      em_andamento: mLeads.filter((l) => ["contato_feito", "reuniao_agendada"].includes(l.status) && l.created_at?.startsWith(key)).length,
-    }));
+    const pipeline6m: PipelineMonth[] = pipelineByMonth(scoped, today);
 
     return {
       funil,

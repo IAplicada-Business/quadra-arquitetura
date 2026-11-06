@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { computeFunnel, computeFunnelByPeriod, funnelWidths, lastSixMonths, periodBounds, inPeriod } from "@/lib/funnel";
+import { computeFunnel, computeFunnelByPeriod, funnelWidths, lastSixMonths, periodBounds, inPeriod, pipelineByMonth } from "@/lib/funnel";
 import { buildPartnerMetrics } from "@/hooks/usePartnerMetrics";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 
@@ -127,5 +127,22 @@ describe("computeFunnelByPeriod", () => {
     expect(computeFunnelByPeriod(leads, periodBounds("mes_atual", today)).closed.some((l) => l.id === "parado")).toBe(false);
     const f = computeFunnelByPeriod([], periodBounds("mes_atual", today));
     expect(f.total).toBe(0);
+  });
+
+  it("pipeline de 6 meses põe o fechado no mesmo mês que o funil, mesmo com updated_at em outro mês", () => {
+    const comEdicaoDepois = [
+      ...leads,
+      L("editado", "fechado", "2026-09-05T10:00:00", "2026-10-28T10:00:00", "2026-11-02T10:00:00"),
+    ];
+    const meses = pipelineByMonth(comEdicaoDepois, today);
+    expect(meses.map((m) => m.month)).toEqual(["Jun", "Jul", "Ago", "Set", "Out", "Nov"]);
+    const out = meses[4];
+    const nov = meses[5];
+    // Out: antigo (updated_at) + editado (converted_at). Nov: paula + mesmo.
+    expect(out.fechados).toBe(2);
+    expect(nov.fechados).toBe(2);
+    expect(out.em_andamento).toBe(1); // parado
+    expect(out.fechados).toBe(computeFunnelByPeriod(comEdicaoDepois, periodBounds("mes_passado", today)).closed.length);
+    expect(nov.fechados).toBe(computeFunnelByPeriod(comEdicaoDepois, periodBounds("mes_atual", today)).closed.length);
   });
 });

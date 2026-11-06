@@ -66,6 +66,21 @@ describe("Q153", () => {
     expect(chaves).toEqual([...chaves].sort());
   });
 
+  it("a tabela do portal repete a ordem do print, exceto onde a planilha não ordenou por data", () => {
+    const tela = [...etapas].reverse().map((e) => e.nome);
+    const print = PLANILHA.map(([, , n]) => n);
+    expect(new Set(tela)).toEqual(new Set(print));
+    // No print, dois trechos de atividades sobrepostas saem da ordem de data
+    // (ex.: "Limpeza grossa" 03/12 acima de "Medição de cortina" 01/12). A
+    // tela mantém a data, que é a sequência da obra; o resto bate linha a linha.
+    const foraDeOrdem = [9, 10, 11, 12, 13, 18, 19, 20, 21, 22];
+    const divergentes = tela.map((n, i) => (n === print[i] ? null : i)).filter((i): i is number => i !== null);
+    expect(divergentes.every((i) => foraDeOrdem.includes(i))).toBe(true);
+    for (const [de, ate] of [[9, 13], [18, 22]]) {
+      expect(new Set(tela.slice(de, ate + 1))).toEqual(new Set(print.slice(de, ate + 1)));
+    }
+  });
+
   it("o prazo exibido bate com a coluna PRAZO (DIAS ÚTEIS) da planilha, inclusive em feriado", () => {
     const divergentes = PLANILHA.filter(([, , nome, prazo]) => prazo !== null &&
       etapas.find((e) => e.nome === nome)?.prazoPlanilha !== prazo).map(([, , nome]) => nome);

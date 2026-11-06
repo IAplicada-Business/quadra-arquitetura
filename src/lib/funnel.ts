@@ -126,6 +126,30 @@ export function lastSixMonths(today: Date): { key: string; label: string }[] {
   });
 }
 
+export interface PipelineMonthCount {
+  month: string;
+  fechados: number;
+  propostas: number;
+  em_andamento: number;
+}
+
+/** Mês yyyy-MM no fuso local, a mesma régua de `inPeriod`. */
+const monthKey = (dateStr: string) => format(new Date(dateStr), "yyyy-MM");
+
+/**
+ * Pipeline dos últimos 6 meses. Fechados entram no mês de `closedAt`
+ * (o mesmo critério do funil); propostas e em andamento, no mês em que
+ * o lead foi criado.
+ */
+export function pipelineByMonth(leads: PeriodFunnelLead[], today: Date): PipelineMonthCount[] {
+  return lastSixMonths(today).map(({ key, label }) => ({
+    month: label,
+    fechados: leads.filter((l) => l.status === "fechado" && monthKey(closedAt(l)) === key).length,
+    propostas: leads.filter((l) => l.status === "proposta_enviada" && monthKey(l.created_at) === key).length,
+    em_andamento: leads.filter((l) => ["contato_feito", "reuniao_agendada"].includes(l.status) && monthKey(l.created_at) === key).length,
+  }));
+}
+
 /** Largura mínima da fatia, em % — etapa com 0 ainda aparece como bico. */
 const FUNNEL_MIN_WIDTH = 24;
 

@@ -170,6 +170,8 @@ export function useContracts() {
       // 3. Mark lead as fechado if not already
       if (leadId) {
         await supabase.from("leads").update({ status: "fechado" }).eq("id", leadId);
+        // O funil conta o fechamento no mês de converted_at; não sobrescreve se já fechou antes.
+        await supabase.from("leads").update({ converted_at: new Date().toISOString() }).eq("id", leadId).is("converted_at", null);
       }
 
       // 4. Insert revenue payment (source: escritorio)

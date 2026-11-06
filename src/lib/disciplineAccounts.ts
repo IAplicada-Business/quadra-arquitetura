@@ -56,6 +56,14 @@ export interface DisciplineSlice {
   value: number;
 }
 
+const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+
+/** Texto da fatia no tooltip e na legenda: valor absoluto e % do total. */
+export function sliceLabel(value: number, total: number): string {
+  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+  return `${brl(value)} · ${pct}%`;
+}
+
 function toSlices(map: Map<string, number>): DisciplineSlice[] {
   return [...map.entries()]
     .filter(([, v]) => v > 0)
