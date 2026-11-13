@@ -1,6 +1,6 @@
 # Data model
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit ece07d4 (branch fix/orcamentos-escopo-manual-fornecedor) plus uncommitted working tree.
 
 Source of truth: `supabase/migrations/` (126 files, first `20260206155922_*.sql`, last `20261106120100_site_media_bucket.sql`). `src/integrations/supabase/types.ts` is generated and lags behind: it lacks `blog_posts`, `instagram_profiles`, `instagram_metrics` and newer columns (see [open-questions.md](open-questions.md)). All tables live in schema `public` and, with few exceptions, have RLS enabled.
 
@@ -11,7 +11,7 @@ Source of truth: `supabase/migrations/` (126 files, first `20260206155922_*.sql`
 | Identity and access | `profiles`, `user_roles`, `user_permissions`, `team_members`, `settings` |
 | Commercial | `leads`, `lead_form_submissions`, `acquisition_channels`, `clients`, `proposals`, `proposal_templates`, `proposal_assets`, `proposal_blocks`, `contracts`, `contract_templates` |
 | Projects | `projects`, `project_rooms`, `project_activities`, `schedule_tasks`, `schedule_scenarios`, `schedule_scenario_activities`, `activity_templates`, `activity_template_items`, `default_disciplines`, `discipline_priorities`, `delivery_checklist_items`, `client_closing_schedule`, `documents`, `plant_analyses` |
-| Scope and budget | `scope_items`, `budget_quotes`, `budget_quote_items`, `budgets`, `budget_analysis_imports`, `scenarios`, `scenario_items`, `suppliers`, `supplier_scopes`, `supplier_allocations`, `purchases`, `material_calculations`, `material_tracking`, `material_indices`, `discipline_material_estimates`, `labor_costs`, `calculation_parameters`, `calculation_rules`, `price_research` |
+| Scope and budget | `scope_items`, `budget_quotes`, `budget_quote_items`, `budgets`, `budget_analysis_imports`, `budget_discipline_suppliers`, `scenarios`, `scenario_items`, `suppliers`, `supplier_scopes`, `supplier_allocations`, `purchases`, `material_calculations`, `material_tracking`, `material_indices`, `discipline_material_estimates`, `labor_costs`, `calculation_parameters`, `calculation_rules`, `price_research` |
 | Tracking | `site_diary_entries`, `site_tracking`, `site_visits`, `weekly_reports`, `pending_items`, `reports` |
 | Finance | `payments`, `invoices`, `invoices_nf` |
 | Client portal | `client_portal_tokens`, `client_pending_responses`, `onboarding_templates`, `onboarding_sections`, `onboarding_project_overrides` |
@@ -64,7 +64,8 @@ Relationships come from column names in `types.ts` and migrations. Foreign key d
 | `project_activities` | `depends_on` (array of ids), `duration_days`, `start_date`, `end_date`, `discipline`, `area_m2`, `medicao_date`, `position`, `progress_percent`, `status` |
 | `schedule_tasks` | Client-facing schedule: `is_client_visible`, `source_activity_id`, `dependencies`, `status` (`planejado`, `em_execucao`, `executado`, `atrasado`) |
 | `scope_items` | `discipline`, `scope_type` (for example `contratado`), `status`, `estimated_value`, `payment_terms`; `note` column exists in migrations but not in `types.ts` |
-| `budget_quotes` | `scope_item_id`, `activity_id`, `supplier_id`, `supplier_name`, `value`, `material_estimate`, `delivery_time`, `payment_terms`, `status`, `revision`, `revision_number`, `is_current_revision`; `valid_until` in migrations, not in `types.ts` |
+| `budget_quotes` | `scope_item_id`, `activity_id`, `discipline`, `supplier_id`, `supplier_name`, `value`, `material_estimate`, `delivery_time`, `payment_terms`, `status`, `revision`, `revision_number`, `is_current_revision`; `valid_until` in migrations, not in `types.ts` |
+| `budget_discipline_suppliers` | `project_id`, `discipline` (free text, unique with project), `supplier_id`, `user_id`. Responsible supplier per discipline/group in the Budget tab. Team RLS via `get_team_user_ids()`. Migration `20261113130000_budget_discipline_suppliers.sql`. |
 | `payments` | `source` (`escritorio`/`obra`/`cotacao` used in code), `payment_type`, `status`, `installment_number`, `total_installments`, `due_date`, `paid_date`, `parent_payment_id`, `budget_quote_id` |
 | `invoices_nf` | `nf_type` (`emitida` used in rules), `status`, `amount`, `competence_month`, `service_code`, recipient address fields, `sent_to_accountant_at` |
 | `client_portal_tokens` | `token`, `is_active`, `expires_at`, `project_id`; unique index: one active token per project |

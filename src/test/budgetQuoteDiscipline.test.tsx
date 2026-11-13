@@ -44,12 +44,13 @@ describe("BudgetQuoteForm — vincular disciplina", () => {
     expect(screen.getAllByText("Elétrica").length).toBeGreaterThan(0);
   });
 
-  it("explica o que fazer quando a obra não tem disciplina cadastrada", () => {
+  it("permite criar cotação/grupo à mão mesmo sem disciplinas cadastradas", () => {
     renderForm({ disciplineOptions: [] });
-    expect(screen.getByText(/Nenhuma disciplina cadastrada ainda/)).toBeInTheDocument();
+    expect(screen.getByText("Disciplina")).toBeInTheDocument();
+    expect(screen.queryByText(/Nenhuma disciplina cadastrada ainda/)).not.toBeInTheDocument();
   });
 
-  it("manda criar o item de escopo quando a disciplina escolhida não tem um", () => {
+  it("grava a disciplina direto na cotação, sem pedir item de escopo", () => {
     const onSubmit = vi.fn();
     renderForm({
       onSubmit,
@@ -60,10 +61,11 @@ describe("BudgetQuoteForm — vincular disciplina", () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
     const payload = onSubmit.mock.calls[0][0];
     expect(payload.scope_item_id).toBeNull();
-    expect(payload._link_discipline).toBe("Elétrica");
+    expect(payload.discipline).toBe("Elétrica");
+    expect(payload).not.toHaveProperty("_link_discipline");
   });
 
-  it("usa o scope_item existente quando a disciplina já tem um", () => {
+  it("mantém o scope_item existente e grava a disciplina dele", () => {
     const onSubmit = vi.fn();
     renderForm({
       onSubmit,
@@ -73,6 +75,13 @@ describe("BudgetQuoteForm — vincular disciplina", () => {
 
     const payload = onSubmit.mock.calls[0][0];
     expect(payload.scope_item_id).toBe("scope-1");
-    expect(payload._link_discipline).toBeNull();
+    expect(payload.discipline).toBe("Alvenaria");
+  });
+
+  it("pré-seleciona a disciplina padrão ao criar a partir de uma seção", () => {
+    const onSubmit = vi.fn();
+    renderForm({ onSubmit, defaultDiscipline: "Elétrica" });
+    screen.getByRole("button", { name: /Adicionar Cotação/ }).click();
+    expect(onSubmit.mock.calls[0][0].discipline).toBe("Elétrica");
   });
 });

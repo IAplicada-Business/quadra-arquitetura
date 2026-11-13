@@ -1,6 +1,6 @@
 # Business rules: projects, schedule, budget, tracking
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit ece07d4 (branch fix/orcamentos-escopo-manual-fornecedor) plus uncommitted working tree.
 
 ## Project and calendar
 
@@ -51,6 +51,9 @@ Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working
 | BR-069 | Accounts by discipline: Executed = paid expenses with source `obra` or `cotacao` (description not containing "receita") plus purchases whose status is not `pendente`. Planned = scope `estimated_value` plus purchases still `pendente`. Pie slices drop zero values and sort by value. An empty filter list means no filter. | `src/lib/disciplineAccounts.ts` (`aggregateExecuted`, `aggregatePlanned`, `filterByDisciplines`) | Tests: `src/test/disciplineAccounts.test.ts`, `src/test/disciplinePieChart.test.tsx`. |
 | BR-070 | Approving the quote scenario creates N installments (see BR-081). The project is marked `cotacao_aprovada` only after the payments are inserted. "Revise" deletes payments with `source=cotacao` and clears the flags. | `src/components/projects/ProjectScenariosTab.tsx` | Test: `src/test/cotacaoInstallments.test.ts` (builder only). |
 | BR-071 | Delete errors from the budget module use the same FK messages (BR-028). | `src/lib/handleDeleteError.ts` | |
+| BR-160 | Budget tab sections are the union of: Escopo disciplines (activities, or `scope_items` when there are no activities), `scope_items` disciplines, and disciplines already on quotes. Names are deduplicated ignoring case and accents. The tab works without activities. | `src/components/projects/ProjectBudgetsTab.tsx` (`canonicalDiscipline`), `src/hooks/useProjectDisciplines.ts` | Same source as Cronograma and Materiais. |
+| BR-161 | A quote can be created, edited, moved and grouped by hand. The chosen discipline, or a new free-text group ("+ Novo grupo"), is saved on `budget_quotes.discipline`. No `scope_items` row is created any more. | `src/components/projects/BudgetQuoteForm.tsx`, `ProjectBudgetsTab.tsx` (`handleSubmit`) | Test: `src/test/budgetQuoteDiscipline.test.tsx`. |
+| BR-162 | One responsible supplier per project and discipline/group (`budget_discipline_suppliers`, unique on `project_id`+`discipline`). New quotes created from a section start with that supplier selected. Approval does not read it yet. | `src/hooks/useBudgetDisciplineSuppliers.ts`, `ProjectBudgetsTab.tsx` | Migration applied in production on 2026-11-13. |
 
 ## Tracking, reports, dashboards
 
