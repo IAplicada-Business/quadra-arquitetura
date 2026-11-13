@@ -139,6 +139,54 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_approval_events: {
+        Row: {
+          action: string
+          actor_name: string | null
+          created_at: string
+          id: string
+          payload: Json
+          project_id: string
+          scenario_id: string
+          token_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_name?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          project_id: string
+          scenario_id: string
+          token_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_name?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          project_id?: string
+          scenario_id?: string
+          token_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_approval_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_approval_events_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_discipline_suppliers: {
         Row: {
           created_at: string
@@ -3444,9 +3492,14 @@ export type Database = {
       }
       scenarios: {
         Row: {
+          approval_source: string | null
+          approved_at: string | null
+          approved_by_name: string | null
+          approved_by_token_id: string | null
           created_at: string
           id: string
           is_approved: boolean | null
+          is_locked: boolean
           name: string
           project_id: string
           total_value: number | null
@@ -3454,9 +3507,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_source?: string | null
+          approved_at?: string | null
+          approved_by_name?: string | null
+          approved_by_token_id?: string | null
           created_at?: string
           id?: string
           is_approved?: boolean | null
+          is_locked?: boolean
           name: string
           project_id: string
           total_value?: number | null
@@ -3464,9 +3522,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_source?: string | null
+          approved_at?: string | null
+          approved_by_name?: string | null
+          approved_by_token_id?: string | null
           created_at?: string
           id?: string
           is_approved?: boolean | null
+          is_locked?: boolean
           name?: string
           project_id?: string
           total_value?: number | null

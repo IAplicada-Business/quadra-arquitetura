@@ -1,6 +1,6 @@
 # Modules
 
-Last verified: 2026-11-13, commit ece07d4 (branch fix/orcamentos-escopo-manual-fornecedor) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 There is one deployable front end and one Supabase backend. "Modules" below are functional areas. The repo has no package boundaries, so the import rules are conventions seen in the code.
 
@@ -108,7 +108,7 @@ Note: no link to `/projects/kanban` exists in `src/` (see [open-questions.md](op
 
 ## 7. Budget and purchases
 
-- Files: `src/lib/budgetImport.ts`, `supplierScopeQuotes.ts`, `cotacaoInstallments.ts`, `disciplineAccounts.ts`, `disciplineColors.ts`; hooks `useBudgetQuotes`, `useBudgetImport`, `useBudgetDisciplineSuppliers`, `useScopeItems`, `useSupplierScopes`, `useSupplierAllocations`, `usePurchaseCategories`, `useProjectPurchases`, `useMaterialCalc`, `useMaterialTracking`, `useMaterialIndices`, `useLaborCosts`, `useCostReferenceTable`, `useCalculationRules`, `useCalculationParameters`, `usePriceResearch`, `useScenarios`.
+- Files: `src/lib/budgetImport.ts`, `supplierScopeQuotes.ts`, `cotacaoInstallments.ts`, `disciplineAccounts.ts`, `disciplineColors.ts`; hooks `useBudgetQuotes`, `useBudgetImport`, `useBudgetDisciplineSuppliers`, `useBudgetApprovalEvents`, `useRealtimeInvalidation`, `useScopeItems`, `useSupplierScopes`, `useSupplierAllocations`, `usePurchaseCategories`, `useProjectPurchases`, `useMaterialCalc`, `useMaterialTracking`, `useMaterialIndices`, `useLaborCosts`, `useCostReferenceTable`, `useCalculationRules`, `useCalculationParameters`, `usePriceResearch`, `useScenarios`.
 - Pages: `Suppliers`. Components: `BudgetQuoteTable`, `BudgetQuoteForm`, `BudgetEstimator`, `ProjectScenariosTab`, `ProjectPurchasesTab`, `ShoppingListDialog`, `PriceSearchDialog`, `SupplierScopeDialog`, `src/components/construction/Supplier*`.
 - Edge functions: `search-prices-bh`, `project-ai-assistant` (`analyze_budget`, `estimate_costs`, `generate_materials`).
 - Rules: [business-rules/projects.md](business-rules/projects.md) and [business-rules/finance.md](business-rules/finance.md).
@@ -143,7 +143,7 @@ Note: no link to `/projects/kanban` exists in `src/` (see [open-questions.md](op
 - Page: `ClientPortal` at `/client/:token`. Components: `src/components/portal/*` (shell, screens `Inicio`, `Pendencias`, `Galeria`, `Orcamento`, `Analise`, `Prestacao`, `Cronograma`, `Compras`, `Resumos`, `Etapa`), `src/components/onboarding/*`.
 - Logic: `src/lib/portal.ts`, `portalTrail.ts`, `portalSchedule.ts`, `portalScenarios.ts`, `portalCompras.ts`, `portalUrl.ts`, `onboarding.ts`, `closingStatus.ts`.
 - Hooks: `useLivePortalData`, `useClientPortalToken`, `useOnboardingTemplate`, `useProjectOnboarding`.
-- Edge functions: `get-client-portal-data`, `submit-client-response`. SQL: `rotate_client_portal_token`, `notify_client_portal_change`.
+- Edge functions: `get-client-portal-data`, `submit-client-response`, `submit-scenario-action`. SQL: `rotate_client_portal_token`, `notify_client_portal_change`.
 - Rule: portal logic stays pure and takes `PortalData` (`src/lib/portal.ts`). Do not add staff-only fields to the edge function payload.
 - Rules: [business-rules/portal.md](business-rules/portal.md).
 

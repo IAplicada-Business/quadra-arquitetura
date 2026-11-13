@@ -2,10 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrencyBRL } from "@/lib/portal";
 import { QuadraWatermark } from "../TrilhaBrand";
 import { DetalheDisciplinas } from "../ScenariosSection";
+import { ScenarioApproval } from "../ScenarioApproval";
 import { SectionTitle, type ScreenProps } from "./shared";
 
 /** Orçamento: o valor total orçado e as propostas por disciplina. A análise de cenários e a prestação de contas têm aba própria. */
-export function OrcamentoScreen({ data }: ScreenProps) {
+export function OrcamentoScreen({ data, onScenarioAction, clientName }: ScreenProps) {
   const total = data.project.estimated_budget || 0;
   return (
     <div className="space-y-8" data-testid="screen-orcamento">
@@ -17,6 +18,7 @@ export function OrcamentoScreen({ data }: ScreenProps) {
           <p className="mt-1 font-display text-2xl" data-testid="orcamento-total">{formatCurrencyBRL(total)}</p>
         </CardContent>
       </Card>
+      <ScenarioApproval data={data} onScenarioAction={onScenarioAction} clientName={clientName} />
       <DetalheDisciplinas data={data} />
     </div>
   );

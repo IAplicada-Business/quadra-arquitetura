@@ -262,6 +262,33 @@ Deno.serve(async (req) => {
       // tabela ainda não existe
     }
 
+    // Cenários de orçamento (sem user_id) e histórico de aprovação. Tabelas/colunas
+    // novas: se a migration ainda não foi aplicada, segue sem elas.
+    let scenarios: unknown[] = [];
+    let approval_events: unknown[] = [];
+    try {
+      const { data: scn } = await supabase
+        .from("scenarios")
+        .select("id, name, total_value, is_locked, approved_at, approved_by_name, approval_source, scenario_items(id, discipline, description, estimated_value, is_included, display_order)")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: true });
+      scenarios = ((scn ?? []) as Array<Record<string, unknown>>).map((s) => {
+        const { scenario_items, ...rest } = s as Record<string, unknown> & { scenario_items?: Array<Record<string, unknown>> };
+        const items = [...(scenario_items ?? [])].sort((a, b) => Number(a.display_order ?? 0) - Number(b.display_order ?? 0));
+        return { ...rest, is_locked: Boolean(rest.is_locked), items: items.map(({ display_order: _o, ...it }) => ({ ...it, is_included: it.is_included !== false })) };
+      });
+      const { data: ev } = await supabase
+        .from("budget_approval_events")
+        .select("id, scenario_id, action, actor_name, created_at")
+        .eq("project_id", projectId)
+        .eq("action", "approve")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      approval_events = ev ?? [];
+    } catch {
+      // migration client_scenario_approval ainda não aplicada
+    }
+
     const quotes = ((quotesRes.data ?? []) as Array<Record<string, unknown>>).map((q) => ({
       id: String(q.id),
       discipline: q.scope_item_id ? disciplinaPorEscopo.get(String(q.scope_item_id)) ?? null : null,
@@ -301,6 +328,8 @@ Deno.serve(async (req) => {
         visits: visitsRes.data ?? [],
         quotes,
         analysis_imports,
+        scenarios,
+        approval_events,
         scope_items,
         purchases: purchasesRes.data ?? [],
         onboarding,

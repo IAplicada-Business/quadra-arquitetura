@@ -1,6 +1,6 @@
 # API
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 There is no REST server of our own. The interfaces are: 16 Supabase Edge Functions, 5 Postgres RPCs, 2 Realtime channels, and PostgREST table access (see [data-model.md](data-model.md)).
 
@@ -21,6 +21,7 @@ There is no REST server of our own. The interfaces are: 16 Supabase Edge Functio
 | `delete-user` | Admin removes a user | false | Bearer token, admin role | `src/pages/AdminUsersPage.tsx` |
 | `get-client-portal-data` | Portal payload | false | Portal token | `src/hooks/useLivePortalData.ts` |
 | `submit-client-response` | Client answers a pending item | false | Portal token | `src/pages/ClientPortal.tsx` |
+| `submit-scenario-action` | Client checks items and approves a budget scenario | false | Portal token | `src/pages/ClientPortal.tsx` |
 | `check-notifications` | Notification sweep | default | None | No caller found |
 | `chat-assistant` | AI chat with business context (stream) | false | Bearer token (`getClaims`) | `src/hooks/useAIChat.ts` |
 | `project-ai-assistant` | Project AI actions | false | Bearer token (`getClaims`) | `src/hooks/useProjectAI.ts`, `ProjectScopeTab`, `ProjectTrackingTab`, `ProjectScenariosTab` |
@@ -63,6 +64,13 @@ There is no REST server of our own. The interfaces are: 16 Supabase Edge Functio
 - Output 200: `{ success: true, data, duplicate?: true }`.
 - Errors: 400 missing field or invalid status, 403 invalid or expired token, 500 insert or generic.
 - Behavior: BR-099 to BR-101.
+
+### `submit-scenario-action`
+
+- Input: `{ token, action, scenario_id, item_id?, is_included?, client_name? }`, action in `toggle_item | approve`. `verify_jwt = false` (the portal token is the only credential).
+- Output 200: `{ success: true, total }` for `toggle_item`; `{ success: true, approved_at, total }` or `{ success: true, duplicate: true }` for `approve`.
+- Errors: 400 missing field or invalid name, 403 invalid or expired token, 404 scenario or item not in the token's project, 409 scenario already approved or locked, 422 approve with no included item, 500 generic.
+- Behavior: BR-163 to BR-165. Shared rules live in `supabase/functions/_shared/scenarioApproval.ts` (also imported by `src/lib/portalScenarioApproval.ts`).
 
 ### `check-notifications`
 
@@ -114,6 +122,7 @@ Notes:
 |---|---|---|---|
 | `portal:<token>` | broadcast, event `portal_changed` | SQL `notify_client_portal_change` (`realtime.send`) | `src/hooks/useLivePortalData.ts` |
 | `notifications-realtime-<userId>-<random>` | `postgres_changes` INSERT on `notifications` filtered by `user_id` | Postgres | `src/hooks/useNotifications.ts` |
+| `staff-sync-<userId>-<random>` | `postgres_changes` `*` on the project tables listed in `REALTIME_TABLE_QUERY_KEYS` | Postgres (tables in `supabase_realtime`, migration `20261113150000_realtime_publication.sql`) | `src/hooks/useRealtimeInvalidation.ts`, mounted in `src/components/layout/AppLayout.tsx` |
 
 ## Client-side helpers
 

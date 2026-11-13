@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PortalData } from "@/lib/portal";
 
 /** Conferência periódica, para quando o aviso em tempo real não chega. */
-export const PORTAL_POLL_MS = 15_000;
+export const PORTAL_POLL_MS = 5_000;
 /** Junta rajadas de avisos (ex.: reordenar 30 atividades) numa recarga só. */
 export const PORTAL_DEBOUNCE_MS = 300;
 
@@ -25,7 +25,10 @@ function subscribePortalChanges(token: string, onChange: () => void): () => void
       const channel = supabase
         .channel(portalChannelTopic(token))
         .on("broadcast", { event: "portal_changed" }, () => onChange())
-        .subscribe();
+        .subscribe((status?: string) => {
+          // Canal caiu ou reconectou: recarrega já, sem esperar a conferência periódica.
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "SUBSCRIBED") onChange();
+        });
       cleanup = () => {
         void supabase.removeChannel(channel);
       };

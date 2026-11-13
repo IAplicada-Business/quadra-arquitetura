@@ -1,6 +1,6 @@
 # Data model
 
-Last verified: 2026-11-13, commit ece07d4 (branch fix/orcamentos-escopo-manual-fornecedor) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 Source of truth: `supabase/migrations/` (126 files, first `20260206155922_*.sql`, last `20261106120100_site_media_bucket.sql`). `src/integrations/supabase/types.ts` is generated and lags behind: it lacks `blog_posts`, `instagram_profiles`, `instagram_metrics` and newer columns (see [open-questions.md](open-questions.md)). All tables live in schema `public` and, with few exceptions, have RLS enabled.
 
@@ -11,7 +11,7 @@ Source of truth: `supabase/migrations/` (126 files, first `20260206155922_*.sql`
 | Identity and access | `profiles`, `user_roles`, `user_permissions`, `team_members`, `settings` |
 | Commercial | `leads`, `lead_form_submissions`, `acquisition_channels`, `clients`, `proposals`, `proposal_templates`, `proposal_assets`, `proposal_blocks`, `contracts`, `contract_templates` |
 | Projects | `projects`, `project_rooms`, `project_activities`, `schedule_tasks`, `schedule_scenarios`, `schedule_scenario_activities`, `activity_templates`, `activity_template_items`, `default_disciplines`, `discipline_priorities`, `delivery_checklist_items`, `client_closing_schedule`, `documents`, `plant_analyses` |
-| Scope and budget | `scope_items`, `budget_quotes`, `budget_quote_items`, `budgets`, `budget_analysis_imports`, `budget_discipline_suppliers`, `scenarios`, `scenario_items`, `suppliers`, `supplier_scopes`, `supplier_allocations`, `purchases`, `material_calculations`, `material_tracking`, `material_indices`, `discipline_material_estimates`, `labor_costs`, `calculation_parameters`, `calculation_rules`, `price_research` |
+| Scope and budget | `scope_items`, `budget_quotes`, `budget_quote_items`, `budgets`, `budget_analysis_imports`, `budget_discipline_suppliers`, `budget_approval_events`, `scenarios`, `scenario_items`, `suppliers`, `supplier_scopes`, `supplier_allocations`, `purchases`, `material_calculations`, `material_tracking`, `material_indices`, `discipline_material_estimates`, `labor_costs`, `calculation_parameters`, `calculation_rules`, `price_research` |
 | Tracking | `site_diary_entries`, `site_tracking`, `site_visits`, `weekly_reports`, `pending_items`, `reports` |
 | Finance | `payments`, `invoices`, `invoices_nf` |
 | Client portal | `client_portal_tokens`, `client_pending_responses`, `onboarding_templates`, `onboarding_sections`, `onboarding_project_overrides` |
@@ -66,6 +66,8 @@ Relationships come from column names in `types.ts` and migrations. Foreign key d
 | `scope_items` | `discipline`, `scope_type` (for example `contratado`), `status`, `estimated_value`, `payment_terms`; `note` column exists in migrations but not in `types.ts` |
 | `budget_quotes` | `scope_item_id`, `activity_id`, `discipline`, `supplier_id`, `supplier_name`, `value`, `material_estimate`, `delivery_time`, `payment_terms`, `status`, `revision`, `revision_number`, `is_current_revision`; `valid_until` in migrations, not in `types.ts` |
 | `budget_discipline_suppliers` | `project_id`, `discipline` (free text, unique with project), `supplier_id`, `user_id`. Responsible supplier per discipline/group in the Budget tab. Team RLS via `get_team_user_ids()`. Migration `20261113130000_budget_discipline_suppliers.sql`. |
+| `budget_approval_events` | `project_id`, `scenario_id`, `token_id`, `actor_name`, `action` (`toggle_item`, `approve`, `unlock`), `payload` jsonb, `created_at`. History of client approval. Team can read; only service role inserts `toggle_item`/`approve`; team may insert `unlock`. Migration `20261113140000_client_scenario_approval.sql`. |
+| `scenarios` (added columns) | `approved_by_name`, `approved_by_token_id`, `approved_at`, `approval_source` (`team` or `client`), `is_locked`. Client approval does not touch `is_approved`. |
 | `payments` | `source` (`escritorio`/`obra`/`cotacao` used in code), `payment_type`, `status`, `installment_number`, `total_installments`, `due_date`, `paid_date`, `parent_payment_id`, `budget_quote_id` |
 | `invoices_nf` | `nf_type` (`emitida` used in rules), `status`, `amount`, `competence_month`, `service_code`, recipient address fields, `sent_to_accountant_at` |
 | `client_portal_tokens` | `token`, `is_active`, `expires_at`, `project_id`; unique index: one active token per project |
@@ -141,3 +143,7 @@ The `invoices` bucket is public, which exposes fiscal documents to anyone with t
 - Counts per month: 2026-02: 17, 03: 47, 04: 20, 06: 14, 07: 1, 08: 9, 09: 8, 10: 7, 11: 3.
 - Some migrations are defensive (`IF NOT EXISTS`, `to_regclass` checks) because they were ported from another IAplicada project (see header of `20260915163213_buddy_oportunidades.sql`).
 - Application of migrations to production is not scripted here.
+
+## Realtime publication
+
+`supabase_realtime` also publishes the project tables in `REALTIME_TABLE_QUERY_KEYS` (migration `20261113150000_realtime_publication.sql`, idempotent). RLS still applies to what each user receives.

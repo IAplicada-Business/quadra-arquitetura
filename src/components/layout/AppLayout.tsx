@@ -6,6 +6,7 @@ import { PermissionGate } from "./PermissionGate";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AIChatBox } from "@/components/chat/AIChatBox";
 import { OportunidadesAprovacaoReminder } from "@/components/oportunidades-aprovacao-reminder";
+import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
 import {
   Sheet,
   SheetContent,
@@ -21,6 +22,7 @@ function getInitialCollapsed(): boolean {
 }
 
 export function AppLayout() {
+  useRealtimeInvalidation();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialCollapsed);
