@@ -12,7 +12,14 @@ export interface ScreenProps {
   onOpenPhoto: (url: string) => void;
   onGoTab: (tab: PortalTab) => void;
   submitting?: boolean;
+  /** Ação do cliente num cenário de orçamento (marcar item / aprovar). Devolve true se o servidor aceitou. */
+  onScenarioAction?: (a: ScenarioActionArgs) => Promise<boolean>;
+  clientName?: string | null;
 }
+
+export type ScenarioActionArgs =
+  | { action: "toggle_item"; scenarioId: string; itemId: string; isIncluded: boolean }
+  | { action: "approve"; scenarioId: string; clientName: string };
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="trilha-eyebrow">{children}</p>;

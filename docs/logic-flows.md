@@ -1,6 +1,6 @@
 # Logic flows
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 ## 1. Sign-in and screen access
 
@@ -105,7 +105,7 @@ sequenceDiagram
   S->>DB: notify each admin
   S-->>C: success (duplicate flag if repeated)
   DB->>RT: trigger sends portal_changed on team edits
-  RT-->>C: reload (debounced) plus 15 s poll
+  RT-->>C: reload (debounced) plus 5 s poll
 ```
 
 Rules: BR-093 to BR-102. Files: `supabase/functions/get-client-portal-data/index.ts`, `supabase/functions/submit-client-response/index.ts`, `src/hooks/useLivePortalData.ts`, `src/pages/ClientPortal.tsx`.

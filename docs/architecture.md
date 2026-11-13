@@ -1,6 +1,6 @@
 # Architecture
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 ## Overview
 
@@ -56,6 +56,7 @@ Pure logic in `src/lib/` is the most tested layer (see [testing.md](testing.md))
 | `supabase.functions.invoke` | Authenticated calls to edge functions | `src/components/projects/GenerateActivitiesDialog.tsx`, `src/pages/AdminUsersPage.tsx`, others |
 | Raw `fetch` to `/functions/v1/<name>` | Streaming (chat) and calls that need custom headers | `src/hooks/useAIChat.ts`, `src/hooks/useLivePortalData.ts`, `src/pages/ClientPortal.tsx` |
 | Realtime `postgres_changes` | Notification bell | `src/hooks/useNotifications.ts` |
+| Realtime `postgres_changes` (project tables) | Staff app stays in sync across devices within 5 s (cache invalidation) | `src/hooks/useRealtimeInvalidation.ts`, `src/lib/queryDefaults.ts` |
 | Realtime broadcast on topic `portal:<token>` (event `portal_changed`) | Live client portal refresh | `src/hooks/useLivePortalData.ts` (`portalChannelTopic`), SQL `notify_client_portal_change` |
 | SSE-like stream | AI chat answer | `supabase/functions/chat-assistant/index.ts` to `src/hooks/useAIChat.ts` |
 | `localStorage` | Sidebar state, theme, onboarding seen flag, reminder snooze | `src/components/layout/AppLayout.tsx`, `src/lib/oportunidades-aprovacao-reminder.ts` |

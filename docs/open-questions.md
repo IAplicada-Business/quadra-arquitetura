@@ -1,6 +1,6 @@
 # Open questions
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 Ambiguities, dead code, inconsistencies and possible bugs found while documenting. Nothing here was changed. Severity is a first guess: High (security, money, data loss), Medium (wrong behavior), Low (cleanup).
 
@@ -52,7 +52,7 @@ Ambiguities, dead code, inconsistencies and possible bugs found while documentin
 | OQ-27 | Medium | Cascade (`computeCascade`, `computeRecalculateAll`) uses calendar days, while timeline and reverse schedule use business days. | `src/hooks/useProjectActivities.ts` vs `src/lib/businessCalendar.ts` |
 | OQ-28 | Low | National holiday Nov 20 is applied to all years, including years before it became national. Ash Wednesday is a full holiday (code comment says half day). | `src/lib/businessCalendar.ts` |
 | OQ-29 | Low | `search-prices-bh` prompt hard-codes the year 2025. | `supabase/functions/search-prices-bh/index.ts` |
-| OQ-30 | Low | Portal live trigger covers 14 tables but not `budget_quotes`, `scope_items` or `purchases`, which the portal shows. They refresh by the 15 s poll only. | `20261013210000_client_portal_live_updates.sql` |
+| OQ-30 | Low | Resolved by `20261113160000_portal_live_scenarios.sql` (not applied until the migration runs): the portal trigger now also covers `budget_quotes`, `scope_items`, `purchases`, `scenarios`, `scenario_items`. | `20261113160000_portal_live_scenarios.sql` |
 
 ## Generated types and docs drift
 
@@ -81,3 +81,5 @@ Ambiguities, dead code, inconsistencies and possible bugs found while documentin
 | OQ-41 | Medium | No CI workflow. Tests, lint and build are not run automatically. |
 | OQ-42 | Medium | How migrations and edge functions reach production is not defined in the repo (Lovable sync or Supabase CLI). |
 | OQ-43 | Low | `src/test/q153.test.ts` and several comments refer to external sheets, videos and sprints ("Q153", "vídeo 16"). The source documents are not in the repo. |
+| OQ-44 | Medium | Cross-device sync and client scenario approval ship as files only. Applied to production on 2026-11-13 (migrations `20261113140000`, `20261113150000`, `20261113160000`; functions `submit-scenario-action` v1 and `get-client-portal-data` v8). `20261013210000` had never run there: only its 14-table trigger loop was applied (as `client_portal_live_updates_triggers`), because running the whole file would replace `notify_client_portal_change` with the older version that ignores `scenario_items`. On a fresh database run `20261013210000` first, then `20261113160000` (it redefines the function). | `supabase/migrations/` |
+| OQ-45 | Medium | The portal approval trusts a typed name plus the portal token (no login), so it is weak evidence of identity. The scenario model expected from the client (Camilla) may change `scenario_items` columns. | `supabase/functions/submit-scenario-action/index.ts` |

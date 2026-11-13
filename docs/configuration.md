@@ -1,6 +1,6 @@
 # Configuration
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 Only variable names are documented. Never commit or paste values.
 
@@ -79,6 +79,14 @@ Requires a `.env` with the `VITE_SUPABASE_*` names above. Node 22.15 was used fo
 | `preview` | `vite preview` |
 | `test` | `vitest run` |
 | `test:watch` | `vitest` |
+
+## Query cache and cross-device sync
+
+- Default `QueryClient` (`src/App.tsx`): `staleTime` 5 min, `refetchOnWindowFocus` off.
+- Project data keys (the values of `REALTIME_TABLE_QUERY_KEYS`) override it in `src/lib/queryDefaults.ts` (`applyProjectSyncDefaults`): `staleTime` and `refetchInterval` 5 s, refetch on focus and reconnect, no polling while the tab is hidden. This is the safety net behind Realtime (`useRealtimeInvalidation`), for blocked or dropped websockets.
+- Content, blog, Instagram and dashboard queries keep the 5 min default or their own `staleTime`.
+- The client portal polls every 5 s while visible (`PORTAL_POLL_MS` in `src/hooks/useLivePortalData.ts`).
+- The service worker (`vite.config.ts`) caches static assets only, never API data.
 
 ## Test
 

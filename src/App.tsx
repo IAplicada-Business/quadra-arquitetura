@@ -44,6 +44,8 @@ import ContentInstagram from "./pages/ContentInstagram";
 import TasksHub from "./pages/TasksHub";
 import BuddyBug from "./pages/BuddyBug";
 
+import { applyProjectSyncDefaults } from "@/lib/queryDefaults";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -53,6 +55,7 @@ const queryClient = new QueryClient({
     },
   },
 });
+applyProjectSyncDefaults(queryClient);
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();

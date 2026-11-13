@@ -1,6 +1,6 @@
 # Business rules (index)
 
-Last verified: 2026-11-13, commit ece07d4 (branch fix/orcamentos-escopo-manual-fornecedor) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 Rules are numbered `BR-001` to `BR-158` and split by domain. Ids are stable. Add new rules at the end of the right file with the next free number.
 
@@ -10,7 +10,7 @@ Rules are numbered `BR-001` to `BR-158` and split by domain. Ids are stable. Add
 | [business-rules/commercial.md](business-rules/commercial.md) | BR-016 to BR-041 | Leads, funnel, partners, proposals, contracts, project codes |
 | [business-rules/projects.md](business-rules/projects.md) | BR-042 to BR-077, BR-160 to BR-162 | Calendar, reverse schedule, prerequisites, checkpoints, scope, budget, tracking |
 | [business-rules/finance.md](business-rules/finance.md) | BR-078 to BR-092 | Payments, installments, financial dashboard, NF export |
-| [business-rules/portal.md](business-rules/portal.md) | BR-093 to BR-114, BR-159 | Client portal, onboarding, derived views |
+| [business-rules/portal.md](business-rules/portal.md) | BR-093 to BR-114, BR-163 to BR-165, BR-159 | Client portal, onboarding, derived views |
 | [business-rules/automation-ai.md](business-rules/automation-ai.md) | BR-115 to BR-136 | Notification sweep, AI behavior |
 | [business-rules/content-site.md](business-rules/content-site.md) | BR-137 to BR-158 | Public site, blog, uploads, Buddy board |
 

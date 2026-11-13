@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { buildOnboardingPlaceholders, sectionsFromJson, visibleSections } from "@/lib/onboarding";
 import { clientOpenCount, onboardingSeenKey, tabFromHash, type PortalTab } from "@/lib/portal";
 import { useLivePortalData } from "@/hooks/useLivePortalData";
+import type { ScenarioActionArgs } from "@/components/portal/screens/shared";
 import { QuadraWatermark } from "@/components/portal/TrilhaBrand";
 
 function readSeen(key: string): boolean {
@@ -216,10 +217,50 @@ export default function ClientPortal() {
     );
   }
 
+  const onScenarioAction = async (a: ScenarioActionArgs): Promise<boolean> => {
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-scenario-action`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: JSON.stringify({
+          token,
+          action: a.action,
+          scenario_id: a.scenarioId,
+          item_id: a.action === "toggle_item" ? a.itemId : undefined,
+          is_included: a.action === "toggle_item" ? a.isIncluded : undefined,
+          client_name: a.action === "approve" ? a.clientName : clientName || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Erro ao enviar");
+      if (a.action === "approve") {
+        setClientName(a.clientName);
+        toast.success(json.duplicate ? "Este orçamento já estava aprovado" : "Orçamento aprovado! A equipe foi avisada.");
+      } else if (data) {
+        // Atualiza na hora; a recarga abaixo confirma com o servidor.
+        setData({
+          ...data,
+          scenarios: (data.scenarios ?? []).map((s) =>
+            s.id !== a.scenarioId ? s : { ...s, items: s.items.map((i) => (i.id === a.itemId ? { ...i, is_included: a.isIncluded } : i)) },
+          ),
+        });
+      }
+      void refresh();
+      return true;
+    } catch (e: unknown) {
+      toast.error((e as Error).message);
+      void refresh();
+      return false;
+    }
+  };
+
   const openPendings = clientOpenCount(data);
   const screenProps = {
     data,
     submitting,
+    onScenarioAction,
+    clientName,
     onApprove: (reportId: string, item: string) => submitResponse(reportId, item, "aprovado"),
     onRespond: (reportId: string, item: string) => setRespondModal({ reportId, item }),
     onOpenPhoto: (url: string) => setLightboxUrl(url),

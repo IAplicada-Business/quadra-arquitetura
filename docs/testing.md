@@ -1,6 +1,6 @@
 # Testing
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit d629e0b (branch feat/sync-5s-aprovacao-cenarios-cliente) plus uncommitted working tree.
 
 ## Setup
 
@@ -18,7 +18,8 @@ Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working
 | Calendar and schedule | `businessCalendar.test.ts`, `reverseSchedule.test.ts`, `q153.test.ts`, `criticalPath.test.ts`, `reverseScheduleTable.test.tsx`, `cronogramaTabelas.test.tsx`, `resolveDonePatch.test.ts`, `prerequisiteTasks.test.ts` | `src/lib/businessCalendar.ts`, `reverseSchedule.ts`, `criticalPath.ts`, `prerequisiteTasks.ts`, `useProjectActivities.ts` |
 | Budget and accounts | `budgetImport.test.ts`, `budgetQuoteTable.test.tsx`, `budgetQuoteDiscipline.test.tsx`, `supplierScopeQuotes.test.ts`, `supplierScopeDialog.test.tsx`, `disciplineAccounts.test.ts`, `disciplinePieChart.test.tsx`, `cotacaoInstallments.test.ts` | matching `src/lib` files and components |
 | Commercial | `funnel.test.tsx`, `leadsPipelinePage.test.tsx`, `leadCapture.test.tsx`, `projectNumber.test.tsx`, `linkClientNotice.test.tsx`, `monthRange.test.ts`, `proposalBlocks.test.ts`, `proposalBlocksEditor.test.tsx`, `proposalCustomBlocks.test.tsx`, `proposalPageRenderer.test.tsx` | `src/lib/funnel.ts`, `projectNumber.ts`, proposal libs, pages |
-| Portal and onboarding | `portal.test.ts`, `portalTrail.test.ts`, `portalSchedule.test.ts`, `portalScenarios.test.ts`, `portalCompras.test.ts`, `portalUrl.test.ts`, `portalLinkDialog.test.tsx`, `clientPortal.test.tsx`, `useClientPortalToken.test.tsx`, `inicioEtapas.test.tsx`, `etapaScreen.test.tsx`, `comprasScreen.test.tsx`, `orcamentoAnaliseScreens.test.tsx`, `prestacaoScreen.test.tsx`, `clientCountdownList.test.tsx`, `closingPendings.test.tsx`, `onboarding.test.ts`, `onboardingEditor.test.tsx`, `onboardingTabs.test.tsx` | `src/lib/portal*.ts`, `onboarding.ts`, portal components |
+| Cross-device sync | `realtimeInvalidation.test.tsx` | `src/hooks/useRealtimeInvalidation.ts`, `src/lib/queryDefaults.ts` |
+| Portal and onboarding | `portal.test.ts`, `portalTrail.test.ts`, `portalSchedule.test.ts`, `portalScenarios.test.ts`, `portalCompras.test.ts`, `portalUrl.test.ts`, `portalLinkDialog.test.tsx`, `clientPortal.test.tsx`, `scenarioApprovalPortal.test.tsx`, `portalScenarioApproval.test.ts`, `useClientPortalToken.test.tsx`, `inicioEtapas.test.tsx`, `etapaScreen.test.tsx`, `comprasScreen.test.tsx`, `orcamentoAnaliseScreens.test.tsx`, `prestacaoScreen.test.tsx`, `clientCountdownList.test.tsx`, `closingPendings.test.tsx`, `onboarding.test.ts`, `onboardingEditor.test.tsx`, `onboardingTabs.test.tsx` | `src/lib/portal*.ts`, `onboarding.ts`, portal components |
 | Tracking | `weeklyReport.test.ts`, `weeklyAIContext.test.ts`, `weeklyReportsUI.test.tsx`, `trackingWeeklyReport.test.tsx`, `deliveryChecklist.test.ts`, `checklistPhotos.test.tsx`, `multiObras.test.ts` | matching files |
 | Site and blog | `siteContent.test.ts`, `siteContentTab.test.tsx`, `landingSiteContent.test.tsx`, `landingSections.test.tsx`, `landingEfeitos.test.tsx`, `motion.test.tsx`, `blog.test.ts`, `blogPages.test.tsx`, `blogPostsTab.test.tsx`, `adminPublicar.test.tsx`, `siteImageUpload.test.ts`, `mediaUpload.test.ts` | `src/lib/siteContent.ts`, `blog.ts`, landing and blog components |
 | Buddy board | `oportunidades.functions.test.ts`, `oportunidades-aprovacao-reminder.test.ts`, `buddyMenus.test.tsx` | `src/lib/oportunidades*.ts`, buddy components |

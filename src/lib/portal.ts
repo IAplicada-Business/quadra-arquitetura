@@ -164,6 +164,10 @@ export interface PortalData {
   quotes?: PortalQuote[];
   /** Análises em HTML importadas pela equipe (exibidas isoladas, sem scripts). */
   analysis_imports?: { id: string; title: string; html: string; created_at: string }[];
+  /** Cenários de orçamento do projeto (o cliente marca itens e aprova). */
+  scenarios?: PortalScenario[];
+  /** Histórico de aprovações (quem e quando). */
+  approval_events?: PortalApprovalEvent[];
   /** Disciplinas do escopo (status de contratação e notas). */
   scope_items?: PortalScopeItem[];
   /** Compras do cliente, base do cronograma de compra. */
@@ -436,4 +440,35 @@ export function groupPhotosByDate(photos: PortalPhoto[]): PhotoGroup[] {
 
 export function formatCurrencyBRL(v: number | null | undefined): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v ?? 0);
+}
+
+/* ------------------------------------------------------------------ */
+/* Cenários de orçamento (aprovação pelo cliente)                      */
+/* ------------------------------------------------------------------ */
+
+export interface PortalScenarioItem {
+  id: string;
+  discipline: string | null;
+  description: string | null;
+  estimated_value: number | null;
+  is_included: boolean;
+}
+
+export interface PortalScenario {
+  id: string;
+  name: string;
+  total_value: number | null;
+  is_locked: boolean;
+  approved_at: string | null;
+  approved_by_name: string | null;
+  approval_source: "team" | "client" | null;
+  items: PortalScenarioItem[];
+}
+
+export interface PortalApprovalEvent {
+  id: string;
+  scenario_id: string;
+  action: "toggle_item" | "approve" | "unlock";
+  actor_name: string | null;
+  created_at: string;
 }

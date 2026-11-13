@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useScenarios, Scenario } from "@/hooks/useScenarios";
+import { useBudgetApprovalEvents } from "@/hooks/useBudgetApprovalEvents";
 import { useProjectDetail } from "@/hooks/useProjectDetail";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -52,6 +53,7 @@ export function ProjectScenariosTab({ projectId, onTabChange }: ProjectScenarios
   const queryClient = useQueryClient();
   const { project, updateProject } = useProjectDetail(projectId);
   const { scenarios, isLoading, createScenario, removeScenario, addItem, updateItem, removeItem, approveScenario } = useScenarios(projectId);
+  const { events: approvalEvents, unlock } = useBudgetApprovalEvents(projectId);
 
   const [newScenarioName, setNewScenarioName] = useState("");
   const [addItemOpen, setAddItemOpen] = useState<string | null>(null);
@@ -601,8 +603,16 @@ export function ProjectScenariosTab({ projectId, onTabChange }: ProjectScenarios
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-base">{scenario.name}</CardTitle>
                       {scenario.is_approved && <Badge variant="default" className="text-xs bg-green-600">Aprovado</Badge>}
+                      {scenario.approval_source === "client" && scenario.approved_at && (
+                        <Badge variant="secondary" className="text-xs" data-testid={`scenario-client-approved-${scenario.id}`}>Aprovado pelo cliente</Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
+                      {scenario.is_locked && scenario.approval_source === "client" && (
+                        <Button size="sm" variant="outline" onClick={() => unlock.mutate(scenario.id)} disabled={unlock.isPending}>
+                          <RotateCcw className="h-3 w-3 mr-1" /> Reabrir para o cliente
+                        </Button>
+                      )}
                       {!scenario.is_approved && (
                         <Button size="sm" variant="default" onClick={() => handleApproveClick(scenario)} disabled={approveScenario.isPending}>
                           <Check className="h-3 w-3 mr-1" /> Aprovar
@@ -615,6 +625,23 @@ export function ProjectScenariosTab({ projectId, onTabChange }: ProjectScenarios
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {scenario.approval_source === "client" && scenario.approved_at && (
+                    <div className="text-xs text-muted-foreground" data-testid={`scenario-approval-history-${scenario.id}`}>
+                      Aprovado por <strong>{scenario.approved_by_name}</strong> em {new Date(scenario.approved_at).toLocaleString("pt-BR")}. Parcelas e escopo ainda dependem da equipe (botão Aprovar).
+                    </div>
+                  )}
+                  {approvalEvents.filter((e) => e.scenario_id === scenario.id).length > 0 && (
+                    <details className="text-xs text-muted-foreground">
+                      <summary className="cursor-pointer">Histórico de aprovação</summary>
+                      <ul className="mt-1 space-y-0.5">
+                        {approvalEvents.filter((e) => e.scenario_id === scenario.id).map((e) => (
+                          <li key={e.id}>
+                            {new Date(e.created_at).toLocaleString("pt-BR")} · {e.action === "approve" ? "Aprovado" : "Reaberto"} · {e.actor_name || "—"}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                   <div className="flex gap-4 text-sm flex-wrap">
                     <span>Incluído: <strong className={overBudget ? "text-destructive" : "text-green-600"}>{formatCurrency(totalIncluded)}</strong></span>
                     <span>Total: <strong>{formatCurrency(totalAll)}</strong></span>

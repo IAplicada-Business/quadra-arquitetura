@@ -24,6 +24,11 @@ export interface Scenario {
   name: string;
   total_value: number;
   is_approved: boolean;
+  /** Aprovação feita pelo cliente na Trilha (só registra; a equipe gera parcelas e escopo). */
+  approved_at?: string | null;
+  approved_by_name?: string | null;
+  approval_source?: "team" | "client" | null;
+  is_locked?: boolean;
   created_at: string;
   updated_at: string;
   scenario_items?: ScenarioItem[];
