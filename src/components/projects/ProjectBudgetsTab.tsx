@@ -13,7 +13,9 @@ import { useBudgetQuotes } from "@/hooks/useBudgetQuotes";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useProjectDisciplines } from "@/hooks/useProjectDisciplines";
+import { useBudgetDisciplineSuppliers } from "@/hooks/useBudgetDisciplineSuppliers";
 import { BudgetQuoteTable } from "./BudgetQuoteTable";
 import { BudgetQuoteForm } from "./BudgetQuoteForm";
 import { ProjectPurchasesTab } from "./ProjectPurchasesTab";
@@ -75,6 +77,18 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { activities } = useProjectActivities(projectId);
+  // Mesma fonte de disciplinas do Cronograma e dos Materiais.
+  const { disciplines: scopeDisciplines } = useProjectDisciplines(projectId);
+  const { getSupplierId: getResponsibleId, setResponsible } = useBudgetDisciplineSuppliers(projectId);
+  const { data: supplierList = [] } = useQuery({
+    queryKey: ["suppliers", "active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("suppliers").select("id, name, is_active").order("name");
+      if (error) throw error;
+      return (data ?? []).filter((s) => s.is_active !== false);
+    },
+  });
+  const [formDiscipline, setFormDiscipline] = useState<string | undefined>(undefined);
   const { indices } = useMaterialIndices();
   const { research, getRecentForActivity } = usePriceResearch(projectId);
   const [formOpen, setFormOpen] = useState(false);
@@ -118,12 +132,17 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
      visto, começando pelas atividades do escopo. */
   const canonicalDiscipline = useMemo(() => {
     const map = new Map<string, string>();
-    for (const a of activities) {
-      const d = a.discipline?.trim();
+    const add = (raw: string | null | undefined) => {
+      const d = raw?.trim();
       if (d && !map.has(normalizeKey(d))) map.set(normalizeKey(d), d);
-    }
+    };
+    for (const a of activities) add(a.discipline);
+    // Disciplinas do Escopo (atividades, ou itens de escopo se não houver atividades).
+    for (const d of scopeDisciplines) add(d);
+    // Itens de escopo antigos também viram seção, mesmo com atividades no Escopo.
+    for (const si of scopeItems) if (!si.parent_id) add(si.discipline);
     return map;
-  }, [activities]);
+  }, [activities, scopeDisciplines, scopeItems]);
 
   // Disciplina de cada cotação: vínculo gravado → item de escopo → atividade → nome.
   const quotesWithDiscipline = useMemo(() => {
@@ -203,42 +222,24 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
     return { total, estimated, byDiscipline, estimatedByDiscipline };
   }, [groupedQuotes]);
 
-  const handleAddQuote = (scopeItemId: string | null) => {
+  const handleAddQuote = (scopeItemId: string | null, discipline?: string) => {
     setActiveScopeId(scopeItemId);
+    setFormDiscipline(discipline);
     setEditingQuote(null);
     setFormOpen(true);
   };
 
   const handleEditQuote = (quote: Record<string, unknown>) => {
     setActiveScopeId(quote.scope_item_id as string);
+    setFormDiscipline(undefined);
     setEditingQuote(quote);
     setFormOpen(true);
   };
 
   const handleSubmit = async (data: Record<string, unknown>) => {
-    const { _link_discipline: linkDiscipline, ...quoteData } = data as
-      { _link_discipline?: string | null } & Record<string, unknown>;
-
-    // Disciplina escolhida que ainda não tem item de escopo: cria o item
-    // (é o único lugar onde budget_quotes guarda o vínculo) e usa o id dele.
-    if (linkDiscipline && user) {
-      const { data: created, error } = await supabase
-        .from("scope_items")
-        .insert({
-          project_id: projectId,
-          user_id: user.id,
-          discipline: linkDiscipline,
-          scope_type: "contratado",
-        } as never)
-        .select("id")
-        .single();
-      if (error) {
-        toast({ title: "Erro ao vincular disciplina", description: error.message, variant: "destructive" });
-        return;
-      }
-      quoteData.scope_item_id = created.id;
-      queryClient.invalidateQueries({ queryKey: ["scope_items", projectId] });
-    }
+    // A disciplina/grupo já vem em data.discipline e é gravada na própria
+    // cotação (budget_quotes.discipline): não cria mais item de escopo.
+    const quoteData = { ...data };
 
     if (editingQuote) {
       update.mutate({ id: editingQuote.id as string, ...quoteData });
@@ -378,7 +379,7 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={openImportDialog} disabled={activities.length === 0}>
+              <Button variant="outline" size="sm" onClick={openImportDialog}>
                 <FileDown className="h-4 w-4 mr-1" /> Importar / atualizar do Escopo
               </Button>
               <Button variant="outline" size="sm" disabled={aiLoading || activities.length === 0} onClick={async () => {
@@ -416,8 +417,11 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
               <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
             </div>
           ) : disciplineSections.length === 0 && (groupedQuotes["sem_disciplina"] ?? []).length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
-              Cadastre atividades com disciplina na aba "Escopo" para começar a adicionar cotações.
+            <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg space-y-3">
+              <p>Nenhuma disciplina ainda. Cadastre atividades na aba "Escopo" ou crie a primeira cotação à mão.</p>
+              <Button size="sm" onClick={() => handleAddQuote(null)}>
+                <Plus className="h-4 w-4 mr-1" /> Nova cotação / grupo
+              </Button>
             </div>
           ) : (
             <>
@@ -451,7 +455,23 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
                             </span>
                             <p className="text-[10px] text-muted-foreground">{hasApproved ? "aprovado" : estimatedTotal > 0 ? "estimado" : "sem valor ainda"}</p>
                           </div>
-                          <Button size="sm" variant="outline" onClick={() => handleAddQuote(matchingScopeItem?.id ?? null)}>
+                          {!isUnassigned && (
+                            <Select
+                              value={getResponsibleId(disc) ?? "__none__"}
+                              onValueChange={(v) => setResponsible.mutate({ discipline: disc, supplierId: v === "__none__" ? null : v })}
+                            >
+                              <SelectTrigger className="h-8 w-[200px] text-xs" data-testid={`budget-responsible-${disc}`} aria-label={`Fornecedor responsável de ${disc}`}>
+                                <SelectValue placeholder="Fornecedor responsável" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">Sem responsável</SelectItem>
+                                {supplierList.map((sp) => (
+                                  <SelectItem key={sp.id} value={sp.id}>{sp.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => handleAddQuote(matchingScopeItem?.id ?? null, isUnassigned ? undefined : disc)}>
                             <Plus className="h-3.5 w-3.5 mr-1" /> Cotação
                           </Button>
                         </div>
@@ -525,6 +545,8 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
             onSubmit={handleSubmit}
             initialData={editingQuote}
             scopeItemId={activeScopeId || undefined}
+            defaultDiscipline={formDiscipline}
+            defaultSupplierId={formDiscipline ? getResponsibleId(formDiscipline) : undefined}
             scopeItemName={activeScopeName}
             revisionNumber={currentRev}
             isLoading={create.isPending || update.isPending}

@@ -139,6 +139,51 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_discipline_suppliers: {
+        Row: {
+          created_at: string
+          discipline: string
+          id: string
+          project_id: string
+          supplier_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discipline: string
+          id?: string
+          project_id: string
+          supplier_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discipline?: string
+          id?: string
+          project_id?: string
+          supplier_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_discipline_suppliers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_discipline_suppliers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_quote_items: {
         Row: {
           budget_quote_id: string

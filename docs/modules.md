@@ -1,6 +1,6 @@
 # Modules
 
-Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+Last verified: 2026-11-13, commit ece07d4 (branch fix/orcamentos-escopo-manual-fornecedor) plus uncommitted working tree.
 
 There is one deployable front end and one Supabase backend. "Modules" below are functional areas. The repo has no package boundaries, so the import rules are conventions seen in the code.
 
@@ -108,7 +108,7 @@ Note: no link to `/projects/kanban` exists in `src/` (see [open-questions.md](op
 
 ## 7. Budget and purchases
 
-- Files: `src/lib/budgetImport.ts`, `supplierScopeQuotes.ts`, `cotacaoInstallments.ts`, `disciplineAccounts.ts`, `disciplineColors.ts`; hooks `useBudgetQuotes`, `useBudgetImport`, `useScopeItems`, `useSupplierScopes`, `useSupplierAllocations`, `usePurchaseCategories`, `useProjectPurchases`, `useMaterialCalc`, `useMaterialTracking`, `useMaterialIndices`, `useLaborCosts`, `useCostReferenceTable`, `useCalculationRules`, `useCalculationParameters`, `usePriceResearch`, `useScenarios`.
+- Files: `src/lib/budgetImport.ts`, `supplierScopeQuotes.ts`, `cotacaoInstallments.ts`, `disciplineAccounts.ts`, `disciplineColors.ts`; hooks `useBudgetQuotes`, `useBudgetImport`, `useBudgetDisciplineSuppliers`, `useScopeItems`, `useSupplierScopes`, `useSupplierAllocations`, `usePurchaseCategories`, `useProjectPurchases`, `useMaterialCalc`, `useMaterialTracking`, `useMaterialIndices`, `useLaborCosts`, `useCostReferenceTable`, `useCalculationRules`, `useCalculationParameters`, `usePriceResearch`, `useScenarios`.
 - Pages: `Suppliers`. Components: `BudgetQuoteTable`, `BudgetQuoteForm`, `BudgetEstimator`, `ProjectScenariosTab`, `ProjectPurchasesTab`, `ShoppingListDialog`, `PriceSearchDialog`, `SupplierScopeDialog`, `src/components/construction/Supplier*`.
 - Edge functions: `search-prices-bh`, `project-ai-assistant` (`analyze_budget`, `estimate_costs`, `generate_materials`).
 - Rules: [business-rules/projects.md](business-rules/projects.md) and [business-rules/finance.md](business-rules/finance.md).
