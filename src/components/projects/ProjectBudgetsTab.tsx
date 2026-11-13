@@ -18,6 +18,7 @@ import { BudgetQuoteTable } from "./BudgetQuoteTable";
 import { BudgetQuoteForm } from "./BudgetQuoteForm";
 import { ProjectPurchasesTab } from "./ProjectPurchasesTab";
 import { ShoppingListDialog } from "./ShoppingListDialog";
+import { ImportAnalysisDialog } from "./ImportAnalysisDialog";
 import { ShoppingCart, Calculator } from "lucide-react";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { BudgetPreviewDialog } from "./BudgetPreviewDialog";
@@ -80,6 +81,7 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
   const [editingQuote, setEditingQuote] = useState<Record<string, unknown> | null>(null);
   const [activeScopeId, setActiveScopeId] = useState<string | null>(null);
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
+  const [analysisImportOpen, setAnalysisImportOpen] = useState(false);
   const [budgetPreviewOpen, setBudgetPreviewOpen] = useState(false);
   const [priceSearchOpen, setPriceSearchOpen] = useState(false);
   const [priceSearchActivity, setPriceSearchActivity] = useState<{
@@ -388,6 +390,9 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
               </Button>
               <Button variant="outline" size="sm" onClick={() => createRevision.mutate(currentRev)} disabled={createRevision.isPending}>
                 <RefreshCw className="h-4 w-4 mr-1" /> Nova Revisão
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setAnalysisImportOpen(true)}>
+                <FileDown className="h-4 w-4 mr-1" /> Importar análise (HTML)
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShoppingListOpen(true)}>
                 <ShoppingCart className="h-4 w-4 mr-1" /> Lista de Compras
@@ -761,6 +766,7 @@ export function ProjectBudgetsTab({ projectId, projectName = "" }: ProjectBudget
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ImportAnalysisDialog projectId={projectId} open={analysisImportOpen} onOpenChange={setAnalysisImportOpen} />
     </div>
   );
 }

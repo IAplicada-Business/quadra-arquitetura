@@ -34,6 +34,15 @@ describe("Análise orçamentária", () => {
     expect(screen.getByRole("heading", { name: "Análise orçamentária" })).toBeInTheDocument();
     expect(screen.getByTestId("cenarios")).toBeInTheDocument();
   });
+  it("mostra o HTML importado num iframe sem scripts", () => {
+    analise.vazio = true;
+    const d = { ...data, analysis_imports: [{ id: "a1", title: "Cenários Q19", html: "<p>oi</p>", created_at: "2026-11-13" }] } as unknown as PortalData;
+    render(<AnaliseScreen {...props} data={d} />);
+    const frame = screen.getByTitle("Cenários Q19");
+    expect(frame).toHaveAttribute("sandbox", "");
+    expect(frame).toHaveAttribute("srcdoc", "<p>oi</p>");
+    expect(screen.queryByText(/aparece aqui quando a equipe tiver propostas/)).toBeNull();
+  });
   it("sem propostas mostra aviso", () => {
     analise.vazio = true;
     render(<AnaliseScreen {...props} />);

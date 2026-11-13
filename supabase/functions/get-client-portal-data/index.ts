@@ -248,6 +248,20 @@ Deno.serve(async (req) => {
       // colunas ainda não existem: segue sem validade e sem nota
     }
 
+    // Análises em HTML importadas pela equipe (tabela nova; sem ela, segue sem).
+    let analysis_imports: unknown[] = [];
+    try {
+      const { data: imp } = await supabase
+        .from("budget_analysis_imports")
+        .select("id, title, html, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      analysis_imports = imp ?? [];
+    } catch {
+      // tabela ainda não existe
+    }
+
     const quotes = ((quotesRes.data ?? []) as Array<Record<string, unknown>>).map((q) => ({
       id: String(q.id),
       discipline: q.scope_item_id ? disciplinaPorEscopo.get(String(q.scope_item_id)) ?? null : null,
@@ -286,6 +300,7 @@ Deno.serve(async (req) => {
         closing_items: closingRes.data ?? [],
         visits: visitsRes.data ?? [],
         quotes,
+        analysis_imports,
         scope_items,
         purchases: purchasesRes.data ?? [],
         onboarding,

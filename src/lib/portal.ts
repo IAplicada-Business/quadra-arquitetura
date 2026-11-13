@@ -162,6 +162,8 @@ export interface PortalData {
   closing_items?: PortalClosingItem[];
   /** Cotações por disciplina, base dos cenários orçamentários. */
   quotes?: PortalQuote[];
+  /** Análises em HTML importadas pela equipe (exibidas isoladas, sem scripts). */
+  analysis_imports?: { id: string; title: string; html: string; created_at: string }[];
   /** Disciplinas do escopo (status de contratação e notas). */
   scope_items?: PortalScopeItem[];
   /** Compras do cliente, base do cronograma de compra. */

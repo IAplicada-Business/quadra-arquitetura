@@ -1,0 +1,64 @@
+# Business rules: projects, schedule, budget, tracking
+
+Last verified: 2026-11-08, commit 4ad4101 (branch main) plus uncommitted working tree.
+
+## Project and calendar
+
+| ID | Rule | Where | Notes and tests |
+|---|---|---|---|
+| BR-042 | Project statuses: `proposta`, `contrato`, `projeto`, `planejamento`, `mobilizacao`, `execucao`, `concluido`. Sub-phases exist for `projeto` (Levantamento, Briefing, Estudo Preliminar, Revisão, Anteprojeto (3D), Projeto Executivo) and `planejamento` (Memória de Cálculo, Orçamento, Reunião de Prioridades). | `src/lib/projectConstants.ts` | |
+| BR-043 | A business day is Monday to Friday, not a national holiday, and outside the year-end recess (20 Dec to 5 Jan). Extra holidays and disabling the recess are options. | `src/lib/businessCalendar.ts` (`isBusinessDay`, `BusinessDayOptions`) | Test: `src/test/businessCalendar.test.ts`. |
+| BR-044 | Holidays: Jan 1, Apr 21, May 1, Sep 7, Oct 12, Nov 2, Nov 15, Nov 20, Dec 25, plus Easter-based Carnival Monday and Tuesday, Ash Wednesday, Good Friday and Corpus Christi (Easter minus 48, 47, 46, 2 days and plus 60). | `src/lib/businessCalendar.ts` (`holidaysForYear`) | Ash Wednesday is treated as a full holiday. |
+| BR-045 | `addBusinessDays` first moves a non-business start to the next business day, then adds days. | `src/lib/businessCalendar.ts` | |
+| BR-046 | Timeline build: each step starts the next business day after the latest end of its dependencies (or at the project start). End = start plus duration minus one business day. Cycles are tolerated: the cyclic dependency is ignored. | `src/lib/businessCalendar.ts` (`buildTimeline`) | Test: `src/test/businessCalendar.test.ts`. |
+
+## Reverse schedule
+
+| ID | Rule | Where | Notes and tests |
+|---|---|---|---|
+| BR-047 | Row metrics in business days: total (inclusive, minimum 1), worked (start to today, capped at total), remaining, overdue (days after end when not finished), days to start. Finished statuses: `concluida`, `concluido`, `executado`. A finished row shows worked = total, remaining 0, overdue 0. | `src/lib/reverseSchedule.ts` (`computeReverseMetrics`) | Test: `src/test/reverseSchedule.test.ts`. |
+| BR-048 | "Sheet" duration for display only: weekdays between start and end, ignoring holidays, not counting the start day (like `NETWORKDAYS - 1`). The rest of the system uses holiday-aware counting. | `src/lib/reverseSchedule.ts` (`sheetBusinessDays`) | Test: `src/test/q153.test.ts`. |
+| BR-049 | Inline edit: changing start keeps end (end follows if start passes it); changing end keeps start (start follows if end goes before it); changing duration recomputes end from start. Duration is always recomputed from the dates. Invalid values return null. | `src/lib/reverseSchedule.ts` (`applyReverseEdit`) | Tests: `src/test/reverseSchedule.test.ts`, `src/test/reverseScheduleTable.test.tsx`. |
+| BR-050 | Critical path (CPM): only tasks with a start date and duration over 0 count. A task is critical when float is 0. Dependencies outside the set are ignored. Cycles fall back to remaining order. | `src/lib/criticalPath.ts` (`computeCriticalPath`) | Test: `src/test/criticalPath.test.ts`. Uses calendar days. |
+| BR-051 | Cascade after changing an activity end: dependents start the day after the predecessor ends and keep their duration (calendar days). Each dependent is visited once. | `src/hooks/useProjectActivities.ts` (`computeCascade`) | Uses calendar days, unlike BR-046 (see [open-questions.md](../open-questions.md)). Test: `src/test/cronogramaTabelas.test.tsx` (inferred). |
+| BR-052 | "Recalculate schedule" walks activities in topological order and moves each start after its latest predecessor end. | `src/hooks/useProjectActivities.ts` (`computeRecalculateAll`) | |
+| BR-053 | Activity status values: `pendente`, `em_andamento`, `concluida`, `bloqueada`. Progress must be 0 to 100. | `supabase/migrations/20260331215118_*.sql` (`validate_project_activity`) | DB trigger. |
+| BR-054 | Marking an activity delivered sets `concluida` and 100%. Reopening sets `em_andamento` if its start is today or earlier, else `pendente`, with progress 0. The change is mirrored to `schedule_tasks` (`pendente`->`planejado`, `em_andamento`->`em_execucao`, `concluida`->`executado`, `bloqueada`->`atrasado`) only if the activity was already synced. | `src/hooks/useProjectActivities.ts` (`resolveDonePatch`, `ACTIVITY_TO_TASK_STATUS`) | Test: `src/test/resolveDonePatch.test.ts`. |
+| BR-055 | Delivery checklist progress = resolved/total, rounded percent, 0 when empty. Pending items group by activity, with `null` meaning "general". A WhatsApp text of open items is built per group. | `src/lib/deliveryChecklist.ts` | Tests: `src/test/deliveryChecklist.test.ts`, `src/test/checklistPhotos.test.tsx`. |
+| BR-056 | Closing schedule (what the client must decide) has statuses `em_cotacao`, `aprovado`, `comprado`, `entregue`. | `src/lib/closingStatus.ts` | Test: `src/test/closingPendings.test.tsx`. |
+
+## Prerequisite tasks and checkpoints
+
+| ID | Rule | Where | Notes and tests |
+|---|---|---|---|
+| BR-057 | Disciplines with fabrication or lead time generate a chain of internal tasks before the activity: Marcenaria (-45, -40, -30, -10, 0 business days), Marmoraria (-20, -18, 0), Vidros (-12, -10, 0), Esquadrias (-30, -28, 0), Serralheria (-20, -18, 0), Louças e Metais (-25, -15, -2), Iluminação (-25, -10, 0), Revestimento and Piso (-20, -10, -2). | `src/lib/prerequisiteTasks.ts` (`PREREQ_BY_DISCIPLINE`) | Test: `src/test/prerequisiteTasks.test.ts`. Tasks are created with category and type (`cronograma`, `orcamentos`, `compras`; `obra`, `compras`, `administrativo`). |
+| BR-058 | For Marcenaria, Marmoraria, Vidros, Esquadrias and Serralheria, a set `medicao_date` re-anchors the chain: offsets run from the measurement date. | `src/lib/prerequisiteTasks.ts` (`MEDICAO_ANCHORED_DISCIPLINES`, `isMedicaoAnchored`) | Test: `src/test/prerequisiteTasks.test.ts`. |
+| BR-059 | Discipline lookup is normalized (lower case, no accents or punctuation) and accepts aliases (for example "marceneiro", "granito", "vidracaria"). If the discipline does not match, the activity name is tried. | `src/lib/prerequisiteTasks.ts` (`resolvePrerequisiteDiscipline`) | Test: `src/test/prerequisiteTasks.test.ts`. |
+| BR-060 | Checkpoints (site visits) are generated without AI by discipline: for example Demolição, Alvenaria, Estrutura, Hidráulica, Elétrica, Impermeabilização: inicio, execucao_critica, finalizacao; Marcenaria, Marmoraria, Esquadrias, Serralheria: medicao, recebimento, instalacao. Unknown discipline gets inicio and finalizacao. Dates: medicao and recebimento 2 days before start; inicio at start; execucao_critica at midpoint; instalacao and finalizacao at end. | `supabase/functions/generate-checkpoints/index.ts` (`CHECKPOINT_RULES`, `checkpointsFor`) | Activities without both dates yield none. |
+| BR-061 | With `replace_existing`, only visits whose type is one of the six internal types are deleted before inserting, so manual visits stay. | `supabase/functions/generate-checkpoints/index.ts` | |
+
+## Scope, quotes and budget
+
+| ID | Rule | Where | Notes and tests |
+|---|---|---|---|
+| BR-062 | Scope status order: `rascunho`, `planejado`, `em_cotacao`, `contratado`, `em_execucao`, `executado`. After `contratado` it cannot go backward. | `supabase/migrations/20260327221510_*.sql` (`check_scope_status_irreversible`) | DB trigger. |
+| BR-063 | Supplier allocation rating, when set, must be 1 to 5. | `supabase/migrations/20260401232309_*.sql` | DB trigger. |
+| BR-064 | Supplier scope to quotes: marked activities that already have a quote from that supplier in the current revision (same activity id, or same normalized name without a leading `[tag]`) are not duplicated. New quotes get the latest revision (or 1), `Rev N`, status `pendente`, value null, and the scope item of the same discipline (prefer `contratado`). | `src/lib/supplierScopeQuotes.ts` (`buildQuoteInserts`, `revisionForNewQuotes`) | Test: `src/test/supplierScopeQuotes.test.ts`, `src/test/supplierScopeDialog.test.tsx`. |
+| BR-065 | Estimated activity cost = material + labor. Material uses indices per m2 times area times the latest price research of that material, only if researched in the last 30 days. Confidence: green if every used price is at most 7 days old, yellow if older, grey if none. Labor = cost per m2 times area. Without area, cost is 0. | `src/lib/budgetImport.ts` (`computeActivityCost`) | Test: `src/test/budgetImport.test.ts`. |
+| BR-066 | Budget import plan classifies each line as `criar`, `atualizar`, `sem_mudanca` or `aprovada` (approved quotes are preserved). | `src/lib/budgetImport.ts` (`planBudgetImport`) | Test: `src/test/budgetImport.test.ts`. |
+| BR-067 | Quote totals group by supplier (`__sem_fornecedor__` for none). Discipline totals separate approved from estimated. | `src/lib/budgetImport.ts` (`groupBySupplier`, `disciplineTotals`) | Tests: `src/test/budgetQuoteTable.test.tsx`, `src/test/budgetQuoteDiscipline.test.tsx`. |
+| BR-068 | Discipline names are normalized with aliases (Civil, Revestimento, Elétrica, Hidráulica, Pintura, Forro/Gesso, Marcenaria, Vidros, Iluminação). Empty becomes "Sem disciplina". | `src/lib/disciplineAccounts.ts` (`normalizeDiscipline`) | Test: `src/test/disciplineAccounts.test.ts`. |
+| BR-069 | Accounts by discipline: Executed = paid expenses with source `obra` or `cotacao` (description not containing "receita") plus purchases whose status is not `pendente`. Planned = scope `estimated_value` plus purchases still `pendente`. Pie slices drop zero values and sort by value. An empty filter list means no filter. | `src/lib/disciplineAccounts.ts` (`aggregateExecuted`, `aggregatePlanned`, `filterByDisciplines`) | Tests: `src/test/disciplineAccounts.test.ts`, `src/test/disciplinePieChart.test.tsx`. |
+| BR-070 | Approving the quote scenario creates N installments (see BR-081). The project is marked `cotacao_aprovada` only after the payments are inserted. "Revise" deletes payments with `source=cotacao` and clears the flags. | `src/components/projects/ProjectScenariosTab.tsx` | Test: `src/test/cotacaoInstallments.test.ts` (builder only). |
+| BR-071 | Delete errors from the budget module use the same FK messages (BR-028). | `src/lib/handleDeleteError.ts` | |
+
+## Tracking, reports, dashboards
+
+| ID | Rule | Where | Notes and tests |
+|---|---|---|---|
+| BR-072 | The AI weekly summary response is normalized: accepts fields nested in `data` or `result`, Portuguese or English names, and lists turned into bullet text. Returns null if neither summary nor next steps exist. | `src/lib/weeklyReport.ts` (`normalizeAISummary`) | Test: `src/test/weeklyReport.test.ts`. |
+| BR-073 | The weekly report message for WhatsApp has greeting with the client's first name, completion percent, "O que andou", "Próximas etapas", optional "Precisamos de você" and the portal link. Phones become digits with country code 55 when absent (at least 10 digits). | `src/lib/weeklyReport.ts` (`buildWeeklyReportMessage`, `whatsappPhone`) | Tests: `src/test/weeklyReport.test.ts`, `src/test/weeklyReportsUI.test.tsx`. |
+| BR-074 | AI context for tracking uses this week's diary, else the last 14 days, else the latest entries, plus in-progress, upcoming and recently finished schedule steps and the last weekly report. | `src/lib/weeklyAIContext.ts` (`buildWeeklyAIContext`) | Test: `src/test/weeklyAIContext.test.ts`. |
+| BR-075 | Multi-project pace: active projects are `execucao`, `mobilizacao`, `planejamento`. Pace is `atrasada` if progress is more than 20 points under expected, `atencao` if more than 5 under, else `no_ritmo`; `sem_cronograma` if no schedule. | `src/lib/multiObras.ts` (`classifyRitmo`, `ACTIVE_OBRA_STATUSES`) | Test: `src/test/multiObras.test.ts`. |
+| BR-076 | Voice task statuses: `pendente`, `em_andamento`, `concluido` (kanban columns "A fazer", "Em andamento", "Concluído"). Task types: `projeto`, `obra`, `compras`, `financeiro`, `administrativo`, `geral`. Priorities: `baixa`, `media`, `alta`, `urgente`. | `src/pages/TasksHub.tsx` (`KANBAN_COLUMNS`), `supabase/functions/process-voice-command/index.ts` (`TASKS_SCHEMA`) | |
+| BR-077 | Content posts: type in `reels`, `carrossel`, `story`, `feed`, `live`; status in `ideia`, `roteiro`, `gravando`, `editando`, `agendado`, `publicado`. | `supabase/migrations/20260410194302_*.sql` (`validate_content_post`) | DB trigger. |
