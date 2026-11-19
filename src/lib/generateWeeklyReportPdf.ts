@@ -78,7 +78,7 @@ export async function generateWeeklyReportPdf(
   pdf.setTextColor(240, 220, 200);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  pdf.text("QUADRA ARQUITETURA · RELATÓRIO SEMANAL", margin, 13);
+  pdf.text("QUADRA · RELATÓRIO SEMANAL", margin, 13);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(16);
   pdf.text(opts.projectName || "Obra", margin, 23);

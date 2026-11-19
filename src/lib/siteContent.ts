@@ -560,7 +560,7 @@ export const SITE_DEFAULTS: SiteContent = {
   },
   footer: {
     logo: "",
-    tagline: "Quadra Arquitetura · Gerenciamento de obras · Belo Horizonte, MG",
+    tagline: "Quadra · Gerenciamento de obras · Belo Horizonte, MG",
     address: "Rua Euler, 10 · sala 301\nPadre Eustáquio · Belo Horizonte/MG\nCEP 30720-160",
     email: "contato@quadraarquitetura.com",
     instagramHandle: "@quadraarq",

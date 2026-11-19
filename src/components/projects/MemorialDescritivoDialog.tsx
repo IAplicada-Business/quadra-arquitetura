@@ -178,7 +178,7 @@ function MemorialPreview({ memorial, projectName, clientName, address, area, dat
       {/* Header */}
       <div className="px-10 py-8" style={{ background: "#1B2A4A", color: "white" }}>
         <p className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "rgba(250,247,242,0.55)" }}>
-          Quadr Arquitetura
+          Quadra
         </p>
         <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, letterSpacing: "0.02em", marginBottom: 16 }}>
           Memorial Descritivo
@@ -262,7 +262,7 @@ function MemorialPreview({ memorial, projectName, clientName, address, area, dat
 
       {/* Footer */}
       <div className="px-10 py-4 flex justify-between text-[11px] text-muted-foreground border-t" style={{ background: "#FAF7F2" }}>
-        <span>Quadr Arquitetura · {new Date().getFullYear()}</span>
+        <span>Quadra · {new Date().getFullYear()}</span>
         <span>Documento gerado em {date}</span>
       </div>
     </div>
@@ -338,7 +338,7 @@ function buildPrintHTML(
 <body>
 <div class="page">
   <div class="header">
-    <p class="studio">Quadr Arquitetura</p>
+    <p class="studio">Quadra</p>
     <h1 class="doctitle">Memorial Descritivo</h1>
     <p style="font-size:13px;color:rgba(250,247,242,.85);">${esc(meta.projectName)}</p>
     ${meta.clientName ? `<p style="font-size:12px;color:rgba(250,247,242,.6);margin-top:3px;">Cliente: ${esc(meta.clientName)}</p>` : ""}
@@ -361,7 +361,7 @@ function buildPrintHTML(
   </div>
 
   <div class="footer">
-    <span>Quadr Arquitetura · ${new Date().getFullYear()}</span>
+    <span>Quadra · ${new Date().getFullYear()}</span>
     <span>Documento gerado em ${esc(meta.date)}</span>
   </div>
 </div>

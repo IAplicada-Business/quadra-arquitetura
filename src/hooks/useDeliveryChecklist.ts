@@ -188,6 +188,42 @@ export function useDeliveryChecklist(projectId: string | undefined) {
       toast({ title: "Erro ao remover foto", description: e.message, variant: "destructive" }),
   });
 
+  /** Troca uma foto: envia a nova, grava o caminho no lugar da antiga e só então apaga a antiga. */
+  const replacePhoto = useMutation({
+    mutationFn: async ({ item, path, file }: { item: DeliveryChecklistItem; path: string; file: File }) => {
+      let blob: Blob = file;
+      let type = file.type || "image/jpeg";
+      try {
+        const r = await resizeImage(file, CHECKLIST_PHOTO_MAX_WIDTH, 0.82);
+        if (r.blob.size < file.size) {
+          blob = r.blob;
+          type = r.contentType;
+        }
+      } catch {
+        /* mantém o arquivo original */
+      }
+      const newPath = checklistPhotoPath(projectId!, item.id, type, 0);
+      const { error: upError } = await supabase.storage
+        .from(CHECKLIST_PHOTOS_BUCKET)
+        .upload(newPath, blob, { contentType: type, upsert: false });
+      if (upError) throw upError;
+      const nextPaths = (item.photo_paths ?? []).map((p) => (p === path ? newPath : p));
+      const { error } = await supabase.from("delivery_checklist_items").update({ photo_paths: nextPaths }).eq("id", item.id);
+      if (error) {
+        await supabase.storage.from(CHECKLIST_PHOTOS_BUCKET).remove([newPath]);
+        throw error;
+      }
+      await supabase.storage.from(CHECKLIST_PHOTOS_BUCKET).remove([path]);
+      return newPath;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["delivery_checklist", projectId] });
+      toast({ title: "Foto trocada" });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Erro ao trocar foto", description: e.message, variant: "destructive" }),
+  });
+
   return {
     items: query.data ?? [],
     isLoading: query.isLoading,
@@ -196,6 +232,7 @@ export function useDeliveryChecklist(projectId: string | undefined) {
     remove,
     addPhotos,
     removePhoto,
+    replacePhoto,
   };
 }
 
