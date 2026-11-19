@@ -89,3 +89,25 @@ describe("foto nos itens do checklist de entrega", () => {
     expect(screen.getByRole("button", { name: /Enviando/ })).toBeDisabled();
   });
 });
+
+describe("trocar foto do item", () => {
+  it("troca a foto aberta por outra e fecha a ampliação", () => {
+    const onReplacePhoto = vi.fn();
+    const item = chk({ id: "c9", description: "Rodapé", photo_paths: ["obra1/c9/1-0.jpg", "obra1/c9/1-1.jpg"] });
+    render(
+      <ActivityDeliveryChecklist
+        items={[item]}
+        onToggle={vi.fn()}
+        onRemove={vi.fn()}
+        onAdd={vi.fn()}
+        photos={{ onAddPhotos, onRemovePhoto, onReplacePhoto }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: 'Ampliar foto 2 de "Rodapé"' }));
+    expect(screen.getByRole("button", { name: /Trocar foto/ })).toBeInTheDocument();
+    const nova = new File(["x"], "nova.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText('Trocar foto de "Rodapé"'), { target: { files: [nova] } });
+    expect(onReplacePhoto).toHaveBeenCalledWith(expect.objectContaining({ id: "c9" }), "obra1/c9/1-1.jpg", nova);
+    expect(screen.queryByAltText("Foto ampliada de Rodapé")).toBeNull();
+  });
+});

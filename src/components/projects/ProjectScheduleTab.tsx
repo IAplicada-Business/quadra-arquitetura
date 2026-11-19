@@ -294,7 +294,12 @@ export function ProjectScheduleTab({ projectId }: { projectId: string }) {
   const checklistPhotos = {
     onAddPhotos: (item: DeliveryChecklistItem, files: File[]) => checklist.addPhotos.mutate({ item, files }),
     onRemovePhoto: (item: DeliveryChecklistItem, path: string) => checklist.removePhoto.mutate({ item, path }),
-    uploadingItemId: checklist.addPhotos.isPending ? checklist.addPhotos.variables?.item.id ?? null : null,
+    onReplacePhoto: (item: DeliveryChecklistItem, path: string, file: File) => checklist.replacePhoto.mutate({ item, path, file }),
+    uploadingItemId: checklist.addPhotos.isPending
+      ? checklist.addPhotos.variables?.item.id ?? null
+      : checklist.replacePhoto.isPending
+        ? checklist.replacePhoto.variables?.item.id ?? null
+        : null,
   };
 
   const handleCopyPending = () => {

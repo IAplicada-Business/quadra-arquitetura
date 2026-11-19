@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Camera, ChevronLeft, ChevronRight, ImageOff, Loader2, Trash2 } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight, ImageOff, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useChecklistPhotoUrls, type DeliveryChecklistItem } from "@/hooks/useDeliveryChecklist";
@@ -7,6 +7,8 @@ import { useChecklistPhotoUrls, type DeliveryChecklistItem } from "@/hooks/useDe
 export interface ChecklistPhotoHandlers {
   onAddPhotos: (item: DeliveryChecklistItem, files: File[]) => void;
   onRemovePhoto: (item: DeliveryChecklistItem, path: string) => void;
+  /** Troca a foto aberta por outra (mantém a posição na lista). */
+  onReplacePhoto?: (item: DeliveryChecklistItem, path: string, file: File) => void;
   /** Id do item que está recebendo upload agora (mostra o carregando). */
   uploadingItemId?: string | null;
 }
@@ -20,8 +22,9 @@ interface Props extends ChecklistPhotoHandlers {
  * Fotos de um item do checklist de entrega: miniaturas na lista, botão
  * de câmera (no celular abre câmera ou galeria) e ampliação ao clicar.
  */
-export function ChecklistItemPhotos({ item, onAddPhotos, onRemovePhoto, uploadingItemId, disabled }: Props) {
+export function ChecklistItemPhotos({ item, onAddPhotos, onRemovePhoto, onReplacePhoto, uploadingItemId, disabled }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const paths = item.photo_paths ?? [];
   const { urls } = useChecklistPhotoUrls(paths);
@@ -34,6 +37,15 @@ export function ChecklistItemPhotos({ item, onAddPhotos, onRemovePhoto, uploadin
   };
 
   const current = openIndex != null ? paths[openIndex] : null;
+
+  const replace = (fileList: FileList | null) => {
+    const file = Array.from(fileList ?? []).find((f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name));
+    if (file && current) {
+      onReplacePhoto?.(item, current, file);
+      setOpenIndex(null);
+    }
+    if (replaceRef.current) replaceRef.current.value = "";
+  };
   const go = (delta: number) => {
     if (openIndex == null || paths.length === 0) return;
     setOpenIndex((openIndex + delta + paths.length) % paths.length);
@@ -108,7 +120,22 @@ export function ChecklistItemPhotos({ item, onAddPhotos, onRemovePhoto, uploadin
               )}
             </div>
           )}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {onReplacePhoto && (
+              <>
+                <input
+                  ref={replaceRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  aria-label={`Trocar foto de "${item.description}"`}
+                  onChange={(e) => replace(e.target.files)}
+                />
+                <Button size="sm" variant="outline" disabled={disabled || uploading} onClick={() => replaceRef.current?.click()}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Trocar foto
+                </Button>
+              </>
+            )}
             <Button
               size="sm"
               variant="ghost"

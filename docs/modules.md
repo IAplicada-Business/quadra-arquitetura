@@ -116,7 +116,7 @@ Note: no link to `/projects/kanban` exists in `src/` (see [open-questions.md](op
 ## 8. Site tracking and reports
 
 - Pages: `SiteTracking`, `Documents`, `Reports`. Hooks: `useSiteDiary`, `useSiteVisits`, `useWeeklyReports`, `useProjectOnboarding`, `usePendingItems`.
-- Components: `ProjectTrackingTab`, `WeeklyReportModal`, `WeeklyReportsSection`, `src/components/reports/*`, `ChecklistItemPhotos`.
+- Components: `ProjectTrackingTab`, `WeeklyReportModal`, `WeeklyReportsSection`, `src/components/reports/*`, `ChecklistItemPhotos` (add, replace via "Trocar foto", remove; `useDeliveryChecklist` `replacePhoto` uploads the new file first, then swaps the path, then deletes the old one).
 - Logic: `src/lib/weeklyReport.ts`, `weeklyAIContext.ts`, `generateWeeklyReportPdf.ts`.
 - Rules: [business-rules/projects.md](business-rules/projects.md).
 
